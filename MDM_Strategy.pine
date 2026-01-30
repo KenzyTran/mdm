@@ -1,0 +1,265 @@
+//@version=5
+strategy("MDM - Market Direction Model", overlay=true, initial_capital=100000, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+// ============================================================================
+// MDM (Market Direction Model) - Pine Script v5
+// Based on William O'Neil's Market Direction Model
+// ============================================================================
+
+// === INPUTS ===
+correctionPct = input.float(10.0, "Correction % from Peak", minval=5.0, maxval=30.0, step=1.0)
+ftdMinGain = input.float(1.0, "FTD Min Price Gain %", minval=0.5, maxval=3.0, step=0.1)
+ftdMinDay = input.int(2, "FTD Min Rally Day", minval=2, maxval=7)
+ftdMaxDay = input.int(12, "FTD Max Rally Day", minval=7, maxval=15)
+ddWindow = input.int(20, "DD Counting Window", minval=10, maxval=30)
+ddThreshold = input.int(5, "DD Threshold for Warning", minval=3, maxval=7)
+stopLossPct = input.float(2.5, "Stop Loss %", minval=0.5, maxval=5.0, step=0.1)
+
+// DD Detection Settings
+ddType1PctDrop = input.float(0.2, "DD Type 1: Min Drop %", minval=0.1, maxval=1.0, step=0.1)
+ddType2PctGain = input.float(0.1, "DD Type 2: Max Gain %", minval=0.05, maxval=0.5, step=0.05)
+ddType2Ploc = input.float(0.25, "DD Type 2: Max P_loc", minval=0.1, maxval=0.5, step=0.05)
+
+// === VARIABLES ===
+var float peakPrice = 0.0
+var bool inCorrection = false
+var int rallyDayCount = 0
+var float day1Low = 0.0
+var bool hasDay1 = false
+
+var float buyPrice = 0.0
+var float buyDayLow = 0.0
+var float triggerPrice = 0.0
+var float dd5High = 0.0
+
+// State: 0 = CASH, 1 = HOLDING, 2 = WAITING_SELL
+var int marketState = 0
+
+// DD History (store dates as bar_index)
+var array<int> ddHistory = array.new_int(0)
+
+// === CALCULATIONS ===
+// Price Location (P_loc)
+pLoc = (high - low) != 0 ? (close - low) / (high - low) : 0.5
+
+// Previous day values
+prevClose = close[1]
+prevVolume = volume[1]
+
+// Price change %
+priceChangePct = prevClose != 0 ? (close - prevClose) / prevClose * 100 : 0
+
+// Volume comparison
+volumeUp = volume > prevVolume
+
+// === UPDATE PEAK ===
+if close > peakPrice
+    peakPrice := close
+
+// === CHECK CORRECTION (12% from peak) ===
+correctionThreshold = peakPrice * (1 - correctionPct / 100)
+wasInCorrection = inCorrection
+inCorrection := close < correctionThreshold
+
+// If exiting correction, reset peak
+if wasInCorrection and not inCorrection
+    peakPrice := close
+
+// === DISTRIBUTION DAY DETECTION ===
+// Type 1: Heavy selling (drop >= 0.2% with higher volume)
+isDD_Type1 = priceChangePct <= -ddType1PctDrop and volumeUp
+
+// Type 2: Stalling (small gain < 0.1%, higher volume, close in lower 25%)
+isDD_Type2 = priceChangePct >= 0 and priceChangePct < ddType2PctGain and volumeUp and pLoc <= ddType2Ploc
+
+isDD = isDD_Type1 or isDD_Type2
+
+// === COUNT DD IN WINDOW ===
+// Add DD to history if detected and in HOLDING/WAITING_SELL
+if isDD and (marketState == 1 or marketState == 2)
+    array.push(ddHistory, bar_index)
+
+// Remove old DDs outside window
+ddCount = 0
+if array.size(ddHistory) > 0
+    for i = array.size(ddHistory) - 1 to 0
+        if bar_index - array.get(ddHistory, i) > ddWindow
+            array.remove(ddHistory, i)
+    ddCount := array.size(ddHistory)
+
+// === RALLY ATTEMPT TRACKING (only in CASH state) ===
+isDay1 = false
+
+if marketState == 0 and inCorrection
+    // Check for Day 1 conditions
+    day1Condition1 = close > prevClose  // Close higher than prev
+    day1Condition2 = close < prevClose and pLoc > 0.5  // Down but close in upper half
+    
+    if not hasDay1
+        // Looking for Day 1
+        if day1Condition1 or day1Condition2
+            hasDay1 := true
+            day1Low := low
+            rallyDayCount := 1
+            isDay1 := true
+    else
+        // Already have Day 1, check for reset
+        if low < day1Low
+            // Reset and check for new Day 1
+            hasDay1 := false
+            rallyDayCount := 0
+            if day1Condition1 or day1Condition2
+                hasDay1 := true
+                day1Low := low
+                rallyDayCount := 1
+                isDay1 := true
+        else
+            // Continue counting
+            rallyDayCount := rallyDayCount + 1
+
+// Reset rally tracking if not in correction
+if not inCorrection or marketState != 0
+    hasDay1 := false
+    rallyDayCount := 0
+
+// === FTD DETECTION ===
+isFTD = false
+if marketState == 0 and rallyDayCount >= ftdMinDay and rallyDayCount <= ftdMaxDay
+    if priceChangePct >= ftdMinGain and volumeUp
+        isFTD := true
+
+// === STOP LOSS CHECK ===
+stopLossTriggered = false
+stopLossReason = ""
+
+if marketState == 1 or marketState == 2
+    // Rule 1: 1.5% stop loss from buy price
+    if close < buyPrice * (1 - stopLossPct / 100)
+        stopLossTriggered := true
+        stopLossReason := "Stop Loss: " + str.tostring(stopLossPct) + "%"
+    
+    // Rule 2: Close below buy day low
+    else if close < buyDayLow
+        stopLossTriggered := true
+        stopLossReason := "Below Buy Day Low"
+
+// === STATE MACHINE ===
+action = ""
+
+// CASH State
+if marketState == 0
+    if isFTD
+        marketState := 1  // -> HOLDING
+        buyPrice := close
+        buyDayLow := low
+        array.clear(ddHistory)  // Reset DD count
+        action := "BUY (FTD)"
+        strategy.entry("Long", strategy.long)
+
+// HOLDING State
+else if marketState == 1
+    if stopLossTriggered
+        marketState := 0  // -> CASH
+        action := "SELL (" + stopLossReason + ")"
+        strategy.close("Long")
+        buyPrice := 0.0
+        buyDayLow := 0.0
+    else if ddCount >= ddThreshold and isDD
+        marketState := 2  // -> WAITING_SELL
+        triggerPrice := low
+        dd5High := high
+        action := "WARNING: 5 DD"
+
+// WAITING_SELL State
+else if marketState == 2
+    // Invalidation: Close > DD5 High
+    if close > dd5High
+        marketState := 1  // -> HOLDING
+        triggerPrice := 0.0
+        dd5High := 0.0
+        action := "BACK TO HOLD"
+    // New FTD invalidates
+    else if isFTD
+        marketState := 1  // -> HOLDING
+        triggerPrice := 0.0
+        dd5High := 0.0
+        array.clear(ddHistory)
+        action := "NEW FTD, HOLD"
+    // Trigger break
+    else if close < triggerPrice
+        marketState := 0  // -> CASH
+        action := "SELL (Trigger)"
+        strategy.close("Long")
+        buyPrice := 0.0
+        buyDayLow := 0.0
+    // Stop loss still applies
+    else if stopLossTriggered
+        marketState := 0  // -> CASH
+        action := "SELL (" + stopLossReason + ")"
+        strategy.close("Long")
+        buyPrice := 0.0
+        buyDayLow := 0.0
+
+// Reset rally on successful FTD
+if isFTD
+    hasDay1 := false
+    rallyDayCount := 0
+    peakPrice := close  // Reset peak on new buy
+
+// === PLOTTING ===
+// Background color based on state
+bgColor = marketState == 0 ? color.new(color.gray, 90) : 
+          marketState == 1 ? color.new(color.green, 90) : 
+          color.new(color.orange, 90)
+bgcolor(bgColor)
+
+// Correction zone
+bgcolor(inCorrection and marketState == 0 ? color.new(color.red, 95) : na)
+
+// Plot signals
+plotshape(isFTD and marketState == 1, title="FTD Buy", location=location.belowbar, 
+          color=color.green, style=shape.triangleup, size=size.normal, text="BUY")
+
+plotshape(action == "SELL (Stop Loss: " + str.tostring(stopLossPct) + "%)" or action == "SELL (Below Buy Day Low)", 
+          title="Stop Loss", location=location.abovebar, 
+          color=color.red, style=shape.triangledown, size=size.normal, text="SL")
+
+plotshape(action == "SELL (Trigger)", title="Trigger Sell", location=location.abovebar, 
+          color=color.orange, style=shape.triangledown, size=size.normal, text="SELL")
+
+plotshape(action == "WARNING: 5 DD", title="5 DD Warning", location=location.abovebar, 
+          color=color.yellow, style=shape.xcross, size=size.small, text="5DD")
+
+plotshape(isDay1, title="Day 1", location=location.belowbar, 
+          color=color.blue, style=shape.circle, size=size.tiny, text="D1")
+
+// Distribution Days markers
+plotshape(isDD and (marketState == 1 or marketState == 2), title="DD", location=location.abovebar, 
+          color=color.purple, style=shape.circle, size=size.tiny)
+
+// Levels
+plot(marketState == 1 or marketState == 2 ? buyPrice : na, "Buy Price", color=color.green, linewidth=1, style=plot.style_linebr)
+plot(marketState == 1 or marketState == 2 ? buyDayLow : na, "Buy Day Low", color=color.blue, linewidth=1, style=plot.style_linebr)
+plot(marketState == 2 ? triggerPrice : na, "Trigger Price", color=color.red, linewidth=1, style=plot.style_linebr)
+plot(marketState == 2 ? dd5High : na, "DD5 High", color=color.orange, linewidth=1, style=plot.style_linebr)
+
+// Peak tracking
+plot(peakPrice, "Peak", color=color.new(color.gray, 50), linewidth=1, style=plot.style_stepline)
+plot(correctionThreshold, "Correction Level", color=color.new(color.red, 70), linewidth=1, style=plot.style_stepline)
+
+// Info table
+var table infoTable = table.new(position.top_right, 2, 6, bgcolor=color.new(color.black, 80))
+if barstate.islast
+    stateStr = marketState == 0 ? "CASH" : marketState == 1 ? "HOLDING" : "WAITING SELL"
+    table.cell(infoTable, 0, 0, "State:", text_color=color.white)
+    table.cell(infoTable, 1, 0, stateStr, text_color=marketState == 0 ? color.gray : marketState == 1 ? color.green : color.orange)
+    table.cell(infoTable, 0, 1, "Rally Day:", text_color=color.white)
+    table.cell(infoTable, 1, 1, str.tostring(rallyDayCount), text_color=color.blue)
+    table.cell(infoTable, 0, 2, "DD Count:", text_color=color.white)
+    table.cell(infoTable, 1, 2, str.tostring(ddCount), text_color=ddCount >= 5 ? color.red : color.white)
+    table.cell(infoTable, 0, 3, "In Correction:", text_color=color.white)
+    table.cell(infoTable, 1, 3, inCorrection ? "Yes" : "No", text_color=inCorrection ? color.red : color.green)
+    table.cell(infoTable, 0, 4, "Buy Price:", text_color=color.white)
+    table.cell(infoTable, 1, 4, buyPrice > 0 ? str.tostring(buyPrice, "#.##") : "-", text_color=color.green)
+    table.cell(infoTable, 0, 5, "Peak:", text_color=color.white)
+    table.cell(infoTable, 1, 5, str.tostring(peakPrice, "#.##"), text_color=color.white)
