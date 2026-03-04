@@ -12,6 +12,7 @@ from .stop_loss import check_fixed_stop_loss, check_spike_low_stop
 from .trailing_stop import check_trailing_stop
 from .vsa_engine import VSAEngine
 from .performance import calculate_performance_metrics
+from .kelly import calculate_rolling_kelly, get_kelly_phase
 
 __all__ = [
     'load_vn30_data',
@@ -29,4 +30,7 @@ __all__ = [
     'check_trailing_stop',
     'VSAEngine',
     'calculate_performance_metrics',
+    'calculate_rolling_kelly',
+    'get_kelly_phase',
 ]
+

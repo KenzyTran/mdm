@@ -6,7 +6,11 @@ Handles portfolio allocation, position tracking, and trade execution
 import pandas as pd
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict
-from .config import MAX_POSITIONS, POSITION_WEIGHT, INITIAL_NAV, TAKE_PROFIT_PCT, MA10_WEEKS_IN_DAYS
+from .config import (
+    MAX_POSITIONS, POSITION_WEIGHT, INITIAL_NAV, TAKE_PROFIT_PCT, MA10_WEEKS_IN_DAYS,
+    KELLY_MIN_TRADES_PHASE1, KELLY_MIN_TRADES_PHASE2, KELLY_WINDOW_SMALL, KELLY_WINDOW_LARGE
+)
+from .kelly import calculate_rolling_kelly
 
 
 @dataclass
@@ -94,7 +98,7 @@ class PositionManager:
         self.nav = self.initial_nav
         self.cash = self.initial_nav
         self.max_positions = max_positions or MAX_POSITIONS
-        self.position_weight = position_weight or POSITION_WEIGHT
+        self.position_weight = position_weight or POSITION_WEIGHT  # Default 15%
         
         self.positions: Dict[str, Position] = {}
         self.trades: List[Trade] = []
@@ -105,8 +109,27 @@ class PositionManager:
         return len(self.positions) < self.max_positions
     
     def get_position_size(self) -> float:
-        """Calculate the position size based on current NAV."""
-        return self.nav * self.position_weight
+        """
+        Calculate position size using Rolling Kelly Criterion.
+        
+        Phases:
+        - Trade 1-20: Fixed 15% (not enough data)
+        - Trade 21-50: Kelly from last 20 trades
+        - Trade 51+: Kelly from last 50 trades
+        """
+        trade_count = len(self.trades)
+        
+        if trade_count < KELLY_MIN_TRADES_PHASE1:
+            # Phase 1: Fixed 15%
+            weight = self.position_weight
+        elif trade_count < KELLY_MIN_TRADES_PHASE2:
+            # Phase 2: Kelly from 20 trades
+            weight = calculate_rolling_kelly(self.trades, KELLY_WINDOW_SMALL)
+        else:
+            # Phase 3: Kelly from 50 trades
+            weight = calculate_rolling_kelly(self.trades, KELLY_WINDOW_LARGE)
+        
+        return self.nav * weight
     
     def open_position(self, stock_code: str, buy_date: pd.Timestamp, 
                       buy_price: float, spike_high: float, spike_low: float) -> bool:

@@ -27,7 +27,9 @@ Tín hiệu mua được kích hoạt khi thỏa mãn đồng thời:
 ### 2. Thực hiện lệnh Mua:
 *   **Giá mua ($P_{buy}$):** Giá đóng cửa ($C$) của phiên hiện tại.
 *   **Quy mô danh mục:** Tối đa 5 mã.
-*   **Tỷ trọng:** 20% NAV cho mỗi mã.
+*   **Tỷ trọng:** 
+    *   **Mặc định ban đầu:** 15% NAV cho mỗi mã
+    *   **Tùy chọn nâng cao:** Sử dụng Kelly Criterion động (xem Mục VI) - tỷ trọng sẽ thay đổi từ 15% → 19-25% tùy theo hiệu suất giao dịch
 *   **Ưu tiên:** Nếu nhiều mã báo mua cùng lúc, chọn mã có tỷ lệ $V / MAV_{20}$ cao nhất.
 
 ## III. TRẠNG THÁI 2: QUẢN TRỊ VỊ THẾ (HOLDING)
@@ -63,9 +65,65 @@ Bán ngay lập tức bất kể các quy tắc quản trị rủi ro nếu xu�
 | :--- | :--- |
 | **Vũ trụ** | VN30 |
 | **Số lượng mã tối đa** | 5 mã |
-| **Tỷ trọng mỗi mã** | 20% NAV |
+| **Tỷ trọng mỗi mã** | 20% NAV (Cố định) hoặc Kelly Criterion (Động) |
 | **Hệ số Volume Spike** | 4.0x (Baseline) |
 | **Cửa sổ Lookback** | 5 phiên |
 | **Stop Loss** | -7% / Thủng đáy Spike |
 | **Trailing Stop** | MA10 (nếu tôn trọng 7 tuần đầu) / MA50 (nếu vi phạm) |
 | **Loại lệnh** | Giá đóng cửa (Market on Close) |
+
+---
+
+## VI. CHIẾN LƯỢC PHÂN BỔ VỊ THẾ ĐỘNG - KELLY CRITERION (ROLLING KELLY)
+
+### 1. Nguyên tắc
+
+Tính Kelly dựa trên **30-50 giao dịch gần nhất**, không phải toàn bộ lịch sử. Điều này giúp thích ứng nhanh với thay đổi thị trường.
+
+**Công thức Kelly:**
+$$f^* = p - \frac{1-p}{R}$$
+
+Trong đó:
+*   $p$ = Win Rate (Tỷ lệ thắng)
+*   $R$ = Avg Win / Avg Loss
+*   Sử dụng **Half Kelly** = $f^*/2$ để giảm rủi ro
+
+---
+
+### 2. Quy trình triển khai
+
+**Giao dịch 1-20:** Dùng **15% cố định** (vì chưa đủ dữ liệu)
+
+**Giao dịch 21-50:** Tính Kelly từ **20 trade gần nhất**
+
+**Giao dịch 51+:** Tính Kelly từ **50 trade gần nhất**, cập nhật liên tục sau mỗi giao dịch đóng
+
+---
+
+### 3. Ví dụ cụ thể
+
+**Ví dụ 1: Sau 30 trade**
+
+Lịch sử: 15 thắng, 15 thua
+*   Win Rate = 50%
+*   Avg Win = 22%, Avg Loss = 5%
+*   R = 22/5 = 4.4
+*   Kelly = 0.50 - (0.50/4.4) = 0.386 = **38.6%**
+*   **Half Kelly = 19.3%** → Dùng **19%** cho trade thứ 31
+
+**Ví dụ 2: Sau 60 trade (tính từ trade 11-60)**
+
+Lịch sử 50 trade gần nhất: 24 thắng, 26 thua
+*   Win Rate = 48%
+*   Avg Win = 24%, Avg Loss = 5%
+*   R = 24/5 = 4.8
+*   Kelly = 0.48 - (0.52/4.8) = 0.372 = **37.2%**
+*   **Half Kelly = 18.6%** → Dùng **18.6%** cho trade thứ 61
+
+---
+
+### 4. Quy tắc bảo vệ
+
+*   **Tỷ trọng tối đa:** 25% NAV (ngay cả khi Kelly > 25%)
+*   **Tỷ trọng tối thiểu:** 5% NAV
+*   **Làm tròn:** Làm tròn đến bội số 1% hoặc 5% để đơn giản hóa
