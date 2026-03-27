@@ -7,9 +7,9 @@
 
 ### Data Infrastructure
 
-- [ ] **DATA-01**: Unified data loader reads NASDAQ, S&P500, VN30 CSV files into normalized OHLCV DataFrames
-- [ ] **DATA-02**: US market data prices normalized correctly (scaled ~1000x in source CSV)
-- [ ] **DATA-03**: Data validation spot-checks normalized prices against known index values (within 0.1%)
+- [x] **DATA-01**: Unified data loader reads NASDAQ, S&P500, VN30 CSV files into normalized OHLCV DataFrames
+- [x] **DATA-02**: US market data prices normalized correctly (scaled ~1000x in source CSV)
+- [x] **DATA-03**: Data validation spot-checks normalized prices against known index values (within 0.1%)
 - [ ] **DATA-04**: Published signal parser converts Dr. K's TECL and NASDAQ signal history into structured test fixtures
 
 ### Codebase Organization
@@ -76,9 +76,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 1 | Pending |
-| DATA-03 | Phase 1 | Pending |
+| DATA-01 | Phase 1 | Complete |
+| DATA-02 | Phase 1 | Complete |
+| DATA-03 | Phase 1 | Complete |
 | DATA-04 | Phase 1 | Pending |
 | ORG-01 | Phase 2 | Pending |
 | ORG-02 | Phase 2 | Pending |

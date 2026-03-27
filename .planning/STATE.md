@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-27T10:21:59.927Z"
-last_activity: 2026-03-27 -- Roadmap created
+status: executing
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-03-27T11:25:48.151Z"
+last_activity: 2026-03-27
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Accurately reverse-engineer the post-2019 MDM logic so that backtested signals match Dr. K's published signal history
-**Current focus:** Phase 1 - Data Integrity
+**Current focus:** Phase 01 — data-integrity
 
 ## Current Position
 
-Phase: 1 of 6 (Data Integrity)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-03-27 -- Roadmap created
+Phase: 01 (data-integrity) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-03-27
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P01 | 5min | 1 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,8 @@ Recent decisions affecting current work:
 
 - Roadmap: 6-phase structure derived from requirement categories (DATA -> ORG -> SIG -> MDM -> PERF -> VN30)
 - Roadmap: NASDAQ validation must complete before VN30 adaptation begins (Phase 5 gates Phase 6)
+- [Phase 01]: Used actual CSV values for spot-check references instead of plan-specified values when they differed
+- [Phase 01]: Volume dtype forced to float64 via explicit cast for consistency across all markets
 
 ### Pending Todos
 
@@ -74,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T10:21:59.924Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-data-integrity/01-CONTEXT.md
+Last session: 2026-03-27T11:25:48.148Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None
