@@ -61,11 +61,13 @@ class TestMDMRegression:
             f"Trade count mismatch: got {len(trades)}, expected {len(baseline)}"
         )
 
-        # String columns exact match
+        # String columns exact match (normalize NaN to empty string for CSV round-trip compatibility)
         for col in trades.select_dtypes(include='object').columns:
+            trades_col = trades[col].fillna('').reset_index(drop=True)
+            baseline_col = baseline[col].fillna('').reset_index(drop=True)
             pd.testing.assert_series_equal(
-                trades[col].reset_index(drop=True),
-                baseline[col].reset_index(drop=True),
+                trades_col,
+                baseline_col,
                 check_names=False,
                 obj=f'MDM trades column {col}'
             )
