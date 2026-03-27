@@ -45,12 +45,12 @@ Plans:
   2. MDM classic strategy runs from strategies/mdm_classic/ and produces identical backtest output to the original models/ implementation
   3. VSA strategy runs from strategies/vsa/ and produces identical backtest output to the original vn30_vsa/ implementation
   4. A regression test suite confirms bit-for-bit identical signal sequences and equity curves before and after migration
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md -- Golden baselines and regression test scaffolds (ORG-04)
+- [ ] 02-02-PLAN.md -- Migrate MDM and VSA strategies to strategies/ (ORG-01, ORG-02, ORG-03)
+- [ ] 02-03-PLAN.md -- Move scripts/analysis, update notebooks, delete old dirs, run regression (ORG-01, ORG-04)
 
 ### Phase 3: Signal Divergence Analysis
 **Goal**: The project can measure exactly where and how classic MDM rules diverge from Dr. K's published post-2019 signals
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Integrity | 0/2 | Planning complete | - |
-| 2. Codebase Organization | 0/3 | Not started | - |
+| 2. Codebase Organization | 0/3 | Planning complete | - |
 | 3. Signal Divergence Analysis | 0/3 | Not started | - |
 | 4. MDM v2 Engine | 0/3 | Not started | - |
 | 5. Validation & Performance | 0/3 | Not started | - |
