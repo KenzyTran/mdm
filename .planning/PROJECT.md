@@ -20,7 +20,7 @@ Accurately reverse-engineer the post-2019 MDM logic so that backtested signals m
 
 ### Active
 
-- [ ] Reorganize codebase into clearly separated strategies (MDM classic, MDM v2, VSA)
+- [x] Reorganize codebase into clearly separated strategies (MDM classic, MDM v2, VSA) — Validated in Phase 2: Codebase Organization
 - [x] Normalize US market data (NASDAQ/S&P500 prices appear scaled by ~1000x) — Validated in Phase 1: Data Integrity
 - [ ] Run MDM classic rules on NASDAQ data and compare with published signals
 - [ ] Identify divergence points between classic rules output and actual post-2019 signals
@@ -54,10 +54,12 @@ Accurately reverse-engineer the post-2019 MDM logic so that backtested signals m
 4. Model appears more responsive to short-term price action
 
 **Existing codebase:**
-- `models/` — MDM classic implementation (VNINDEX-focused)
-- `vn30_vsa/` — Independent VSA strategy
+- `strategies/mdm_classic/` — MDM classic implementation (migrated from `models/`)
+- `strategies/vsa/` — Independent VSA strategy (migrated from `vn30_vsa/`)
+- `scripts/` — Entry-point scripts (`run_backtest.py`, `optimize_mdm.py`, `check_date.py`)
+- `analysis/` — Analysis tools (`analyze_drawdown.py`, `diagnose_vn30.py`)
 - `data/` — NASDAQ, S&P500, VN30 OHLCV data
-- Data format: US data has prices scaled (need normalization), VN30 data is native scale
+- Data format: US data normalized (Phase 1), VN30 data is native scale
 
 **Published signal data (embedded in project):**
 - TECL signals: 2017-01-30 to 2026-02-26 (100+ signals)
@@ -98,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after initialization*
+*Last updated: 2026-03-27 after Phase 2 completion*
