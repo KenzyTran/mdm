@@ -30,12 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Spot-checking normalized US prices against known real-world index values on specific dates confirms values within 0.1% tolerance
   3. Published TECL and NASDAQ signal histories parse into structured fixtures with date, signal type, and gain/loss fields that match the source data
   4. All percentage-based calculations (FTD thresholds, stop losses) produce correct results on the normalized data
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Unified DataLoader with normalization and spot-check validation (DATA-01, DATA-02, DATA-03)
+- [ ] 01-02-PLAN.md -- Signal fixture loader and TECL/NASDAQ published signal CSV files (DATA-04)
 
 ### Phase 2: Codebase Organization
 **Goal**: Existing code is reorganized into a clean three-layer architecture with zero regression in backtest output
@@ -124,7 +123,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Integrity | 0/3 | Not started | - |
+| 1. Data Integrity | 0/2 | Planning complete | - |
 | 2. Codebase Organization | 0/3 | Not started | - |
 | 3. Signal Divergence Analysis | 0/3 | Not started | - |
 | 4. MDM v2 Engine | 0/3 | Not started | - |
