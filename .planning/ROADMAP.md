@@ -49,8 +49,8 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md -- Golden baselines and regression test scaffolds (ORG-04)
-- [ ] 02-02-PLAN.md -- Migrate MDM and VSA strategies to strategies/ (ORG-01, ORG-02, ORG-03)
-- [ ] 02-03-PLAN.md -- Move scripts/analysis, update notebooks, delete old dirs, run regression (ORG-01, ORG-04)
+- [x] 02-02-PLAN.md -- Migrate MDM and VSA strategies to strategies/ (ORG-01, ORG-02, ORG-03)
+- [x] 02-03-PLAN.md -- Move scripts/analysis, update notebooks, delete old dirs, run regression (ORG-01, ORG-04)
 
 ### Phase 3: Signal Divergence Analysis
 **Goal**: The project can measure exactly where and how classic MDM rules diverge from Dr. K's published post-2019 signals
