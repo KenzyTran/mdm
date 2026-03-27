@@ -12,5 +12,11 @@ dependencies = [
     "python-dotenv>=1.2.1",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "regression: marks tests as regression tests (deselect with '-m \"not regression\"')",
+]
+
 [tool.uv]
 dev-dependencies = []
