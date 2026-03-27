@@ -93,3 +93,42 @@ class TestSignalFixtureLoader:
         df = load_signal_fixture(csv)
         assert df["signal"].iloc[0] == "Buy"
         assert df["signal"].iloc[1] == "Sell"
+
+
+class TestSignalFixtureIntegration:
+    """Integration tests for actual signal fixture CSV files."""
+
+    TECL_PATH = "data/signals/tecl_signals.csv"
+    NASDAQ_PATH = "data/signals/nasdaq_signals.csv"
+
+    def test_tecl_fixture_loads(self):
+        """TECL fixture loads and has >10 rows."""
+        df = load_signal_fixture(self.TECL_PATH)
+        assert len(df) > 10, f"TECL fixture has only {len(df)} rows"
+
+    def test_nasdaq_fixture_loads(self):
+        """NASDAQ fixture loads and has >10 rows."""
+        df = load_signal_fixture(self.NASDAQ_PATH)
+        assert len(df) > 10, f"NASDAQ fixture has only {len(df)} rows"
+
+    def test_tecl_fixture_date_range(self):
+        """TECL fixture dates span expected range."""
+        df = load_signal_fixture(self.TECL_PATH)
+        assert df["date"].min() >= pd.Timestamp("2017-01-01")
+        assert df["date"].max() <= pd.Timestamp("2026-12-31")
+
+    def test_nasdaq_fixture_date_range(self):
+        """NASDAQ fixture dates span expected range."""
+        df = load_signal_fixture(self.NASDAQ_PATH)
+        assert df["date"].min() >= pd.Timestamp("2017-01-01")
+        assert df["date"].max() <= pd.Timestamp("2026-12-31")
+
+    def test_no_duplicate_dates_tecl(self):
+        """TECL fixture has no duplicate dates."""
+        df = load_signal_fixture(self.TECL_PATH)
+        assert df["date"].is_unique, "TECL fixture contains duplicate dates"
+
+    def test_no_duplicate_dates_nasdaq(self):
+        """NASDAQ fixture has no duplicate dates."""
+        df = load_signal_fixture(self.NASDAQ_PATH)
+        assert df["date"].is_unique, "NASDAQ fixture contains duplicate dates"
