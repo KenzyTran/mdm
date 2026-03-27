@@ -1,12 +1,12 @@
 import sys
-import os
+from pathlib import Path
+
+# Ensure project root is on sys.path for imports
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import pandas as pd
 import numpy as np
-
-# Add parent directory to path to import models
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from models.data_loader import DataLoader
+from strategies.mdm_classic.data_loader import DataLoader
 
 def analyze_vn30():
     print("🔍 DIAGNOSING VN30 MARKET BEHAVIOR")

@@ -1,6 +1,12 @@
-from models import MDMEngine, DataLoader
-from models.performance import PerformanceAnalyzer
 import sys
+from pathlib import Path
+
+# Ensure project root is on sys.path for imports
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from strategies.mdm_classic import MDMEngine
+from strategies.mdm_classic.data_loader import DataLoader
+from strategies.mdm_classic.performance import PerformanceAnalyzer
 
 loader = DataLoader('vnindex_price.csv')
 df = loader.load(start_date='2014-01-01', end_date='2026-01-16')

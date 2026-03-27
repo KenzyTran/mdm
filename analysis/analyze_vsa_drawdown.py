@@ -1,9 +1,15 @@
 """
 Drawdown Analysis Script for VN30 VSA Strategy
 """
+import sys
+from pathlib import Path
+
+# Ensure project root is on sys.path for imports
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import pandas as pd
 import numpy as np
-from vn30_vsa.vsa_engine import VSAEngine
+from strategies.vsa.vsa_engine import VSAEngine
 
 # Run full backtest
 engine = VSAEngine(

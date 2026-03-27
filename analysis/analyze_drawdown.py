@@ -1,6 +1,13 @@
-from models import MDMEngine, DataLoader
+import sys
+from pathlib import Path
+
+# Ensure project root is on sys.path for imports
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import pandas as pd
 import numpy as np
+from strategies.mdm_classic import MDMEngine
+from strategies.mdm_classic.data_loader import DataLoader
 
 # Load data and run engine
 loader = DataLoader('vnindex_price.csv')
@@ -33,17 +40,17 @@ for idx, row in results.iterrows():
     date = row['date']
     close = row['close']
     state = row['state'] # CASH, HOLDING, WAITING_SELL, SHORT
-    
+
     # Simple simulation matching the backtest logic implicitly
     # If state is HOLDING or WAITING_SELL, we are invested long
     # If state is SHORT, we are short
     # If state is CASH, we are in cash
-    
+
     # NOTE: This is an approximation. The engine results don't store daily equity.
     # We will rely on the trade list to reconstruct exact entry/exit points
     # or just use the state from results to approximate.
-    
-    # Better approach: Calculate drawdown OF THE INDEX first, 
+
+    # Better approach: Calculate drawdown OF THE INDEX first,
     # then check what the system was doing during max drawdown periods of the index.
     pass
 
@@ -83,7 +90,7 @@ for idx, row in results.iterrows():
     date = pd.Timestamp(row['date'])
     close = row['close']
     state = row['state']
-    
+
     # Check for trade actions first
     if date in buy_dates:
         # EXECUTE BUY
@@ -95,7 +102,7 @@ for idx, row in results.iterrows():
             current_shares = capital / price
             capital = 0
             is_short = False
-            
+
     elif date in short_dates:
         # EXECUTE SHORT
         # If we have cash, open short
@@ -111,7 +118,7 @@ for idx, row in results.iterrows():
             # We don't change capital variable, we just toggle is_short flag
             # and calculate value differently.
             is_short = True
-            
+
     elif date in sell_dates:
         # EXECUTE SELL
         if current_shares > 0:
@@ -119,7 +126,7 @@ for idx, row in results.iterrows():
             capital = current_shares * price
             current_shares = 0
             is_short = False
-            
+
     elif date in cover_dates:
         # EXECUTE COVER
         if is_short:
@@ -138,7 +145,7 @@ for idx, row in results.iterrows():
         # Short value = Original Capital * (1 + (Entry - Current)/Entry)
         pnl_pct = (short_entry_price - close) / short_entry_price
         daily_value = capital * (1 + pnl_pct)
-        
+
     portfolio_history.append({
         'date': date,
         'value': daily_value,
