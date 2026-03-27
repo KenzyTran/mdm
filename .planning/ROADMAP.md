@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md -- Unified DataLoader with normalization and spot-check validation (DATA-01, DATA-02, DATA-03)
-- [ ] 01-02-PLAN.md -- Signal fixture loader and TECL/NASDAQ published signal CSV files (DATA-04)
+- [x] 01-02-PLAN.md -- Signal fixture loader and TECL/NASDAQ published signal CSV files (DATA-04)
 
 ### Phase 2: Codebase Organization
 **Goal**: Existing code is reorganized into a clean three-layer architecture with zero regression in backtest output
