@@ -14,9 +14,9 @@
 
 ### Codebase Organization
 
-- [ ] **ORG-01**: Three-layer architecture implemented (core/ shared infrastructure, strategies/ signal logic, analysis/ tools)
-- [ ] **ORG-02**: Existing MDM classic migrated from models/ to strategies/mdm_classic/
-- [ ] **ORG-03**: Existing VSA migrated from vn30_vsa/ to strategies/vsa/
+- [x] **ORG-01**: Three-layer architecture implemented (core/ shared infrastructure, strategies/ signal logic, analysis/ tools)
+- [x] **ORG-02**: Existing MDM classic migrated from models/ to strategies/mdm_classic/
+- [x] **ORG-03**: Existing VSA migrated from vn30_vsa/ to strategies/vsa/
 - [x] **ORG-04**: Backtest output identical before and after migration (regression test)
 
 ### Signal Analysis
@@ -80,9 +80,9 @@
 | DATA-02 | Phase 1 | Complete |
 | DATA-03 | Phase 1 | Complete |
 | DATA-04 | Phase 1 | Complete |
-| ORG-01 | Phase 2 | Pending |
-| ORG-02 | Phase 2 | Pending |
-| ORG-03 | Phase 2 | Pending |
+| ORG-01 | Phase 2 | Complete |
+| ORG-02 | Phase 2 | Complete |
+| ORG-03 | Phase 2 | Complete |
 | ORG-04 | Phase 2 | Complete |
 | SIG-01 | Phase 3 | Pending |
 | SIG-02 | Phase 3 | Pending |
