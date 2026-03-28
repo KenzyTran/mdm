@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: Codebase Organization** - Three-layer architecture with migrated strategies and verified identical output
 - [ ] **Phase 3: Signal Divergence Analysis** - Comparison engine and divergence report identifying where classic rules fail post-2019
 - [ ] **Phase 4: MDM v2 Engine** - Cash state machine, parameterized rules, and systematic hypothesis testing
-- [x] **Phase 5: Validation & Performance** - Held-out validation, performance metrics, and visual analysis tools (completed 2026-03-28)
+- [x] **Phase 5: Validation & Performance** - Held-out validation, performance metrics, and visual analysis tools (completed 2026-03-28)
 - [ ] **Phase 6: VN30 Adaptation** - MDM v2 recalibrated for Vietnamese market microstructure
 
 ## Phase Details
@@ -107,12 +107,12 @@ Plans:
   1. Market microstructure filters handle VN30 7% daily price limit days, T+2.5 settlement constraints, and derivative expiry effects
   2. MDM v2 parameters are recalibrated for VN30 (different volatility, volume characteristics, index composition)
   3. Full VN30 backtest report with equity curve, drawdown, Sharpe, and win rate is generated and compared against VN30 buy-and-hold
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
+- [ ] 06-01-PLAN.md -- VN30 microstructure filters and engine DD suppression integration (VN30-01)
+- [ ] 06-02-PLAN.md -- Parameter sweep Sharpe adaptation and VN30 grid search (VN30-02)
+- [ ] 06-03-PLAN.md -- VN30 backtest report with performance metrics and buy-and-hold comparison (VN30-03)
 
 ## Progress
 
@@ -126,4 +126,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Signal Divergence Analysis | 1/2 | Executing | - |
 | 4. MDM v2 Engine | 0/2 | Planning complete | - |
 | 5. Validation & Performance | 2/2 | Complete   | 2026-03-28 |
-| 6. VN30 Adaptation | 0/3 | Not started | - |
+| 6. VN30 Adaptation | 0/3 | Planning complete | - |
