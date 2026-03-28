@@ -49,3 +49,8 @@ class MDMV2Config:
         assert self.correction_threshold < 0, "Correction threshold must be negative"
         assert self.stop_loss_pct > 0, "Stop loss percentage must be positive"
         assert self.dd_cash_threshold > 0, "DD cash threshold must be positive"
+
+
+# Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
+# import MDMConfig from .config -- this alias lets them work unchanged.
+MDMConfig = MDMV2Config

@@ -26,6 +26,10 @@ STATE_TO_SIGNAL = {
     "SHORT": "Sell",
     "CASH": "Cash",
     "WAITING_SELL": "Cash",
+    # V2 state mappings
+    "BUY": "Buy",
+    "SELL": "Sell",
+    # "CASH" already maps to "Cash"
 }
 
 # Window size for TIMING divergence detection (trading days)

@@ -10,8 +10,14 @@ import numpy as np
 WORKTREE_ROOT = Path(__file__).resolve().parent.parent
 MAIN_REPO = WORKTREE_ROOT
 # If running from a git worktree, data lives in the main repo
-if '.claude/worktrees' in str(WORKTREE_ROOT):
-    MAIN_REPO = WORKTREE_ROOT.parent.parent.parent
+# Worktree path: .../mdm/.claude/worktrees/agent-xxx -> main repo is .../mdm
+if '.claude' in str(WORKTREE_ROOT) and 'worktrees' in str(WORKTREE_ROOT):
+    # Walk up to find the main repo (parent of .claude directory)
+    parts = WORKTREE_ROOT.parts
+    for i, part in enumerate(parts):
+        if part == '.claude' and i + 1 < len(parts) and parts[i + 1] == 'worktrees':
+            MAIN_REPO = Path(*parts[:i])
+            break
 
 from strategies.mdm_v2.config import MDMV2Config
 from strategies.mdm_v2.mdm_v2_engine import MDMV2Engine
@@ -116,8 +122,8 @@ class TestIntegrationWithNASDAQData:
         """Load NASDAQ data from main repo."""
         from core.data_loader import DataLoader
         loader = DataLoader('nasdaq')
-        # Override data directory to main repo
-        loader.data_dir = str(MAIN_REPO / 'data')
+        # Override data directory to main repo root (FILE_PATHS already contain 'data/')
+        loader.data_dir = MAIN_REPO
         df = loader.load('2019-01-01', '2022-12-31')
         return df
 
@@ -153,8 +159,8 @@ class TestIntegrationWithNASDAQData:
         model_signals = extract_model_signals(result)
 
         # Load published signals
-        from core.signal_loader import load_published_signals
-        pub_signals = load_published_signals(str(MAIN_REPO / 'data' / 'signals' / 'nasdaq_signals.csv'))
+        from core.signal_loader import load_signal_fixture
+        pub_signals = load_signal_fixture(str(MAIN_REPO / 'data' / 'signals' / 'nasdaq_signals.csv'))
 
         comparison = compare_signals(model_signals, pub_signals)
         assert isinstance(comparison, dict)
