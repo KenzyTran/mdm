@@ -26,7 +26,7 @@ Accurately reverse-engineer the post-2019 MDM logic so that backtested signals m
 - [x] Identify divergence points between classic rules output and actual post-2019 signals — Validated in Phase 3: Signal Divergence Analysis
 - [x] Analyze signal patterns to hypothesize new MDM v2 rules (Cash state behavior, faster signal switching, modified DD counting) — Validated in Phase 4: MDM V2 Engine
 - [x] Implement MDM v2 candidate rules — Validated in Phase 4: MDM V2 Engine
-- [ ] Validate MDM v2 against published signal history (target: high match rate)
+- [x] Validate MDM v2 against published signal history (target: high match rate) — Validated in Phase 5: Validation & Performance
 - [ ] Adapt MDM v2 parameters for VN30 market characteristics
 - [ ] Backtest MDM v2 on VN30 with performance reporting
 
@@ -59,6 +59,9 @@ Accurately reverse-engineer the post-2019 MDM logic so that backtested signals m
 - `scripts/` — Entry-point scripts (`run_backtest.py`, `optimize_mdm.py`, `check_date.py`)
 - `strategies/mdm_v2/` — MDM v2 engine with 3-state machine (BUY/CASH/SELL) and parameterized config
 - `analysis/hypothesis/` — Hypothesis testing framework and parameter sweep for v2 tuning
+- `strategies/mdm_v2/performance.py` — V2PerformanceAnalyzer (equity curve, drawdown, Sharpe, win rate)
+- `analysis/validate_v2.py` — Full validation pipeline (match rates, three-way comparison, dashboard)
+- `notebooks/v2_validation.ipynb` — Interactive Jupyter validation notebook
 - `analysis/` — Analysis tools (`analyze_drawdown.py`, `diagnose_vn30.py`)
 - `data/` — NASDAQ, S&P500, VN30 OHLCV data
 - Data format: US data normalized (Phase 1), VN30 data is native scale
@@ -102,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after Phase 4 completion*
+*Last updated: 2026-03-28 after Phase 5 completion*
