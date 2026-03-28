@@ -83,7 +83,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md -- MDM v2 engine with 3-state machine and parameterized config (MDM-01, MDM-02)
-- [ ] 04-02-PLAN.md -- Hypothesis testing framework and parameter sweep (MDM-03, MDM-04)
+- [x] 04-02-PLAN.md -- Hypothesis testing framework and parameter sweep (MDM-03, MDM-04)
 
 ### Phase 5: Validation & Performance
 **Goal**: MDM v2 rules are validated on held-out data and backed by full performance analysis

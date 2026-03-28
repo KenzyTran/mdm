@@ -30,8 +30,8 @@
 
 - [x] **MDM-01**: Cash implemented as intermediate state between Buy and Sell in state machine
 - [x] **MDM-02**: Parameterized rule engine with configurable thresholds (FTD %, DD %, MA periods, DD count, etc.)
-- [ ] **MDM-03**: Hypothesis testing framework allows systematic rule modification and match-rate scoring
-- [ ] **MDM-04**: Parameter sweep searches over rule parameter space to maximize signal match rate
+- [x] **MDM-03**: Hypothesis testing framework allows systematic rule modification and match-rate scoring
+- [x] **MDM-04**: Parameter sweep searches over rule parameter space to maximize signal match rate
 
 ### Backtesting & Performance
 
@@ -90,8 +90,8 @@
 | SIG-04 | Phase 3 | Complete |
 | MDM-01 | Phase 4 | Complete |
 | MDM-02 | Phase 4 | Complete |
-| MDM-03 | Phase 4 | Pending |
-| MDM-04 | Phase 4 | Pending |
+| MDM-03 | Phase 4 | Complete |
+| MDM-04 | Phase 4 | Complete |
 | PERF-01 | Phase 5 | Pending |
 | PERF-02 | Phase 5 | Pending |
 | PERF-03 | Phase 5 | Pending |
