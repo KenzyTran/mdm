@@ -110,7 +110,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 06-01-PLAN.md -- VN30 microstructure filters and engine DD suppression integration (VN30-01)
+- [x] 06-01-PLAN.md -- VN30 microstructure filters and engine DD suppression integration (VN30-01)
 - [ ] 06-02-PLAN.md -- Parameter sweep Sharpe adaptation and VN30 grid search (VN30-02)
 - [ ] 06-03-PLAN.md -- VN30 backtest report with performance metrics and buy-and-hold comparison (VN30-03)
 

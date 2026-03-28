@@ -41,7 +41,7 @@
 
 ### VN30 Adaptation
 
-- [ ] **VN30-01**: Market microstructure adjustments for 7% daily price limit, T+2.5 settlement, derivative expiry filtering
+- [x] **VN30-01**: Market microstructure adjustments for 7% daily price limit, T+2.5 settlement, derivative expiry filtering
 - [ ] **VN30-02**: MDM v2 parameters recalibrated for VN30 market characteristics
 - [ ] **VN30-03**: Full VN30 backtest with performance report and comparison vs buy-and-hold
 
@@ -95,7 +95,7 @@
 | PERF-01 | Phase 5 | Complete |
 | PERF-02 | Phase 5 | Complete |
 | PERF-03 | Phase 5 | Complete |
-| VN30-01 | Phase 6 | Pending |
+| VN30-01 | Phase 6 | Complete |
 | VN30-02 | Phase 6 | Pending |
 | VN30-03 | Phase 6 | Pending |
 

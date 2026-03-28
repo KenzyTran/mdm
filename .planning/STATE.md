@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-28T10:04:00.821Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-28T10:54:24.144Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
   percent: 12
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Accurately reverse-engineer the post-2019 MDM logic so that backtested signals match Dr. K's published signal history
-**Current focus:** Phase 05 — validation-performance
+**Current focus:** Phase 06 — vn30-adaptation
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
+Phase: 06 (vn30-adaptation) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -62,6 +62,7 @@ Progress: [█░░░░░░░░░] 12%
 | Phase 03 P02 | 5min | 2 tasks | 5 files |
 | Phase 04 P02 | 3min | 2 tasks | 4 files |
 | Phase 05 P02 | 4min | 2 tasks | 2 files |
+| Phase 06 P01 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Parameter sweep uses itertools.product for exhaustive grid search, same pattern as scripts/optimize_mdm.py
 - [Phase 05]: Classic engine equity maps HOLDING/WAITING_SELL to invested, CASH/SHORT to flat for fair comparison
 - [Phase 05]: Published vs model signal markers use different shapes/sizes in dashboard for visual separation
+- [Phase 06]: Expiry day holiday fallback uses DataFrame trading dates as calendar
+- [Phase 06]: Engine DD suppression via volume_up override - no vn30_filters import in engine
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T10:04:00.817Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-vn30-adaptation/06-CONTEXT.md
+Last session: 2026-03-28T10:54:24.140Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
