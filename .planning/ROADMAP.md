@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: Codebase Organization** - Three-layer architecture with migrated strategies and verified identical output
 - [ ] **Phase 3: Signal Divergence Analysis** - Comparison engine and divergence report identifying where classic rules fail post-2019
 - [ ] **Phase 4: MDM v2 Engine** - Cash state machine, parameterized rules, and systematic hypothesis testing
-- [ ] **Phase 5: Validation & Performance** - Held-out validation, performance metrics, and visual analysis tools
+- [x] **Phase 5: Validation & Performance** - Held-out validation, performance metrics, and visual analysis tools (completed 2026-03-28)
 - [ ] **Phase 6: VN30 Adaptation** - MDM v2 recalibrated for Vietnamese market microstructure
 
 ## Phase Details
@@ -93,11 +93,11 @@ Plans:
   1. Backtest report shows equity curve, max drawdown, Sharpe ratio, and win rate for MDM v2 on NASDAQ
   2. Performance comparison table shows MDM v2 vs buy-and-hold NASDAQ over the same period
   3. Held-out validation (2023-2026 signals) confirms match rate does not degrade significantly compared to training set (2017-2022)
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 05-01-PLAN.md -- V2PerformanceAnalyzer with daily equity, drawdown, Sharpe, win rate and unit tests (PERF-01)
-- [ ] 05-02-PLAN.md -- Validation script, three-way comparison, dashboard chart, and notebook (PERF-02, PERF-03)
+- [x] 05-02-PLAN.md -- Validation script, three-way comparison, dashboard chart, and notebook (PERF-02, PERF-03)
 
 ### Phase 6: VN30 Adaptation
 **Goal**: MDM v2 is recalibrated for VN30 market characteristics and produces actionable backtest results
@@ -125,5 +125,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Codebase Organization | 0/4 | Gap closure planned | - |
 | 3. Signal Divergence Analysis | 1/2 | Executing | - |
 | 4. MDM v2 Engine | 0/2 | Planning complete | - |
-| 5. Validation & Performance | 0/2 | Planning complete | - |
+| 5. Validation & Performance | 2/2 | Complete   | 2026-03-28 |
 | 6. VN30 Adaptation | 0/3 | Not started | - |

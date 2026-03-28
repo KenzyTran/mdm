@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-28T08:41:28.906Z"
-last_activity: 2026-03-28 -- Phase 05 execution started
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-28T08:55:35.289Z"
+last_activity: 2026-03-28
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 12
   percent: 12
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 05 (validation-performance) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 05
-Last activity: 2026-03-28 -- Phase 05 execution started
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-03-28
 
 Progress: [█░░░░░░░░░] 12%
 
@@ -61,6 +61,7 @@ Progress: [█░░░░░░░░░] 12%
 | Phase 03 P01 | 8min | 2 tasks | 3 files |
 | Phase 03 P02 | 5min | 2 tasks | 5 files |
 | Phase 04 P02 | 3min | 2 tasks | 4 files |
+| Phase 05 P02 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Used git worktree data path resolution in analysis script for gitignored CSVs
 - [Phase 04]: Hypothesis runner uses synthetic self-matching for baseline validation
 - [Phase 04]: Parameter sweep uses itertools.product for exhaustive grid search, same pattern as scripts/optimize_mdm.py
+- [Phase 05]: Classic engine equity maps HOLDING/WAITING_SELL to invested, CASH/SHORT to flat for fair comparison
+- [Phase 05]: Published vs model signal markers use different shapes/sizes in dashboard for visual separation
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T07:27:41.928Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-validation-performance/05-CONTEXT.md
+Last session: 2026-03-28T08:55:35.285Z
+Stopped at: Completed 05-02-PLAN.md
+Resume file: None

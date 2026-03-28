@@ -36,7 +36,7 @@
 ### Backtesting & Performance
 
 - [x] **PERF-01**: Backtest produces equity curve, max drawdown, Sharpe ratio, win rate
-- [ ] **PERF-02**: Performance compared against buy-and-hold baseline
+- [x] **PERF-02**: Performance compared against buy-and-hold baseline
 - [x] **PERF-03**: Train/test split validation (train on pre-2022, validate on 2022-2026)
 
 ### VN30 Adaptation
@@ -93,7 +93,7 @@
 | MDM-03 | Phase 4 | Complete |
 | MDM-04 | Phase 4 | Complete |
 | PERF-01 | Phase 5 | Complete |
-| PERF-02 | Phase 5 | Pending |
+| PERF-02 | Phase 5 | Complete |
 | PERF-03 | Phase 5 | Complete |
 | VN30-01 | Phase 6 | Pending |
 | VN30-02 | Phase 6 | Pending |
