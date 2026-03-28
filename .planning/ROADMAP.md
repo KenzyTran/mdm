@@ -67,7 +67,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md -- Signal comparison engine and model signal extraction (SIG-01, SIG-02)
-- [ ] 03-02-PLAN.md -- Divergence report, visual overlay chart, and interactive notebook (SIG-03, SIG-04)
+- [x] 03-02-PLAN.md -- Divergence report, visual overlay chart, and interactive notebook (SIG-03, SIG-04)
 
 ### Phase 4: MDM v2 Engine
 **Goal**: A parameterized MDM v2 engine with Cash state can be systematically tuned to maximize match rate against published signals
