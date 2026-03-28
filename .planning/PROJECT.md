@@ -22,8 +22,8 @@ Accurately reverse-engineer the post-2019 MDM logic so that backtested signals m
 
 - [x] Reorganize codebase into clearly separated strategies (MDM classic, MDM v2, VSA) — Validated in Phase 2: Codebase Organization
 - [x] Normalize US market data (NASDAQ/S&P500 prices appear scaled by ~1000x) — Validated in Phase 1: Data Integrity
-- [ ] Run MDM classic rules on NASDAQ data and compare with published signals
-- [ ] Identify divergence points between classic rules output and actual post-2019 signals
+- [x] Run MDM classic rules on NASDAQ data and compare with published signals — Validated in Phase 3: Signal Divergence Analysis
+- [x] Identify divergence points between classic rules output and actual post-2019 signals — Validated in Phase 3: Signal Divergence Analysis
 - [ ] Analyze signal patterns to hypothesize new MDM v2 rules (Cash state behavior, faster signal switching, modified DD counting)
 - [ ] Implement MDM v2 candidate rules
 - [ ] Validate MDM v2 against published signal history (target: high match rate)
@@ -100,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after Phase 2 completion*
+*Last updated: 2026-03-28 after Phase 3 completion*
