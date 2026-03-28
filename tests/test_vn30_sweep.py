@@ -151,3 +151,102 @@ def test_print_sweep_summary_score_mode():
     assert 'Sharpe: 1.800' in summary
     assert 'Return:' in summary
     assert 'MaxDD:' in summary
+
+
+# --- Task 2 integration tests ---
+
+from analysis.sweep_vn30 import sharpe_scoring_fn, VN30_PARAM_GRID
+from strategies.mdm_v2.vn30_filters import apply_vn30_filters
+from strategies.mdm_v2.config import MDMV2Config
+
+
+def _make_synthetic_vn30(n_rows=100, start_date='2017-01-01'):
+    """Create a synthetic VN30-like DataFrame with enough rows for engine warm-up."""
+    dates = pd.bdate_range(start=start_date, periods=n_rows)
+    np.random.seed(123)
+    # Start at VN30-like price level
+    close = 900 + np.cumsum(np.random.randn(n_rows) * 5.0)
+    # Ensure positive
+    close = np.maximum(close, 100)
+    return pd.DataFrame({
+        'date': dates,
+        'open': close - np.random.rand(n_rows) * 2,
+        'high': close + np.abs(np.random.randn(n_rows)) * 4,
+        'low': close - np.abs(np.random.randn(n_rows)) * 4,
+        'close': close,
+        'volume': np.random.randint(50_000_000, 200_000_000, size=n_rows).astype(float),
+    })
+
+
+def test_sharpe_sweep_runs():
+    """Test that Sharpe-optimized sweep completes with a small grid and returns sorted results."""
+    df = _make_synthetic_vn30(100)
+    df = apply_vn30_filters(df)
+
+    # 2x2 = 4 combos (small grid for speed)
+    mini_grid = {
+        'correction_threshold': [-0.08, -0.10],
+        'ftd_min_rally_day': [3, 4],
+    }
+
+    results = run_sweep(
+        df=df,
+        param_grid=mini_grid,
+        top_n=10,
+        scoring_fn=sharpe_scoring_fn,
+    )
+
+    # Verify result structure
+    assert isinstance(results, pd.DataFrame)
+    assert len(results) == 4
+    assert 'score' in results.columns
+    assert 'hypothesis' in results.columns
+
+    # Verify sorted by score descending
+    scores = results['score'].tolist()
+    assert scores == sorted(scores, reverse=True), "Results not sorted by score descending"
+
+
+def test_sharpe_scoring_fn_returns_metrics():
+    """Test that sharpe_scoring_fn returns all required metric keys."""
+    df = _make_synthetic_vn30(100)
+    df = apply_vn30_filters(df)
+
+    config = MDMV2Config(name='test_sharpe')
+    result = sharpe_scoring_fn(config, df)
+
+    assert isinstance(result, dict)
+    required_keys = {'score', 'sharpe_ratio', 'total_return', 'max_drawdown', 'win_rate',
+                     'annualized_return', 'num_trades'}
+    assert required_keys.issubset(result.keys()), (
+        f"Missing keys: {required_keys - set(result.keys())}"
+    )
+
+    # score should equal sharpe_ratio
+    assert result['score'] == result['sharpe_ratio']
+
+    # num_trades should be non-negative integer
+    assert isinstance(result['num_trades'], int)
+    assert result['num_trades'] >= 0
+
+
+def test_sharpe_scoring_fn_no_trades():
+    """Test that sharpe_scoring_fn handles edge case of no CASH_EXIT trades gracefully."""
+    # Create a flat dataset with no price movement -- no signals should fire
+    dates = pd.bdate_range(start='2017-01-01', periods=10)
+    df = pd.DataFrame({
+        'date': dates,
+        'open': [100.0] * 10,
+        'high': [100.0] * 10,
+        'low': [100.0] * 10,
+        'close': [100.0] * 10,
+        'volume': [1000000.0] * 10,
+    })
+    df = apply_vn30_filters(df)
+
+    config = MDMV2Config(name='test_no_trades')
+    result = sharpe_scoring_fn(config, df)
+
+    # With flat prices and tiny data, should have 0 trades and score 0
+    assert result['score'] == 0.0
+    assert result['num_trades'] == 0
