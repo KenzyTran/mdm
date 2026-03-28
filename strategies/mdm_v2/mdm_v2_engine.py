@@ -74,6 +74,11 @@ class MDMV2Engine:
         df['prev_ma50'] = df['ma50'].shift(1)
         df['prev_ma10'] = df['ma10'].shift(1)
 
+        # Suppress DD counting on derivative expiry days (VN30 microstructure, per D-05)
+        # Guard: only apply if is_expiry_day column exists (NASDAQ runs without it, per Pitfall 5)
+        if 'is_expiry_day' in df.columns:
+            df.loc[df['is_expiry_day'] == True, 'volume_up'] = False
+
         # Initialize result columns
         df['in_correction'] = False
         df['rally_day'] = 0
