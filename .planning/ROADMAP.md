@@ -79,12 +79,11 @@ Plans:
   3. Hypothesis testing framework takes a rule modification, runs it against train-set signals (2017-2022), and reports match rate delta
   4. Parameter sweep searches a defined parameter space and reports the top-N configurations ranked by signal match rate
   5. Best configuration achieves measurably higher match rate than classic rules on the training signal set
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md -- MDM v2 engine with 3-state machine and parameterized config (MDM-01, MDM-02)
+- [ ] 04-02-PLAN.md -- Hypothesis testing framework and parameter sweep (MDM-03, MDM-04)
 
 ### Phase 5: Validation & Performance
 **Goal**: MDM v2 rules are validated on held-out data and backed by full performance analysis
@@ -126,6 +125,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Data Integrity | 0/2 | Planning complete | - |
 | 2. Codebase Organization | 0/4 | Gap closure planned | - |
 | 3. Signal Divergence Analysis | 1/2 | Executing | - |
-| 4. MDM v2 Engine | 0/3 | Not started | - |
+| 4. MDM v2 Engine | 0/2 | Planning complete | - |
 | 5. Validation & Performance | 0/3 | Not started | - |
 | 6. VN30 Adaptation | 0/3 | Not started | - |
