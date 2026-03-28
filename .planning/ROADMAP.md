@@ -96,7 +96,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md -- V2PerformanceAnalyzer with daily equity, drawdown, Sharpe, win rate and unit tests (PERF-01)
+- [x] 05-01-PLAN.md -- V2PerformanceAnalyzer with daily equity, drawdown, Sharpe, win rate and unit tests (PERF-01)
 - [ ] 05-02-PLAN.md -- Validation script, three-way comparison, dashboard chart, and notebook (PERF-02, PERF-03)
 
 ### Phase 6: VN30 Adaptation
