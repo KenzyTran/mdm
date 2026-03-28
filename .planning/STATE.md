@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-28T05:27:44.026Z"
-last_activity: 2026-03-28
+stopped_at: Phase 4 context gathered
+last_updated: "2026-03-28T05:17:27.485Z"
+last_activity: 2026-03-28 -- Phase 04 execution started
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 8
   percent: 12
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Accurately reverse-engineer the post-2019 MDM logic so that backtested signals match Dr. K's published signal history
-**Current focus:** Phase 03 — signal-divergence-analysis
+**Current focus:** Phase 04 — mdm-v2-engine
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-03-28
+Phase: 04 (mdm-v2-engine) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 04
+Last activity: 2026-03-28 -- Phase 04 execution started
 
 Progress: [█░░░░░░░░░] 12%
 
@@ -60,7 +60,6 @@ Progress: [█░░░░░░░░░] 12%
 | Phase 02 P04 | 1min | 1 tasks | 1 files |
 | Phase 03 P01 | 8min | 2 tasks | 3 files |
 | Phase 03 P02 | 5min | 2 tasks | 5 files |
-| Phase 04 P01 | 8min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -86,9 +85,6 @@ Recent decisions affecting current work:
 - [Phase 03]: Divergence classification cascade: TIMING -> STRUCTURAL -> THRESHOLD -> IRREPRODUCIBLE (D-06 order)
 - [Phase 03]: Added output/ to .gitignore for generated analysis artifacts
 - [Phase 03]: Used git worktree data path resolution in analysis script for gitignored CSVs
-- [Phase 04]: Added MDMConfig alias in v2 config.py for backward compat with copied modules
-- [Phase 04]: SELL state is persistent -- only FTD can exit SELL to BUY
-- [Phase 04]: Stop loss in BUY transitions to CASH (not SELL) preserving Cash as intermediate state
 
 ### Pending Todos
 
@@ -101,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T05:27:44.022Z
-Stopped at: Completed 04-01-PLAN.md
-Resume file: None
+Last session: 2026-03-28T04:13:05.745Z
+Stopped at: Phase 4 context gathered
+Resume file: .planning/phases/04-mdm-v2-engine/04-CONTEXT.md
