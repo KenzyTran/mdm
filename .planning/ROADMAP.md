@@ -62,13 +62,12 @@ Plans:
   2. MDM classic rules running on NASDAQ data produce a complete Buy/Sell/Cash signal list for the full 2017-2026 period
   3. Divergence report lists every date where classic output differs from published post-2019 signals, classified by type (threshold, timing, structural, irreproducible)
   4. Visual overlay chart shows NASDAQ price with both model signals and published signals plotted, making divergence patterns visually apparent
-**Plans**: TBD
+**Plans:** 2 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md -- Signal comparison engine and model signal extraction (SIG-01, SIG-02)
+- [ ] 03-02-PLAN.md -- Divergence report, visual overlay chart, and interactive notebook (SIG-03, SIG-04)
 
 ### Phase 4: MDM v2 Engine
 **Goal**: A parameterized MDM v2 engine with Cash state can be systematically tuned to maximize match rate against published signals
@@ -126,7 +125,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Data Integrity | 0/2 | Planning complete | - |
 | 2. Codebase Organization | 0/4 | Gap closure planned | - |
-| 3. Signal Divergence Analysis | 0/3 | Not started | - |
+| 3. Signal Divergence Analysis | 0/2 | Planning complete | - |
 | 4. MDM v2 Engine | 0/3 | Not started | - |
 | 5. Validation & Performance | 0/3 | Not started | - |
 | 6. VN30 Adaptation | 0/3 | Not started | - |
