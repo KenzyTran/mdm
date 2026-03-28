@@ -38,20 +38,20 @@ created: 2026-03-28
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 05-01-01 | 01 | 1 | PERF-01 | unit | `python -m pytest tests/test_v2_performance.py -k test_equity_curve` | ❌ W0 | ⬜ pending |
-| 05-01-02 | 01 | 1 | PERF-01 | unit | `python -m pytest tests/test_v2_performance.py -k test_sharpe_ratio` | ❌ W0 | ⬜ pending |
-| 05-01-03 | 01 | 1 | PERF-01 | unit | `python -m pytest tests/test_v2_performance.py -k test_max_drawdown` | ❌ W0 | ⬜ pending |
-| 05-02-01 | 02 | 1 | PERF-02 | integration | `python -m pytest tests/test_v2_performance.py -k test_comparison_table` | ❌ W0 | ⬜ pending |
-| 05-03-01 | 03 | 2 | PERF-03 | integration | `python -m pytest tests/test_v2_validation.py -k test_held_out_match_rate` | ❌ W0 | ⬜ pending |
+| 05-01-01 | 01 | 1 | PERF-01 | unit | `python -m pytest tests/test_v2_performance.py -k test_equity_curve` | :x: W0 | :white_large_square: pending |
+| 05-01-02 | 01 | 1 | PERF-01 | unit | `python -m pytest tests/test_v2_performance.py -k test_sharpe_ratio` | :x: W0 | :white_large_square: pending |
+| 05-01-03 | 01 | 1 | PERF-01 | unit | `python -m pytest tests/test_v2_performance.py -k test_max_drawdown` | :x: W0 | :white_large_square: pending |
+| 05-01-04 | 01 | 1 | PERF-03 | unit | `python -m pytest tests/test_v2_performance.py -k test_validate_match_rates` | :x: W0 | :white_large_square: pending |
+| 05-01-05 | 01 | 1 | PERF-03 | unit | `python -m pytest tests/test_v2_performance.py -k test_train_heldout_validation` | :x: W0 | :white_large_square: pending |
+| 05-02-01 | 02 | 2 | PERF-02 | integration | `python -m pytest tests/test_v2_performance.py -k test_comparison_table` | :x: W0 | :white_large_square: pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: :white_large_square: pending / :white_check_mark: green / :x: red / :warning: flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `tests/test_v2_performance.py` — stubs for PERF-01, PERF-02
-- [ ] `tests/test_v2_validation.py` — stubs for PERF-03 held-out validation
+- [ ] `tests/test_v2_performance.py` — stubs for PERF-01 metrics and PERF-03 held-out validation
 - [ ] `tests/conftest.py` — shared fixtures (sample DataFrames, mock configs)
 - [ ] pytest install — if not already present
 
