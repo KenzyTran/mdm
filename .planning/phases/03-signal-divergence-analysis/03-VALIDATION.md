@@ -2,8 +2,8 @@
 phase: 3
 slug: signal-divergence-analysis
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-28
 ---
 
@@ -36,25 +36,16 @@ created: 2026-03-28
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 03-01-01 | 01 | 1 | SIG-01 | unit | `python -m pytest tests/test_signal_comparison.py -v` | ❌ W0 | ⬜ pending |
-| 03-01-02 | 01 | 1 | SIG-02 | unit | `python -m pytest tests/test_signal_generation.py -v` | ❌ W0 | ⬜ pending |
-| 03-02-01 | 02 | 2 | SIG-03 | integration | `python -m pytest tests/test_divergence_report.py -v` | ❌ W0 | ⬜ pending |
-| 03-03-01 | 03 | 2 | SIG-04 | integration | `python -m pytest tests/test_signal_chart.py -v` | ❌ W0 | ⬜ pending |
+| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | Status |
+|---------|------|------|-------------|-----------|-------------------|--------|
+| 03-01-01 | 01 | 1 | SIG-01 | unit | `python -m pytest tests/test_signal_comparison.py -v` | pending |
+| 03-01-02 | 01 | 1 | SIG-02 | integration | `python -m pytest tests/test_signal_generation.py -v` | pending |
+| 03-02-01 | 02 | 2 | SIG-03 | integration | `python -m pytest tests/test_divergence_report.py -v` | pending |
+| 03-02-02 | 02 | 2 | SIG-04 | integration | `python -m pytest tests/test_signal_chart.py -v` | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
----
-
-## Wave 0 Requirements
-
-- [ ] `tests/test_signal_comparison.py` — stubs for SIG-01 signal scoring
-- [ ] `tests/test_signal_generation.py` — stubs for SIG-02 full signal generation
-- [ ] `tests/test_divergence_report.py` — stubs for SIG-03 divergence classification
-- [ ] `tests/test_signal_chart.py` — stubs for SIG-04 visual overlay
-
-*Existing pytest infrastructure covers framework setup. Test files need creation.*
+**Wave 0 note:** No separate Wave 0 plan is needed. All test files are created inline within their respective TDD tasks. Each task creates its test file as part of the red-green-refactor cycle (Plan 01 tasks are `tdd="true"`; Plan 02 tasks create tests alongside production code). The Nyquist rule is satisfied by inline test creation.
 
 ---
 
@@ -68,11 +59,11 @@ created: 2026-03-28
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 15s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify commands
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Test files created inline within TDD tasks (no separate Wave 0 needed)
+- [x] No watch-mode flags
+- [x] Feedback latency < 15s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
