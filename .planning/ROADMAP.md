@@ -93,12 +93,11 @@ Plans:
   1. Backtest report shows equity curve, max drawdown, Sharpe ratio, and win rate for MDM v2 on NASDAQ
   2. Performance comparison table shows MDM v2 vs buy-and-hold NASDAQ over the same period
   3. Held-out validation (2023-2026 signals) confirms match rate does not degrade significantly compared to training set (2017-2022)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md -- V2PerformanceAnalyzer with daily equity, drawdown, Sharpe, win rate and unit tests (PERF-01)
+- [ ] 05-02-PLAN.md -- Validation script, three-way comparison, dashboard chart, and notebook (PERF-02, PERF-03)
 
 ### Phase 6: VN30 Adaptation
 **Goal**: MDM v2 is recalibrated for VN30 market characteristics and produces actionable backtest results
@@ -126,5 +125,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Codebase Organization | 0/4 | Gap closure planned | - |
 | 3. Signal Divergence Analysis | 1/2 | Executing | - |
 | 4. MDM v2 Engine | 0/2 | Planning complete | - |
-| 5. Validation & Performance | 0/3 | Not started | - |
+| 5. Validation & Performance | 0/2 | Planning complete | - |
 | 6. VN30 Adaptation | 0/3 | Not started | - |
