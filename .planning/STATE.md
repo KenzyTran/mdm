@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-03-28T11:29:09.235Z"
+stopped_at: Completed 06-02-PLAN.md and 06-03-PLAN.md
+last_updated: "2026-03-28T11:30:00.000Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 6
@@ -63,6 +63,7 @@ Progress: [█░░░░░░░░░] 12%
 | Phase 04 P02 | 3min | 2 tasks | 4 files |
 | Phase 05 P02 | 4min | 2 tasks | 2 files |
 | Phase 06 P01 | 3min | 2 tasks | 3 files |
+| Phase 06 P02 | 4min | 2 tasks | 3 files |
 | Phase 06 P03 | 14min | 2 tasks | 2 files |
 
 ## Accumulated Context
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 06]: Expiry day holiday fallback uses DataFrame trading dates as calendar
 - [Phase 06]: Engine DD suppression via volume_up override - no vn30_filters import in engine
 - [Phase 06]: Config loaded from key=value text file with fallback to MDMV2Config defaults
+- [Phase 06]: scoring_fn parameter makes run_sweep market-agnostic (Sharpe for VN30, match-rate for NASDAQ)
+- [Phase 06]: Train/test split at 2020 with overfitting detection (Sharpe > 2.0 train + < 0.5 test)
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T11:29:09.227Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-03-28T11:30:00.000Z
+Stopped at: Completed 06-02-PLAN.md and 06-03-PLAN.md (Wave 2)
 Resume file: None
