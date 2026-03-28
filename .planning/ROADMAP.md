@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Signal Divergence Analysis** - Comparison engine and divergence report identifying where classic rules fail post-2019
 - [ ] **Phase 4: MDM v2 Engine** - Cash state machine, parameterized rules, and systematic hypothesis testing
 - [x] **Phase 5: Validation & Performance** - Held-out validation, performance metrics, and visual analysis tools (completed 2026-03-28)
-- [ ] **Phase 6: VN30 Adaptation** - MDM v2 recalibrated for Vietnamese market microstructure
+- [x] **Phase 6: VN30 Adaptation** - MDM v2 recalibrated for Vietnamese market microstructure
 
 ## Phase Details
 
@@ -126,4 +126,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Signal Divergence Analysis | 1/2 | Executing | - |
 | 4. MDM v2 Engine | 0/2 | Planning complete | - |
 | 5. Validation & Performance | 2/2 | Complete   | 2026-03-28 |
-| 6. VN30 Adaptation | 0/3 | Planning complete | - |
+| 6. VN30 Adaptation | 3/3 | Complete | 2026-03-28 |
