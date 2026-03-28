@@ -21,8 +21,8 @@
 
 ### Signal Analysis
 
-- [ ] **SIG-01**: Signal comparison engine scores model-generated signals against published signal history
-- [ ] **SIG-02**: MDM classic rules run on NASDAQ data and produce Buy/Sell/Cash signal list
+- [x] **SIG-01**: Signal comparison engine scores model-generated signals against published signal history
+- [x] **SIG-02**: MDM classic rules run on NASDAQ data and produce Buy/Sell/Cash signal list
 - [ ] **SIG-03**: Divergence report identifies dates, signal types, and durations where classic rules differ from published post-2019 signals
 - [ ] **SIG-04**: Visual signal overlay shows price chart with model signals and published signals side by side
 
@@ -84,8 +84,8 @@
 | ORG-02 | Phase 2 | Complete |
 | ORG-03 | Phase 2 | Complete |
 | ORG-04 | Phase 2 | Complete |
-| SIG-01 | Phase 3 | Pending |
-| SIG-02 | Phase 3 | Pending |
+| SIG-01 | Phase 3 | Complete |
+| SIG-02 | Phase 3 | Complete |
 | SIG-03 | Phase 3 | Pending |
 | SIG-04 | Phase 3 | Pending |
 | MDM-01 | Phase 4 | Pending |
