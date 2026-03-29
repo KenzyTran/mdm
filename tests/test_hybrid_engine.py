@@ -403,3 +403,118 @@ def test_baseline_unchanged(nasdaq_data):
     # Confidence column should exist in both
     assert 'confidence' in result_off.columns
     assert 'confidence' in result_on.columns
+
+
+# ====================================================================
+# State history + contextual threshold tests (Phase 15, Plan 02)
+# ADV-01: Contextual state transitions
+# ====================================================================
+
+
+def test_state_history_tracking(nasdaq_data):
+    """State history records {state, entered_date, duration} on state transitions."""
+    config = HybridConfig(filter_enabled=False)
+    engine = HybridEngine(config)
+    engine.run(nasdaq_data)
+
+    # Engine must have state_history populated after run
+    assert hasattr(engine, 'state_history'), "Engine should have state_history attribute"
+    assert len(engine.state_history) > 0, (
+        "state_history should have entries after processing NASDAQ data with transitions"
+    )
+
+    # Each entry must have required keys
+    for entry in engine.state_history:
+        assert 'state' in entry, f"state_history entry missing 'state': {entry}"
+        assert 'entered_date' in entry, f"state_history entry missing 'entered_date': {entry}"
+        assert 'duration' in entry, f"state_history entry missing 'duration': {entry}"
+        assert entry['duration'] >= 1, f"duration should be >= 1: {entry}"
+        assert entry['state'] in ('BUY', 'CASH', 'SELL'), f"Invalid state: {entry['state']}"
+
+
+def test_state_history_only_on_changes(nasdaq_data):
+    """State history length equals number of state transitions, not number of days."""
+    config = HybridConfig(filter_enabled=False)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # Count actual state transitions in results
+    states = results['state'].tolist()
+    transition_count = 0
+    for i in range(1, len(states)):
+        if states[i] != states[i - 1]:
+            transition_count += 1
+
+    # state_history records completed states (one per transition, minus the final ongoing state)
+    # So it should be approximately transition_count (each transition closes prior state)
+    history_len = len(engine.state_history)
+    assert history_len < len(results), (
+        f"state_history ({history_len}) should be far less than total days ({len(results)})"
+    )
+    assert history_len > 0, "Should have at least one completed state"
+    # History should be close to transition count (transitions create history entries)
+    assert history_len <= transition_count, (
+        f"state_history ({history_len}) should not exceed transition count ({transition_count})"
+    )
+
+
+def test_contextual_cash_from_sell_stickier():
+    """CASH entered from SELL with >5 days requires 100% threshold for BUY."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+
+    # Simulate: prior state was SELL, now in CASH for 6 days
+    engine.state_history = [{'state': 'SELL', 'entered_date': '2020-01-01', 'duration': 10}]
+    engine._current_state_name = "CASH"
+    engine._current_state_start = '2020-02-01'
+    engine._days_in_current_state = 6
+
+    threshold = engine._get_contextual_threshold("BUY")
+    assert threshold == 1.0, f"BUY from CASH (entered from SELL, 6 days) should require 1.0, got {threshold}"
+
+
+def test_contextual_long_cash_raises_threshold():
+    """CASH for > cash_deterioration_days (10) requires 100% threshold for BUY."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+
+    # Simulate: in CASH for 11 days (> default cash_deterioration_days=10)
+    engine.state_history = [{'state': 'BUY', 'entered_date': '2020-01-01', 'duration': 20}]
+    engine._current_state_name = "CASH"
+    engine._current_state_start = '2020-02-01'
+    engine._days_in_current_state = 11
+
+    threshold = engine._get_contextual_threshold("BUY")
+    assert threshold == 1.0, f"BUY from long CASH (11 days) should require 1.0, got {threshold}"
+
+
+def test_contextual_normal_does_not_modify():
+    """CASH for <5 days entered from BUY keeps default 2/3 threshold."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+
+    # Simulate: in CASH for 3 days, entered from BUY (not bearish regime)
+    engine.state_history = [{'state': 'BUY', 'entered_date': '2020-01-01', 'duration': 20}]
+    engine._current_state_name = "CASH"
+    engine._current_state_start = '2020-02-01'
+    engine._days_in_current_state = 3
+
+    threshold = engine._get_contextual_threshold("BUY")
+    expected = config.filter_config.majority_threshold  # 2/3
+    assert threshold == expected, f"Short CASH from BUY should keep default {expected}, got {threshold}"
+
+
+def test_contextual_only_affects_buy_proposals():
+    """SELL and CASH proposals are NOT affected by contextual threshold."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+
+    # Simulate: bearish context (CASH from SELL, long duration)
+    engine.state_history = [{'state': 'SELL', 'entered_date': '2020-01-01', 'duration': 10}]
+    engine._current_state_name = "CASH"
+    engine._current_state_start = '2020-02-01'
+    engine._days_in_current_state = 15
+
+    expected = config.filter_config.majority_threshold
+    assert engine._get_contextual_threshold("SELL") == expected, "SELL should not be affected"
+    assert engine._get_contextual_threshold("CASH") == expected, "CASH should not be affected"
