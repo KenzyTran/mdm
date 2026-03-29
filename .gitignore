@@ -7,3 +7,5 @@ data/
 .env
 output/
 results/
+
+CLAUDE.md
