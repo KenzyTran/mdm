@@ -128,6 +128,7 @@ class HybridEngine:
         df['old_state'] = ''
         df['proposed'] = ''
         df['verdict'] = ''
+        df['confidence'] = 0.0
 
         all_dates = df['date'].tolist()
 
@@ -273,7 +274,8 @@ class HybridEngine:
                     # No change: proposal is "confirm current state" (D-02)
                     proposal = old_state.value
 
-                verdict = self.indicator_filter.evaluate(row, proposal, old_state)
+                verdict, confidence = self.indicator_filter.evaluate(row, proposal, old_state)
+                df.at[idx, 'confidence'] = confidence
 
                 if new_state != old_state:
                     # State machine proposed a change
@@ -316,6 +318,9 @@ class HybridEngine:
                 df.at[idx, 'old_state'] = old_state.value
                 df.at[idx, 'proposed'] = proposal
                 df.at[idx, 'verdict'] = verdict.value
+            else:
+                # Filter disabled: default to full confidence
+                df.at[idx, 'confidence'] = 1.0
 
             # Update DataFrame
             df.at[idx, 'in_correction'] = in_correction

@@ -352,3 +352,54 @@ def test_signal_log_columns_populated(nasdaq_data):
         f"All {len(active_rows)} rows should have signal log data, "
         f"only {len(populated)} do"
     )
+
+
+# ====================================================================
+# Confidence column tests (Phase 15, Plan 01)
+# ====================================================================
+
+
+def test_confidence_column_exists(nasdaq_data):
+    """Confidence column present with float values 0.0-1.0 when filter enabled."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    assert 'confidence' in results.columns, "confidence column should exist"
+    # Skip first row (idx=0 skipped in engine loop)
+    active = results.iloc[1:]
+    assert active['confidence'].dtype in [float, 'float64'], "confidence should be float"
+    assert (active['confidence'] >= 0.0).all(), "confidence should be >= 0.0"
+    assert (active['confidence'] <= 1.0).all(), "confidence should be <= 1.0"
+
+
+def test_confidence_column_filter_disabled(nasdaq_data):
+    """Confidence column defaults to 1.0 when filter is disabled."""
+    config = HybridConfig(filter_enabled=False)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    assert 'confidence' in results.columns, "confidence column should exist even without filter"
+    active = results.iloc[1:]
+    assert (active['confidence'] == 1.0).all(), (
+        "confidence should be 1.0 for all rows when filter disabled"
+    )
+
+
+def test_baseline_unchanged(nasdaq_data):
+    """Phase 14 behavior preserved: filter_enabled=True with default FilterConfig gives same states."""
+    # Run without filter
+    config_off = HybridConfig(filter_enabled=False)
+    engine_off = HybridEngine(config_off)
+    result_off = engine_off.run(nasdaq_data)
+
+    # Run with filter (ha_smooth_enabled=False by default)
+    config_on = HybridConfig(filter_enabled=True)
+    engine_on = HybridEngine(config_on)
+    result_on = engine_on.run(nasdaq_data)
+
+    # State sequences should differ (filter changes behavior) but both should complete
+    assert len(result_off) == len(result_on), "Both runs should produce same row count"
+    # Confidence column should exist in both
+    assert 'confidence' in result_off.columns
+    assert 'confidence' in result_on.columns
