@@ -2,8 +2,9 @@
 
 ## Milestones
 
-- [x] **v1.0 MDM Classic & VN30** - Phases 1-6 (shipped 2026-03-28)
-- [ ] **v2.0 MDM Rule Discovery** - Phases 7-10 (in progress)
+- ✅ **v1.0 MDM Classic & VN30** - Phases 1-6 (shipped 2026-03-28)
+- ✅ **v2.0 MDM Rule Discovery** - Phases 7-10 (shipped 2026-03-29)
+- 🚧 **v3.0 Hybrid MDM Engine** - Phases 11-15 (in progress)
 
 ## Phases
 
@@ -95,7 +96,7 @@ Plans:
   1. Backtest report shows equity curve, max drawdown, Sharpe ratio, and win rate for MDM v2 on NASDAQ
   2. Performance comparison table shows MDM v2 vs buy-and-hold NASDAQ over the same period
   3. Held-out validation (2023-2026 signals) confirms match rate does not degrade significantly compared to training set (2017-2022)
-**Plans:** 2/2 plans complete
+**Plans:** 2 plans
 
 Plans:
 - [x] 05-01-PLAN.md -- V2PerformanceAnalyzer with daily equity, drawdown, Sharpe, win rate and unit tests (PERF-01)
@@ -118,16 +119,13 @@ Plans:
 
 </details>
 
-### v2.0 MDM Rule Discovery
+<details>
+<summary>v2.0 MDM Rule Discovery (Phases 7-10) - SHIPPED 2026-03-29</summary>
 
-**Milestone Goal:** Reverse-engineer Dr. K's MDM decision rules using 962 published signals and multi-indicator feature engineering (EMA 9/21/55, MA 200, MACD 12-26-9, Heikin Ashi Smoothed).
-
-- [ ] **Phase 7: Data Foundation** - Full NASDAQ OHLCV from 1974+ and 962-signal history loaded as ground truth
-- [ ] **Phase 8: Indicator Engine** - Multi-indicator feature engineering with feature snapshots at every signal date
-- [x] **Phase 9: Rule Discovery** - Statistical analysis and decision tree extraction of indicator-based signal rules (completed 2026-03-29)
-- [x] **Phase 10: Discovery Validation** - Match rate scoring, train/test split, and visual comparison of discovered rules (completed 2026-03-29)
-
-## Phase Details
+- [x] **Phase 7: Data Foundation** - Full NASDAQ OHLCV from 1974+ and 962-signal history loaded as ground truth
+- [x] **Phase 8: Indicator Engine** - Multi-indicator feature engineering with feature snapshots at every signal date
+- [x] **Phase 9: Rule Discovery** - Statistical analysis and decision tree extraction of indicator-based signal rules
+- [x] **Phase 10: Discovery Validation** - Match rate scoring, train/test split, and visual comparison of discovered rules
 
 ### Phase 7: Data Foundation
 **Goal**: Full 52-year NASDAQ price history and complete 962-signal ground truth are loaded and ready for indicator computation
@@ -153,7 +151,7 @@ Plans:
   3. Heikin Ashi Smoothed candles are computed from OHLC data with visually verifiable smoothing behavior
   4. Feature snapshot at each of the 962 signal dates contains all indicator values, EMA crossover states (9/21, 21/55), price-vs-MA relationships, and MACD histogram sign
   5. Feature snapshot DataFrame has no NaN values for signal dates after indicator warm-up period (~200 trading days)
-**Plans:** 0/2 plans executed
+**Plans:** 2 plans
 
 Plans:
 - [x] 08-01-PLAN.md -- Indicator computation module: EMA, SMA, MACD, Heikin Ashi Smoothed (IND-01, IND-02, IND-03, IND-04)
@@ -166,9 +164,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Statistical profile shows frequency distributions of indicator conditions (EMA crossover states, MACD sign, price-vs-MA position) at each signal type, revealing clear separation between Buy/Sell/Cash
   2. Decision tree classifier achieves meaningfully above-chance accuracy on classifying signal transitions from indicator features
-  3. Human-readable rules are extracted from the decision tree with confidence scores (e.g., "Buy when EMA9 > EMA21 AND MACD histogram > 0: 78% confidence")
+  3. Human-readable rules are extracted from the decision tree with confidence scores
   4. Era comparison shows quantifiable differences in rule patterns pre-2019 vs post-2019, confirming or refining the structural change hypothesis
-**Plans:** 2/2 plans complete
+**Plans:** 2 plans
 
 Plans:
 - [x] 09-01-PLAN.md -- Dependency setup, test scaffold, and era-aware statistical profiling (DISC-01, DISC-04)
@@ -182,17 +180,88 @@ Plans:
   1. Match rate report scores discovered rules against all 962 signals with per-type breakdown (Buy/Sell/Cash match rates separately)
   2. Train/test validation shows rules trained on pre-2019 data achieve acceptable match rate on post-2019 held-out period (and vice versa)
   3. Comparison dashboard overlays discovered-rule signals and published signals on NASDAQ price chart, making agreement and divergence visually apparent
-**Plans:** 2/2 plans complete
+**Plans:** 2 plans
 
 Plans:
 - [x] 10-01-PLAN.md -- Match rate scoring, confusion matrices, and cross-era validation (VAL-01, VAL-02)
 - [x] 10-02-PLAN.md -- Two-era comparison dashboard and end-to-end pipeline (VAL-03)
 **UI hint**: yes
 
+</details>
+
+### 🚧 v3.0 Hybrid MDM Engine (In Progress)
+
+**Milestone Goal:** Combine v2 state machine (DD/FTD/Rally) with indicator filters (EMA/MACD) into a hybrid model that beats 56.7% accuracy on 962 published signals.
+
+- [ ] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos
+- [ ] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check
+- [ ] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic
+- [ ] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy
+- [ ] **Phase 15: Advanced Features** - Contextual transitions, HA Smoothed filter, confidence scoring, three-way dashboard
+
+## Phase Details
+
+### Phase 11: Foundation & Two-Phase Commit
+**Goal**: Hybrid engine has a safe architectural foundation where indicator vetos cannot corrupt state machine internals
+**Depends on**: Phase 10
+**Requirements**: HYB-01, HYB-06
+**Success Criteria** (what must be TRUE):
+  1. `strategies/mdm_hybrid/` package exists with `HybridConfig` dataclass that composes v2 config plus indicator filter flags
+  2. State machine proposes signal transitions without mutating internal state (DD counter, rally tracker) until explicit commit is called
+  3. A vetoed FTD proposal does not reset the DD counter -- verified by unit test with known scenario
+  4. With two-phase commit enabled and no filter active, hybrid position manager produces identical state transitions to v2 position manager
+**Plans**: TBD
+
+### Phase 12: Indicator Filter Layer
+**Goal**: Indicator conditions can evaluate any market day and return a CONFIRM/VETO/OVERRIDE verdict independently of the state machine
+**Depends on**: Phase 11
+**Requirements**: HYB-02
+**Success Criteria** (what must be TRUE):
+  1. `IndicatorFilter` class exposes boolean condition methods for EMA stack (9/21/55), MACD bullish/bearish, and price vs MA 200
+  2. `evaluate(row, proposal, current_state)` returns a typed verdict (CONFIRM, VETO, or OVERRIDE) based on configured indicator conditions
+  3. Each condition method is unit-tested with synthetic row data producing expected boolean outputs
+  4. EMA and MACD boolean values spot-checked against TradingView at 5+ known dates and confirmed matching
+**Plans**: TBD
+
+### Phase 13: Hybrid Engine Integration
+**Goal**: The full Propose-Filter-Decide pipeline runs on NASDAQ data, producing signal output in the same format as v2
+**Depends on**: Phase 12
+**Requirements**: HYB-03, HYB-04, HYB-05
+**Success Criteria** (what must be TRUE):
+  1. `HybridEngine.run()` processes daily bars through the complete pipeline: classic proposal, indicator filter evaluation, resolved action, position manager commit
+  2. When indicator filter is set to "always confirm" mode, hybrid engine output is identical to v2 engine output (regression baseline locked in tests)
+  3. Signal override logic forces state transitions when indicator conditions are sufficiently strong, even without a state machine proposal
+  4. Cash state is inserted when indicator degradation is detected (EMA crossover bearish) independent of DD count threshold
+  5. `scripts/run_hybrid_backtest.py` entry point runs end-to-end and produces output file with signal log
+**Plans**: TBD
+
+### Phase 14: Hybrid Validation
+**Goal**: Hybrid model accuracy is measured against all 962 published signals and compared to the v2 baseline of 56.7%
+**Depends on**: Phase 13
+**Requirements**: VAL-04
+**Success Criteria** (what must be TRUE):
+  1. Confusion matrix shows per-type accuracy (Buy/Cash/Sell) for hybrid model on the full 962-signal history
+  2. Post-2019 accuracy is reported separately and compared against 56.7% v2 baseline with clear delta
+  3. Signal log records "proposed X, filter said Y, final Z" for every trading day, enabling diagnosis of where filter helps or hurts
+  4. Held-out test set (19+ post-2019 signals) selected and locked before any filter tuning begins -- tuning results reported on held-out set separately
+**Plans**: TBD
+
+### Phase 15: Advanced Features
+**Goal**: Hybrid model enhanced with contextual awareness, additional filters, and comparative analysis tools
+**Depends on**: Phase 14
+**Requirements**: ADV-01, ADV-02, ADV-03, ADV-04
+**Success Criteria** (what must be TRUE):
+  1. State transitions consider previous state history (duration in current state, prior state sequence) when applying filter rules
+  2. Heikin Ashi Smoothed 55 operates as an additional trend confirmation filter that can be toggled on/off via config
+  3. Indicator confidence score (count of agreeing indicators out of total) is computed per day and available in the output DataFrame
+  4. Three-way comparison dashboard shows pure state machine vs pure decision tree vs hybrid accuracy side-by-side on a single chart
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 7 -> 8 -> 9 -> 10
+Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -202,7 +271,12 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 4. MDM v2 Engine | v1.0 | 2/2 | Complete | 2026-03-28 |
 | 5. Validation & Performance | v1.0 | 2/2 | Complete | 2026-03-28 |
 | 6. VN30 Adaptation | v1.0 | 3/3 | Complete | 2026-03-28 |
-| 7. Data Foundation | v2.0 | 0/2 | Not started | - |
-| 8. Indicator Engine | v2.0 | 0/2 | Planned    |  |
-| 9. Rule Discovery | v2.0 | 2/2 | Complete   | 2026-03-29 |
-| 10. Discovery Validation | v2.0 | 2/2 | Complete    | 2026-03-29 |
+| 7. Data Foundation | v2.0 | 2/2 | Complete | 2026-03-29 |
+| 8. Indicator Engine | v2.0 | 2/2 | Complete | 2026-03-29 |
+| 9. Rule Discovery | v2.0 | 2/2 | Complete | 2026-03-29 |
+| 10. Discovery Validation | v2.0 | 2/2 | Complete | 2026-03-29 |
+| 11. Foundation & Two-Phase Commit | v3.0 | 0/? | Not started | - |
+| 12. Indicator Filter Layer | v3.0 | 0/? | Not started | - |
+| 13. Hybrid Engine Integration | v3.0 | 0/? | Not started | - |
+| 14. Hybrid Validation | v3.0 | 0/? | Not started | - |
+| 15. Advanced Features | v3.0 | 0/? | Not started | - |

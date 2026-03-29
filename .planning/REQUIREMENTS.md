@@ -166,6 +166,17 @@
 | VAL-01 | Phase 10 | Complete |
 | VAL-02 | Phase 10 | Complete |
 | VAL-03 | Phase 10 | Complete |
+| HYB-01 | Phase 11 | Pending |
+| HYB-06 | Phase 11 | Pending |
+| HYB-02 | Phase 12 | Pending |
+| HYB-03 | Phase 13 | Pending |
+| HYB-04 | Phase 13 | Pending |
+| HYB-05 | Phase 13 | Pending |
+| VAL-04 | Phase 14 | Pending |
+| ADV-01 | Phase 15 | Pending |
+| ADV-02 | Phase 15 | Pending |
+| ADV-03 | Phase 15 | Pending |
+| ADV-04 | Phase 15 | Pending |
 
 **v1.0 Coverage:**
 - v1 requirements: 22 total
@@ -177,6 +188,11 @@
 - Mapped to phases: 13
 - Unmapped: 0
 
+**v3.0 Coverage:**
+- v3 requirements: 11 total
+- Mapped to phases: 11
+- Unmapped: 0
+
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-29 after v3.0 milestone requirements*
+*Last updated: 2026-03-29 after v3.0 roadmap creation*

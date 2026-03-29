@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Hybrid MDM Engine
-status: executing
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-03-29T06:25:25.391Z"
+status: ready_to_plan
+stopped_at: Roadmap created for v3.0
+last_updated: "2026-03-29"
 last_activity: 2026-03-29
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
   percent: 0
 ---
 
@@ -20,23 +20,22 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-03-29)
 
-**Core value:** Kết hợp state machine cổ điển với indicator filters thành hybrid MDM model có accuracy cao hơn
-**Current focus:** Defining requirements
+**Core value:** Combine v2 state machine with indicator filters into hybrid MDM model that beats 56.7% accuracy
+**Current focus:** Phase 11 - Foundation & Two-Phase Commit
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-29 — Milestone v3.0 started
+Phase: 11 of 15 (Foundation & Two-Phase Commit)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-03-29 -- Roadmap created for v3.0 Hybrid MDM Engine
 
 Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
-
-- Total plans completed: 0 (v2.0)
+- Total plans completed: 0 (v3.0)
 - Average duration: -
 - Total execution time: 0 hours
 
@@ -46,31 +45,11 @@ Progress: [░░░░░░░░░░] 0%
 |-------|-------|-------|----------|
 | - | - | - | - |
 
-**Recent Trend (from v1.0):**
-
-- Last 5 plans: 3min, 4min, 14min, 4min, 3min
-- Trend: Stable (~4min avg excluding outlier)
+**Recent Trend (from v1.0/v2.0):**
+- Last 5 plans: 4min, 4min, 8min, 4min, 5min
+- Trend: Stable (~5min avg)
 
 *Updated after each plan completion*
-| Phase 01 P01 | 5min | 1 tasks | 7 files |
-| Phase 01 P02 | 4min | 2 tasks | 5 files |
-| Phase 02 P01 | 4min | 2 tasks | 8 files |
-| Phase 02 P02 | 2min | 2 tasks | 23 files |
-| Phase 02 P03 | 6min | 2 tasks | 55 files |
-| Phase 02 P04 | 1min | 1 tasks | 1 files |
-| Phase 03 P01 | 8min | 2 tasks | 3 files |
-| Phase 03 P02 | 5min | 2 tasks | 5 files |
-| Phase 04 P02 | 3min | 2 tasks | 4 files |
-| Phase 05 P02 | 4min | 2 tasks | 2 files |
-| Phase 06 P01 | 3min | 2 tasks | 3 files |
-| Phase 06 P02 | 4min | 2 tasks | 3 files |
-| Phase 06 P03 | 14min | 2 tasks | 2 files |
-| Phase 07 P02 | 3min | 2 tasks | 2 files |
-| Phase 08 P01 | 5min | 2 tasks | 2 files |
-| Phase 08 P02 | 4min | 2 tasks | 2 files |
-| Phase 09 P01 | 4min | 2 tasks | 4 files |
-| Phase 09 P02 | 4min | 2 tasks | 3 files |
-| Phase 10 P02 | 8min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,20 +58,12 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Roadmap v2.0: 4-phase structure (Data -> Indicators -> Discovery -> Validation) derived from v2.0 requirement categories
-- Roadmap v2.0: Phase 7 starts at data foundation since indicators need full 1974+ OHLCV history
-- Roadmap v2.0: IND-01 through IND-04 grouped together since all are independent indicator computations
-- Roadmap v2.0: DISC phase depends on IND-05 feature snapshots being complete first
-- [Phase 07]: Gap report warns but does not fail, per D-05 design requirement
-- [Phase 08]: Module-level pure functions for indicators (no class) - stateless transformations per research
-- [Phase 08]: Two-stage HA Smoothed (EMA then HA) as primary variant; Phase 9 will evaluate correlation with signals
-- [Phase 08]: Backward day-by-day search for date snapping (max_lookback=5) rather than merge_asof
-- [Phase 08]: Preserved original signal dates in snapshot output (not snapped dates) for Phase 9 rule discovery
-- [Phase 09]: Boolean profiling via groupby-mean-transpose for proportion tables
-- [Phase 09]: train_era_tree and extract_rules stubbed as NotImplementedError for Plan 02
-- [Phase 09]: Used n_node_samples for actual counts in rules instead of weighted counts from class_weight=balanced
-- [Phase 09]: Boolean threshold detection (0.4-0.6 range) for simplified rule output in extract_rules
-- [Phase 10]: Agg backend for matplotlib to avoid GUI dependency on headless/CLI execution
+- [Phase 9/10]: close_above_ema55 is dominant feature post-2019 (importance=0.687), EMA9 dominant pre-2019
+- [Phase 10]: 21.3% cross-era degradation confirms era-specific models needed
+- [v3.0 Research]: Two-phase commit MUST come before indicator filter to prevent DD counter corruption
+- [v3.0 Research]: Indicators can only CONFIRM/VETO, never originate signals independently
+- [v3.0 Research]: Max 2-3 filter rules to avoid overfitting on 95 post-2019 signals
+- [v3.0 Roadmap]: 5-phase structure: Foundation -> Filter -> Integration -> Validation -> Advanced
 
 ### Pending Todos
 
@@ -100,11 +71,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- DATA-05: Need to verify NASDAQ OHLCV data availability from 1974 (may need to source/download)
-- Post-2019 structural change confirmed in v1.0 -- era-aware analysis (DISC-04) is critical for rule quality
+- Exact mutation points in v2 DD counter/rally tracker need code audit before Phase 11 design
+- TradingView EMA/MACD parity not formally verified -- must spot-check in Phase 12
+- Only 95 post-2019 signals for filter tuning -- overfitting risk requires held-out set discipline
 
 ## Session Continuity
 
-Last session: 2026-03-29T06:17:59.224Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-03-29
+Stopped at: Roadmap created for v3.0 milestone
 Resume file: None
