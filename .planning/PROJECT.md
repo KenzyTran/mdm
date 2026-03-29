@@ -40,6 +40,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - [x] Implement MDM v2 candidate rules — Validated in Phase 4: MDM V2 Engine
 - [x] Validate MDM v2 against published signal history (target: high match rate) — Validated in Phase 5: Validation & Performance
 - [x] Use decision trees to discover indicator conditions that predict signal types per era — Validated in Phase 9: Rule Discovery
+- [x] Score discovered rules against published signals with match rates, confusion matrices, and cross-era validation — Validated in Phase 10: Discovery Validation
 - [ ] Adapt MDM v2 parameters for VN30 market characteristics
 - [ ] Backtest MDM v2 on VN30 with performance reporting
 
@@ -78,6 +79,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - `core/indicators.py` — Indicator engine: EMA 9/21/55, MA 200, MACD (12,26,9), Heikin Ashi Smoothed
 - `core/feature_snapshot.py` — Feature snapshot extraction: joins indicators with 962 signal dates + 8 boolean features
 - `analysis/rule_discovery.py` — Rule discovery pipeline: era splitting, statistical profiling, decision tree training, human-readable rule extraction
+- `analysis/validate_discovery.py` — Discovery validation: match rate scoring, confusion matrices, cross-era validation, degradation deltas, two-era dashboard
 - `analysis/` — Analysis tools (`analyze_drawdown.py`, `diagnose_vn30.py`)
 - `data/` — NASDAQ, S&P500, VN30 OHLCV data
 - Data format: US data normalized (Phase 1), VN30 data is native scale
@@ -130,4 +132,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 8: Indicator Engine complete*
+*Last updated: 2026-03-29 after Phase 10: Discovery Validation complete (v2.0 milestone final phase)*
