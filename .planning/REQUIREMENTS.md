@@ -86,7 +86,7 @@
 
 ### Advanced Features
 
-- [ ] **ADV-01**: Contextual state transitions — chuyển trạng thái phụ thuộc lịch sử trạng thái trước đó
+- [x] **ADV-01**: Contextual state transitions — chuyển trạng thái phụ thuộc lịch sử trạng thái trước đó
 - [x] **ADV-02**: Heikin Ashi Smoothed 55 làm bộ lọc trend confirmation bổ sung
 - [x] **ADV-03**: Indicator confidence scoring — đếm số indicators đồng thuận, tạo điểm tự tin
 - [ ] **ADV-04**: Three-way comparison dashboard — pure state machine vs pure decision tree vs hybrid
@@ -173,7 +173,7 @@
 | HYB-04 | Phase 13 | Complete |
 | HYB-05 | Phase 13 | Complete |
 | VAL-04 | Phase 14 | Complete |
-| ADV-01 | Phase 15 | Pending |
+| ADV-01 | Phase 15 | Complete |
 | ADV-02 | Phase 15 | Complete |
 | ADV-03 | Phase 15 | Complete |
 | ADV-04 | Phase 15 | Pending |

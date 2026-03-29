@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Hybrid MDM Engine
 status: executing
-stopped_at: Completed 15-01-PLAN.md
-last_updated: "2026-03-29T12:58:17.605Z"
+stopped_at: Completed 15-02-PLAN.md
+last_updated: "2026-03-29T14:11:11.490Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 15 (advanced-features) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 13 P01 | 4min | 2 tasks | 2 files |
 | Phase 13 P02 | 20min | 2 tasks | 3 files |
 | Phase 15 P01 | 22min | 2 tasks | 4 files |
+| Phase 15 P02 | 48min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,9 @@ Recent decisions affecting current work:
 - [Phase 13]: Signal log CSV format: date, old_state, proposed, verdict, final_state, action
 - [Phase 15]: evaluate() returns tuple(Verdict, float) for confidence score exposure
 - [Phase 15]: ha_smooth_enabled defaults False preserving Phase 14 baseline
+- [Phase 15]: State history only grows on state CHANGES, not every day (no memory leak)
+- [Phase 15]: Contextual threshold uses temporary IndicatorFilter to keep filter stateless
+- [Phase 15]: Only 2 contextual rules (long Cash, Cash-from-Sell) to avoid overfitting
 
 ### Pending Todos
 
@@ -92,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T12:58:17.600Z
-Stopped at: Completed 15-01-PLAN.md
+Last session: 2026-03-29T14:11:11.486Z
+Stopped at: Completed 15-02-PLAN.md
 Resume file: None

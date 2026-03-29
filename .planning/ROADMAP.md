@@ -268,11 +268,11 @@ Plans:
   2. Heikin Ashi Smoothed 55 operates as an additional trend confirmation filter that can be toggled on/off via config
   3. Indicator confidence score (count of agreeing indicators out of total) is computed per day and available in the output DataFrame
   4. Three-way comparison dashboard shows pure state machine vs pure decision tree vs hybrid accuracy side-by-side on a single chart
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 15-01-PLAN.md -- HA Smoothed 55 filter condition + confidence score exposure (ADV-02, ADV-03)
-- [ ] 15-02-PLAN.md -- Contextual state transitions with state history tracking (ADV-01)
+- [x] 15-02-PLAN.md -- Contextual state transitions with state history tracking (ADV-01)
 - [ ] 15-03-PLAN.md -- Three-way model comparison dashboard (ADV-04)
 **UI hint**: yes
 
@@ -297,4 +297,4 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 12. Indicator Filter Layer | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 13. Hybrid Engine Integration | v3.0 | 1/2 | Complete    | 2026-03-29 |
 | 14. Hybrid Validation | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 15. Advanced Features | v3.0 | 1/3 | In Progress|  |
+| 15. Advanced Features | v3.0 | 2/3 | In Progress|  |
