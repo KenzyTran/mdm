@@ -24,7 +24,7 @@ class TestMDMRegression:
         from strategies.mdm_classic.data_loader import DataLoader
         from strategies.mdm_classic import MDMEngine
 
-        loader = DataLoader('vnindex_price.csv')
+        loader = DataLoader('data/vnindex_price.csv')
         df = loader.load(start_date='2014-01-01', end_date='2026-01-16')
         engine = MDMEngine()
         results = engine.run(df)

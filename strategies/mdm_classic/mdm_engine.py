@@ -51,7 +51,7 @@ class MDMEngine:
     
     def load_data(
         self, 
-        file_path: str = 'vnindex_price.csv',
+        file_path: str = 'data/vnindex_price.csv',
         start_date: str = '2016-01-16',
         end_date: str = '2026-01-16'
     ) -> pd.DataFrame:

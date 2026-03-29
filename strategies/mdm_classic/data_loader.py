@@ -22,7 +22,7 @@ class DataLoader:
         'totalvol': 'volume'
     }
     
-    def __init__(self, file_path: str = 'vnindex_price.csv'):
+    def __init__(self, file_path: str = 'data/vnindex_price.csv'):
         """
         Initialize DataLoader.
         

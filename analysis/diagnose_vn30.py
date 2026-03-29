@@ -14,7 +14,7 @@ def analyze_vn30():
     
     # Load data
     try:
-        loader = DataLoader('vn30_price.csv')
+        loader = DataLoader('data/vn30_price.csv')
         df = loader.load(start_date='2014-01-01', end_date='2026-01-16')
         print(f"✅ Data loaded: {len(df)} rows")
     except Exception as e:

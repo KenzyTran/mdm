@@ -19,7 +19,7 @@ def optimize_mdm():
     # Load data SAME AS BACKTEST
     engine = MDMEngine()
     # User uses VN30 from 2014-01-01
-    df = engine.load_data(file_path='vn30_price.csv', start_date='2014-01-01', end_date='2026-01-16')
+    df = engine.load_data(file_path='data/vn30_price.csv', start_date='2014-01-01', end_date='2026-01-16')
 
     # Define Parameter Grid
     # Focused on a few key parameters to keep search space reasonable
@@ -80,8 +80,8 @@ def optimize_mdm():
     print(results_df.head(5).to_string())
 
     # Save to CSV
-    results_df.to_csv('optimization_results.csv', index=False)
-    print("\nFull results saved to optimization_results.csv")
+    results_df.to_csv('data/optimization_results.csv', index=False)
+    print("\nFull results saved to data/optimization_results.csv")
 
 if __name__ == "__main__":
     optimize_mdm()
