@@ -4,6 +4,8 @@ Loads CSV files containing Dr. K's published Buy/Sell/Cash signals
 into validated DataFrames for use as ground truth in signal comparison.
 """
 
+import warnings
+
 import pandas as pd
 
 
@@ -51,3 +53,40 @@ def load_signal_fixture(filepath: str) -> pd.DataFrame:
     df = df.sort_values("date").reset_index(drop=True)
 
     return df
+
+
+def check_signal_date_alignment(
+    signals: pd.DataFrame, ohlcv: pd.DataFrame
+) -> pd.DataFrame:
+    """Check which signal dates have no matching OHLCV trading day.
+
+    Per D-05: warns and reports but does not fail when signal dates
+    have no matching OHLCV row.
+
+    Args:
+        signals: Signal DataFrame with 'date' column (datetime64).
+        ohlcv: OHLCV DataFrame with 'date' column (datetime64).
+
+    Returns:
+        DataFrame with columns [date, signal, day_of_week] for unmatched
+        signal dates. Empty DataFrame if all dates align.
+    """
+    ohlcv_dates = set(ohlcv["date"].dt.normalize())
+    sig_dates_norm = signals["date"].dt.normalize()
+    mask = ~sig_dates_norm.isin(ohlcv_dates)
+
+    if mask.sum() == 0:
+        return pd.DataFrame(columns=["date", "signal", "day_of_week"])
+
+    gaps = signals.loc[mask, ["date", "signal"]].copy()
+    gaps["day_of_week"] = gaps["date"].dt.day_name()
+
+    # Warn about gaps per D-05
+    warnings.warn(
+        f"{len(gaps)} signal date(s) have no matching OHLCV row: "
+        f"{gaps['date'].dt.strftime('%Y-%m-%d').tolist()}",
+        UserWarning,
+        stacklevel=2,
+    )
+
+    return gaps.reset_index(drop=True)
