@@ -1,4 +1,4 @@
-"""Tests for Phase 10 Discovery Validation (VAL-01, VAL-02)."""
+"""Tests for Phase 10 Discovery Validation (VAL-01, VAL-02, VAL-03)."""
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -6,7 +6,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from analysis.rule_discovery import train_era_tree, BOOLEAN_FEATURES, CLASS_NAMES
-from analysis.validate_discovery import score_predictions, filter_high_confidence, cross_era_validation
+from analysis.validate_discovery import score_predictions, filter_high_confidence, cross_era_validation, generate_dashboard
 
 
 def _make_mock_snapshot(n=100):
@@ -114,3 +114,17 @@ def test_degradation_quantification():
     expected_post = results['post_same_era'] - results['post_on_pre']
     assert abs(results['post_degradation'] - expected_post) < 1e-6, \
         f"post_degradation {results['post_degradation']} != {expected_post}"
+
+
+def test_dashboard_generates_png(tmp_path):
+    """VAL-03: Dashboard generates PNG with two era panels."""
+    snap = _make_mock_snapshot(200)
+    # Ensure dates span both eras (pre and post 2019)
+    dates_pre = pd.date_range('2015-01-01', periods=100, freq='14D')
+    dates_post = pd.date_range('2020-01-01', periods=100, freq='14D')
+    snap['date'] = list(dates_pre) + list(dates_post)
+    output_path = str(tmp_path / 'test_dashboard.png')
+    result = generate_dashboard(snap, BOOLEAN_FEATURES, output_path=output_path)
+    assert os.path.exists(output_path), f"Dashboard PNG not created at {output_path}"
+    assert os.path.getsize(output_path) > 1000, "Dashboard PNG too small (likely empty)"
+    assert result == output_path

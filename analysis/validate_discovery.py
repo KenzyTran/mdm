@@ -18,6 +18,10 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from analysis.rule_discovery import (
     train_era_tree, split_by_era, BOOLEAN_FEATURES, CLASS_NAMES, ERA_SPLIT_DATE
 )
@@ -166,6 +170,109 @@ def cross_era_validation(snapshot, feature_cols, max_depth=4):
         'pre_clf': pre_clf,
         'post_clf': post_clf,
     }
+
+
+# ---------------------------------------------------------------------------
+# Dashboard generation
+# ---------------------------------------------------------------------------
+
+def generate_dashboard(snapshot, feature_cols, output_path='output/discovery_dashboard.png', max_depth=4):
+    """Generate a two-era stacked dashboard PNG showing published vs discovered signals.
+
+    Trains era-specific decision trees and plots their predictions against
+    published signals on NASDAQ price, with divergence points highlighted.
+
+    Args:
+        snapshot: Full feature snapshot DataFrame with 'date', 'signal', 'close',
+            and boolean feature columns.
+        feature_cols: List of feature column names for tree training.
+        output_path: Path for output PNG file (default: output/discovery_dashboard.png).
+        max_depth: Maximum decision tree depth (default: 4).
+
+    Returns:
+        The output_path string after saving the dashboard PNG.
+    """
+    pre, post = split_by_era(snapshot)
+
+    # Train era-specific trees (D-09: retrain per script run)
+    pre_clf, _, _ = train_era_tree(pre, feature_cols, max_depth=max_depth)
+    post_clf, _, _ = train_era_tree(post, feature_cols, max_depth=max_depth)
+
+    # Generate predictions for each era
+    pre_preds = pre_clf.predict(pre[feature_cols].values)
+    post_preds = post_clf.predict(post[feature_cols].values)
+
+    # Create two-era stacked figure
+    fig, (ax_pre, ax_post) = plt.subplots(2, 1, figsize=(18, 14), sharex=False)
+
+    # Color map per D-06: green=Buy, red=Sell, gray=Cash
+    colors = {'Buy': '#2ca02c', 'Sell': '#d62728', 'Cash': '#7f7f7f'}
+
+    # Published signal markers (above price)
+    pub_markers = {'Buy': '^', 'Sell': 'v', 'Cash': 'D'}
+    # Discovered signal markers (below price)
+    disc_markers = {'Buy': 'o', 'Sell': 's', 'Cash': 'x'}
+
+    for ax, era_df, era_preds, era_name in [
+        (ax_pre, pre, pre_preds, 'Pre-2019'),
+        (ax_post, post, post_preds, 'Post-2019'),
+    ]:
+        era_df = era_df.reset_index(drop=True)
+
+        # Plot NASDAQ price line
+        ax.plot(era_df['date'], era_df['close'], 'k-', linewidth=0.8, alpha=0.6, label='NASDAQ')
+
+        # Compute vertical offsets for marker placement
+        y_offset_up = era_df['close'].max() * 0.015
+        y_offset_down = era_df['close'].max() * 0.015
+
+        # Published signals (markers above price, D-06 "top row")
+        for signal_type, marker in pub_markers.items():
+            mask = era_df['signal'].values == signal_type
+            if mask.any():
+                ax.scatter(
+                    era_df.loc[mask, 'date'],
+                    era_df.loc[mask, 'close'] + y_offset_up,
+                    marker=marker, c=colors[signal_type], s=60, alpha=0.8,
+                    zorder=5, label=f'Published {signal_type}',
+                )
+
+        # Discovered signals (markers below price, D-06 "bottom row")
+        pred_series = pd.Series(era_preds, index=era_df.index)
+        for signal_type, marker in disc_markers.items():
+            mask = pred_series == signal_type
+            if mask.any():
+                ax.scatter(
+                    era_df.loc[mask, 'date'],
+                    era_df.loc[mask, 'close'] - y_offset_down,
+                    marker=marker, c=colors[signal_type], s=40, alpha=0.6,
+                    zorder=4, label=f'Discovered {signal_type}',
+                )
+
+        # Highlight divergence points (predicted != actual)
+        divergence_mask = era_df['signal'].values != era_preds
+        for idx in era_df.index[divergence_mask]:
+            ax.vlines(
+                era_df.loc[idx, 'date'],
+                era_df.loc[idx, 'close'] - y_offset_down,
+                era_df.loc[idx, 'close'] + y_offset_up,
+                colors='gray', alpha=0.2, linewidth=0.5,
+            )
+
+        ax.set_title(f'{era_name} Era: Published vs Discovered Signals', fontsize=13)
+        ax.legend(loc='upper left', fontsize=8, ncol=3)
+        ax.set_ylabel('NASDAQ Index')
+
+    fig.suptitle('Discovery Validation: Published vs Rule-Based Signals', fontsize=15, fontweight='bold')
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+    # Ensure output directory exists
+    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else '.', exist_ok=True)
+
+    fig.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+
+    return output_path
 
 
 # ---------------------------------------------------------------------------
@@ -428,5 +535,10 @@ if __name__ == '__main__':
         f.write(f"Labels: {CLASS_NAMES}\n")
         f.write(str(post_results['confusion_matrix']))
     print(f"Confusion matrices saved to {cm_path}")
+
+    # Generate dashboard
+    print("Generating dashboard...")
+    dashboard_path = generate_dashboard(snapshot, BOOLEAN_FEATURES)
+    print(f"Dashboard saved to {dashboard_path}")
 
     print("\nSaved to output/")
