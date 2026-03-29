@@ -62,6 +62,7 @@ class FilterConfig:
     ma200_enabled: bool = False
     ema9_enabled: bool = False
     macd_signal_enabled: bool = False
+    ha_smooth_enabled: bool = False
     majority_threshold: float = 2 / 3  # 0.6667: 2-out-of-3 majority
 
     def __post_init__(self):
@@ -90,6 +91,7 @@ class FilterConfig:
             self.ma200_enabled,
             self.ema9_enabled,
             self.macd_signal_enabled,
+            self.ha_smooth_enabled,
         ])
 
 
@@ -196,6 +198,38 @@ class IndicatorFilter:
             and row['macd'] > row['macd_signal']
         )
 
+    @staticmethod
+    def ha_smooth_bullish(row) -> bool:
+        """Check if Heikin Ashi Smoothed 55 candle is bullish (green).
+
+        Args:
+            row: pandas Series with 'ha_smooth_close' and 'ha_smooth_open' fields.
+
+        Returns:
+            True if ha_smooth_close > ha_smooth_open and neither is NaN, False otherwise.
+        """
+        return bool(
+            pd.notna(row.get('ha_smooth_close'))
+            and pd.notna(row.get('ha_smooth_open'))
+            and row['ha_smooth_close'] > row['ha_smooth_open']
+        )
+
+    @staticmethod
+    def ha_smooth_bearish(row) -> bool:
+        """Check if Heikin Ashi Smoothed 55 candle is bearish (red).
+
+        Args:
+            row: pandas Series with 'ha_smooth_close' and 'ha_smooth_open' fields.
+
+        Returns:
+            True if ha_smooth_close < ha_smooth_open and neither is NaN, False otherwise.
+        """
+        return bool(
+            pd.notna(row.get('ha_smooth_close'))
+            and pd.notna(row.get('ha_smooth_open'))
+            and row['ha_smooth_close'] < row['ha_smooth_open']
+        )
+
     # ------------------------------------------------------------------
     # Vote aggregation
     # ------------------------------------------------------------------
@@ -225,6 +259,8 @@ class IndicatorFilter:
             votes.append(self.close_above_ema9(row))
         if self.config.macd_signal_enabled:
             votes.append(self.macd_above_signal(row))
+        if self.config.ha_smooth_enabled:
+            votes.append(self.ha_smooth_bullish(row))
         return votes
 
     def _get_bearish_votes(self, row) -> list:
@@ -270,13 +306,15 @@ class IndicatorFilter:
                 and pd.notna(row['macd_signal'])
                 and row['macd'] < row['macd_signal']
             ))
+        if self.config.ha_smooth_enabled:
+            votes.append(self.ha_smooth_bearish(row))
         return votes
 
     # ------------------------------------------------------------------
     # Main evaluation
     # ------------------------------------------------------------------
 
-    def evaluate(self, row, proposal: str, current_state=None) -> Verdict:
+    def evaluate(self, row, proposal: str, current_state=None) -> tuple:
         """Evaluate indicator conditions against a state machine proposal.
 
         For BUY proposals, checks bullish conditions (close above EMAs,
@@ -296,25 +334,26 @@ class IndicatorFilter:
             current_state: Current engine state (reserved for future use).
 
         Returns:
-            Verdict.CONFIRM, Verdict.VETO, or Verdict.OVERRIDE.
+            Tuple of (Verdict, float) where float is the confidence score
+            (agree_count / total_active_conditions, range 0.0-1.0).
         """
         if proposal == "BUY":
             conditions = self._get_bullish_votes(row)
         elif proposal in ("SELL", "CASH"):
             conditions = self._get_bearish_votes(row)
         else:
-            return Verdict.CONFIRM
+            return Verdict.CONFIRM, 1.0
 
         if len(conditions) == 0:
-            return Verdict.CONFIRM
+            return Verdict.CONFIRM, 1.0
 
         agree_count = sum(conditions)
         agree_ratio = agree_count / len(conditions)
 
         if agree_ratio == 0.0 and len(conditions) >= 3:
-            return Verdict.OVERRIDE
+            return Verdict.OVERRIDE, 0.0
 
         if agree_ratio >= self.config.majority_threshold:
-            return Verdict.CONFIRM
+            return Verdict.CONFIRM, agree_ratio
 
-        return Verdict.VETO
+        return Verdict.VETO, agree_ratio

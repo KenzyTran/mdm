@@ -50,6 +50,12 @@ class HybridEngine:
         self.results: Optional[pd.DataFrame] = None
         self.indicator_filter = IndicatorFilter(self.config.filter_config) if self.config.filter_enabled else None
 
+        # State history tracking (Phase 15, Plan 02 -- ADV-01)
+        self.state_history = []  # List of dicts: {state, entered_date, duration}
+        self._current_state_name = "CASH"
+        self._current_state_start = None
+        self._days_in_current_state = 0
+
     def reset(self):
         """Reset all components."""
         self.dd_counter.reset()
@@ -57,6 +63,10 @@ class HybridEngine:
         self.ftd_detector.reset()
         self.position_manager.reset()
         self.results = None
+        self.state_history = []
+        self._current_state_name = "CASH"
+        self._current_state_start = None
+        self._days_in_current_state = 0
 
     def _snapshot_components(self) -> dict:
         """Snapshot all mutable state machine components for two-phase commit."""
@@ -73,6 +83,42 @@ class HybridEngine:
         self.rally_tracker = snapshot['rally_tracker']
         self.ftd_detector = snapshot['ftd_detector']
         self.position_manager = snapshot['position_manager']
+
+    def _get_contextual_threshold(self, proposal: str) -> float:
+        """Compute context-adjusted majority threshold for filter evaluation.
+
+        Implements Dr. K's 'favor cash positions' philosophy:
+        - BUY proposals from long Cash (> cash_deterioration_days): require 100% agreement
+        - BUY proposals from Cash entered via Sell (> 5 days): require 100% agreement
+        - All other proposals: use default threshold
+
+        Args:
+            proposal: Signal proposal from state machine ('BUY', 'SELL', 'CASH').
+
+        Returns:
+            Majority threshold float (default or 1.0 for stricter context).
+        """
+        base_threshold = self.config.filter_config.majority_threshold
+
+        if proposal != "BUY":
+            return base_threshold
+
+        # Only affects BUY proposals when currently in CASH
+        if self._current_state_name != "CASH":
+            return base_threshold
+
+        # Rule 1: Long Cash duration -> stricter BUY threshold
+        cash_limit = self.config.v2_config.cash_deterioration_days  # default 10
+        if self._days_in_current_state > cash_limit:
+            return 1.0  # Require unanimous agreement
+
+        # Rule 2: Cash entered from Sell -> bearish regime, stricter after 5 days
+        if len(self.state_history) > 0:
+            prior_state = self.state_history[-1]['state']
+            if prior_state == "SELL" and self._days_in_current_state > 5:
+                return 1.0  # Require unanimous agreement
+
+        return base_threshold
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -128,6 +174,7 @@ class HybridEngine:
         df['old_state'] = ''
         df['proposed'] = ''
         df['verdict'] = ''
+        df['confidence'] = 0.0
 
         all_dates = df['date'].tolist()
 
@@ -273,7 +320,25 @@ class HybridEngine:
                     # No change: proposal is "confirm current state" (D-02)
                     proposal = old_state.value
 
-                verdict = self.indicator_filter.evaluate(row, proposal, old_state)
+                # Contextual threshold adjustment (Phase 15, Plan 02 -- ADV-01)
+                ctx_threshold = self._get_contextual_threshold(proposal)
+                if ctx_threshold != self.config.filter_config.majority_threshold:
+                    from .indicator_filter import FilterConfig, IndicatorFilter as _IF
+                    ctx_config = FilterConfig(
+                        ema55_enabled=self.config.filter_config.ema55_enabled,
+                        macd_enabled=self.config.filter_config.macd_enabled,
+                        ema9_21_enabled=self.config.filter_config.ema9_21_enabled,
+                        ma200_enabled=self.config.filter_config.ma200_enabled,
+                        ema9_enabled=self.config.filter_config.ema9_enabled,
+                        macd_signal_enabled=self.config.filter_config.macd_signal_enabled,
+                        ha_smooth_enabled=self.config.filter_config.ha_smooth_enabled,
+                        majority_threshold=ctx_threshold,
+                    )
+                    ctx_filter = _IF(ctx_config)
+                    verdict, confidence = ctx_filter.evaluate(row, proposal, old_state)
+                else:
+                    verdict, confidence = self.indicator_filter.evaluate(row, proposal, old_state)
+                df.at[idx, 'confidence'] = confidence
 
                 if new_state != old_state:
                     # State machine proposed a change
@@ -316,6 +381,26 @@ class HybridEngine:
                 df.at[idx, 'old_state'] = old_state.value
                 df.at[idx, 'proposed'] = proposal
                 df.at[idx, 'verdict'] = verdict.value
+            else:
+                # Filter disabled: default to full confidence
+                df.at[idx, 'confidence'] = 1.0
+
+            # State history tracking (Phase 15, Plan 02 -- ADV-01)
+            # Track only on state CHANGES, not every day
+            final_state_str = new_state.value
+            if final_state_str != self._current_state_name:
+                # Record completed state
+                if self._current_state_start is not None:
+                    self.state_history.append({
+                        'state': self._current_state_name,
+                        'entered_date': self._current_state_start,
+                        'duration': self._days_in_current_state,
+                    })
+                self._current_state_name = final_state_str
+                self._current_state_start = date
+                self._days_in_current_state = 1
+            else:
+                self._days_in_current_state += 1
 
             # Update DataFrame
             df.at[idx, 'in_correction'] = in_correction
