@@ -74,6 +74,8 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - `strategies/mdm_v2/performance.py` — V2PerformanceAnalyzer (equity curve, drawdown, Sharpe, win rate)
 - `analysis/validate_v2.py` — Full validation pipeline (match rates, three-way comparison, dashboard)
 - `notebooks/v2_validation.ipynb` — Interactive Jupyter validation notebook
+- `core/indicators.py` — Indicator engine: EMA 9/21/55, MA 200, MACD (12,26,9), Heikin Ashi Smoothed
+- `core/feature_snapshot.py` — Feature snapshot extraction: joins indicators with 962 signal dates + 8 boolean features
 - `analysis/` — Analysis tools (`analyze_drawdown.py`, `diagnose_vn30.py`)
 - `data/` — NASDAQ, S&P500, VN30 OHLCV data
 - Data format: US data normalized (Phase 1), VN30 data is native scale
@@ -126,4 +128,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 7: Data Foundation complete*
+*Last updated: 2026-03-29 after Phase 8: Indicator Engine complete*
