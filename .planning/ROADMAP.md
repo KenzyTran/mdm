@@ -254,10 +254,10 @@ Plans:
   2. Post-2019 accuracy is reported separately and compared against 56.7% v2 baseline with clear delta
   3. Signal log records "proposed X, filter said Y, final Z" for every trading day, enabling diagnosis of where filter helps or hurts
   4. Held-out test set (19+ post-2019 signals) selected and locked before any filter tuning begins -- tuning results reported on held-out set separately
-**Plans:** [to be planned]
+**Plans:** 1 plan
 
 Plans:
-- [ ] TBD
+- [ ] 14-01-PLAN.md -- Hybrid validation with confusion matrix, v2 baseline comparison, signal diagnosis, held-out split (VAL-04)
 
 ### Phase 15: Advanced Features
 **Goal**: Hybrid model enhanced with contextual awareness, additional filters, and comparative analysis tools
@@ -294,5 +294,5 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 12. Indicator Filter Layer | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 13. Hybrid Engine Integration | v3.0 | 1/2 | Complete    | 2026-03-29 |
-| 14. Hybrid Validation | v3.0 | 0/? | Not started | - |
+| 14. Hybrid Validation | v3.0 | 0/1 | Not started | - |
 | 15. Advanced Features | v3.0 | 0/? | Not started | - |
