@@ -1,182 +1,167 @@
 # Project Research Summary
 
-**Project:** MDM Reverse-Engineering System
-**Domain:** Quantitative trading strategy analysis / rule-based model reverse-engineering
-**Researched:** 2026-03-27
-**Confidence:** HIGH (stack, architecture, pitfalls) / MEDIUM (differentiator features)
+**Project:** MDM Hybrid Engine (v3.0) — State Machine + Indicator Filter
+**Domain:** Hybrid trading model reverse-engineering (rule-based FSM + ML-discovered indicator filters)
+**Researched:** 2026-03-29
+**Confidence:** HIGH
 
 ## Executive Summary
 
-This project is a rule-based reverse-engineering effort aimed at reconstructing the post-2019 logic of Dr. K's Market Direction Model (MDM) from published signal history. Unlike typical ML projects, the goal is human-interpretable rule discovery — the model must remain explainable. With only ~100 published signals and a ~7-year dataset (~13K NASDAQ rows, ~3.7K VN30 rows), machine learning is explicitly excluded: the sample is too small and overfitting risk is extreme. The correct approach is systematic hypothesis testing — propose a rule modification, measure signal match rate, iterate.
+The Hybrid MDM Engine (v3.0) is a layered trading model that combines the existing v2 state machine (DD counting, FTD detection, rally attempts) with an indicator filter layer (EMA 9/21/55, MA 200, MACD 12-26-9) to improve signal accuracy beyond the Phase 9/10 baseline of 56.7%. The project has substantial existing infrastructure that must be reused rather than rebuilt: all indicator computation is in `core/indicators.py`, the v2 state machine is stable in `strategies/mdm_v2/`, the validation pipeline against 962 published signals exists in `analysis/validate_discovery.py`, and the 8 boolean features from Phase 9/10 rule discovery are in `core/feature_snapshot.py`. No new library dependencies are needed — the entire hybrid engine builds on what is already installed (Python 3.10+, pandas, numpy, scikit-learn, matplotlib, pytest).
 
-The recommended approach is a three-layer Python architecture (core infrastructure → strategy implementations → analysis tools), preserving the existing pandas + custom state-machine pattern but refactoring the duplicated code into a shared `core/` package. The current codebase has three copies of the same infrastructure (MDM, VSA, and a nascent v2). Consolidation is not just a cleanliness concern — it is necessary for reliable divergence analysis, because the signal comparison engine must be shared to produce consistent results across strategy variants.
+The recommended approach is a strict Propose-Filter-Decide pipeline: the classic state machine proposes a signal transition, the indicator filter layer confirms or vetoes (but never originates signals independently), and the position manager commits the state change only when confirmed. This architecture preserves the interpretability and debuggability of the v2 system while adding the indicator-gated behavior that Phase 9/10 confirmed characterizes Dr. K's post-2019 model. The hybrid engine is built as a new `strategies/mdm_hybrid/` package that imports v2 components without modifying them — clean separation with no code duplication. Four new components are required: `HybridConfig`, `IndicatorFilter`, `HybridPositionManager`, and `HybridEngine`.
 
-The two highest risks are (1) lookahead bias in the backtester — the engine must be strictly point-in-time — and (2) data normalization, because US market CSVs have prices scaled ~1000x and any miscorrection silently corrupts every percentage-based rule (FTD thresholds, distribution day counts, stop losses). These two issues must be resolved in Phase 1 before any rule discovery work begins. A third risk, overfitting to the training signal set, must be controlled by holding out 2023-2026 signals for final validation.
+The single most dangerous risk is overfitting indicator filter thresholds to the 95 post-2019 signals (roughly 30 per class with 8 boolean features). A match rate jump from 58.9% to more than 80% after adding filters is a red flag, not a success. The project must hold out at least 19 post-2019 signals before any filter tuning begins, limit total filter rules to 2-3, and require each rule to cover at least 10 historical signals. The second critical risk is state machine corruption: the v2 DD counter resets eagerly inside the FTD detection call chain — if the FTD transition is then vetoed by the indicator filter, the counter is already wiped and the model is stuck in CASH with no exit path. A two-phase commit pattern (propose without mutating state, confirm, then commit mutation) must be implemented before any filter code is written.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The existing pandas + numpy + custom state-machine engine is the correct core. No framework replacement is warranted at this dataset scale. TA-Lib should be added for standard indicators (RSI, MA families), but the MDM-specific indicators (Follow-Through Days, Distribution Days, Rally Attempts) must remain hand-coded — no library implements them. The custom backtesting engine (`mdm_engine.py`) is superior to backtrader/zipline for this use case because MDM is a state machine, not an event-driven portfolio; generic frameworks impose unnecessary complexity.
+No new dependencies required. The existing stack covers all needs for the hybrid engine. The critical insight from stack research is that external FSM libraries (`transitions`, `python-statemachine`) and ML frameworks (PyBroker, LSTM, XGBoost) are explicitly not recommended — all add integration complexity without value for a 3-state deterministic model with 962 training samples. The decision tree from Phase 9 (`analysis/rule_discovery.py`) is the right ML approach; its discovered rules are the starting point for indicator filter conditions, translated into explicit conditional methods rather than loaded as a pickle at runtime.
 
 **Core technologies:**
-- **pandas >= 2.2**: Primary data structure for all OHLCV operations — existing codebase, migration cost outweighs polars gains at this scale
-- **numpy >= 1.26**: Vectorized math for indicator calculations
-- **ta-lib / pandas-ta**: Standard technical indicators (MA, RSI); pandas-ta as fallback if TA-Lib C lib fails
-- **Custom state-machine engine**: MDM Cash→Buy→Hold→Warning→Short logic; generic frameworks cannot represent this cleanly
-- **matplotlib + mplfinance**: Signal overlay charts and candlestick visualization — essential for visual divergence analysis
-- **scipy.stats**: Statistical tests for signal pattern analysis during hypothesis testing
-- **pytest**: Rule validation — each rule modification must produce a verifiable expected signal set
-- **pyproject.toml**: Dependency management — currently missing from the repo
+- Python 3.10+ / pandas / numpy: Already in use — no change needed
+- scikit-learn >= 1.5.0: Already in use in `rule_discovery.py` and `validate_discovery.py` — reuse for validation scoring
+- pytest >= 9.0.2: Already installed — essential for unit testing the two-phase commit refactor and filter layer
+- matplotlib >= 3.7.0: Already installed — needed for three-way comparison chart (classic vs v2 vs hybrid)
 
-**Do not add:** scikit-learn, XGBoost, LSTM, backtrader, zipline, real-time data feeds, or web dashboards.
+**What not to use:** `transitions`, `python-statemachine`, PyBroker, TensorFlow/LSTM, XGBoost, networkx.
 
 ### Expected Features
 
-**Must have (table stakes) — these enable the core mission:**
-- Data normalization layer — US prices are ~1000x scaled; all percentage rules fail without this
-- Published signal parser — Dr. K's NASDAQ/TECL signal history as structured test fixtures
-- Signal comparison engine — match scoring between model-generated and published signals; biggest current gap
-- MDM classic on NASDAQ data — baseline before attempting to reverse-engineer changes
-- Divergence analysis report — where and how classic rules fail post-2019
-- Cash state modeling — the single most significant post-2019 behavioral change (intermediate Cash state between Buy and Sell)
-- Parameterized rule engine — thresholds configurable for systematic experimentation
-- Backtesting with standard metrics — equity curve, Sharpe, drawdown, win rate vs. buy-and-hold
+**Must have (table stakes — hybrid MVP):**
+- State machine layer (DD/FTD/Rally): Reuse v2 components unchanged, import cross-package
+- Indicator filter layer (EMA/MACD confirmation): Core new code — `IndicatorFilter` class with boolean condition methods
+- Signal confirmation logic (Propose-Filter-Decide): The central integration pattern; three explicit steps per day
+- Signal override/veto logic: Force early exit when EMA bearish before DD count reaches threshold
+- Indicator-driven cash state insertion: EMA crossover bearish = CASH trigger beyond DD counting
+- Parameterized `HybridConfig` dataclass: All filter rules must be configuration, not hardcoded in engine
+- Validation scoring against 962 signals: Reuse `validate_discovery.py`; target > 56.7% post-2019 accuracy
 
-**Should have (enable systematic research):**
-- Hypothesis testing framework — propose/score rule modifications systematically; highest ROI feature
-- Visual signal overlay charts — price chart with model signals and published signals overlaid; visual inspection often reveals what statistics miss
-- Parameter sweep / grid search — automated threshold exploration
-- Rolling window validation — train pre-2022, validate 2022-2026
-- Trade-by-trade attribution — which rule triggered each signal
+**Should have (add when MVP validates above 56.7%):**
+- Indicator confidence scoring: Weighted confirmation (3/4 indicators agree = HIGH confidence)
+- Contextual state transitions: Track state duration for context-dependent filter rules
+- Transition cooldown (N-day persistence): Prevent whipsaw in fast-switching periods
+- Parameter sweep for filter thresholds: Grid search over boolean filter combinations
+- Three-way comparison dashboard: Classic vs v2 vs hybrid side-by-side accuracy chart
 
-**Defer to later:**
-- VN30 market adaptation — only after NASDAQ rules are validated
-- Multi-timeframe analysis — after core rules are stable
-- Regime detection — nice-to-have for understanding MDM's operating conditions
-- Signal confidence scoring — post-validation refinement
+**Defer to v2+:**
+- Adaptive indicator weights by market regime: Requires regime detection infrastructure and out-of-sample validation
+- Heikin Ashi Smoothed as primary filter: Less well-understood than EMA/MACD; add only after base hybrid is validated
+- VN30 adaptation of hybrid model: Must first prove hybrid works on NASDAQ
 
 ### Architecture Approach
 
-The three-layer design eliminates the current duplication problem. All shared logic moves to `core/` (data loading, normalization, indicator math, backtesting engine, comparison engine, metrics, visualization). Strategy-specific signal logic lives in `strategies/` (mdm_classic, mdm_v2, vsa) and implements a Protocol interface. Analysis tools (divergence, hypothesis, parameter sweep) live in `analysis/`. The strict dependency rule — strategies depend on core, never on each other, core never depends on strategies — is non-negotiable for the comparison engine to work correctly.
+The hybrid engine lives in a new `strategies/mdm_hybrid/` package, structured identically to the existing `mdm_classic`, `mdm_v2`, and `vsa` packages. Four new components are required; everything else is imported from existing modules unchanged. The core data flow is: DataLoader loads OHLCV → `build_indicator_dataframe()` adds EMA/MACD/HA columns → v2 `Indicators.add_*()` adds classic columns (MA50/MA10/p_loc) → `HybridEngine.run()` iterates daily bars via the Propose-Filter-Decide pipeline → `extract_model_signals()` and `compare_signals()` score against 962 published signals. The validation interface already works because it maps BUY/CASH/SELL state strings — the hybrid engine outputs the same format as v2.
 
 **Major components:**
-1. `core/data/` — unified OHLCV loader, US price normalizer, published signal parser
-2. `core/backtesting/` — generic backtest loop, signal comparison engine, performance metrics
-3. `strategies/mdm_classic/` — pre-2019 state machine (FTD, Distribution Days, Rally Attempt)
-4. `strategies/mdm_v2/` — post-2019 reverse-engineered rules (parameterized, Cash state)
-5. `strategies/vsa/` — Volume Spread Analysis (independent, preserved from current codebase)
-6. `analysis/` — divergence report, hypothesis tester, parameter sweep
+1. `HybridConfig` (`strategies/mdm_hybrid/config.py`) — Composes `MDMV2Config` by containment plus indicator filter boolean flags; all filter rules are config, never hardcoded in engine logic
+2. `IndicatorFilter` (`strategies/mdm_hybrid/indicator_filter.py`) — Stateless evaluator per row: individual condition methods (`is_bullish_ema_stack`, `is_macd_bullish`, `is_above_ma200`) plus `evaluate(row, proposal, state) -> Verdict`; no internal state
+3. `HybridPositionManager` (`strategies/mdm_hybrid/position_manager.py`) — 3-state machine (BUY/CASH/SELL) with two-phase commit; `process_day()` accepts filter verdict and only commits state mutation after CONFIRM; separates proposal from commitment
+4. `HybridEngine` (`strategies/mdm_hybrid/hybrid_engine.py`) — Orchestrator: data preparation, daily loop via `_compute_classic_proposal` → `indicator_filter.evaluate` → `_resolve_action` → `position_manager.process_day`, results DataFrame output matching v2 format
 
-Migration of existing code to this structure must verify identical backtest output at each step. Any regression is a bug.
+**Build order by dependency:** HybridConfig (no deps) → IndicatorFilter (config only) → HybridPositionManager (config only) → HybridEngine (all above + v2 imports + core) → validation entry script.
 
 ### Critical Pitfalls
 
-1. **Lookahead bias in engine** — each bar can only see data up to that bar; MA calculations must use only prior data; run sequentially not vectorized. Enforce at engine architecture level before any rule work begins.
+1. **Signal authority ambiguity (design time)** — Without a strict hierarchy, indicator-originated signals and state machine signals create untestable spaghetti logic. Prevention: indicators can only CONFIRM or VETO; they never propose new signals. Encode this as an assertion in `_resolve_action()`. Define the authority chain before writing any code — this is a design decision, not an implementation detail.
 
-2. **US data price normalization** — NASDAQ/S&P500 CSVs have prices ~1000x scaled; unit test against known real-world index values on specific dates; catches silent corruption of all percentage-based rules.
+2. **State machine corruption from indicator vetos (implementation time)** — The v2 DD counter resets eagerly inside the FTD detection call chain. If the FTD transition is then vetoed, the counter is already wiped and the model is stuck in CASH with no exit path. Prevention: refactor to two-phase commit before adding any filter logic. This is the hardest integration task and cannot be deferred.
 
-3. **Overfitting to published signals** — split signals into train (2017-2022) and held-out test (2023-2026); prefer fewer, logically motivated rules over parameter curve-fitting; a 95%+ match rate with many special-case rules is a red flag, not a success.
+3. **Overfitting indicator filter thresholds to 95 post-2019 signals (filter tuning time)** — 95 signals with 8 boolean features is near the statistical floor for rule discovery. Prevention: hold out 19+ signals before tuning begins; use LOOCV; require each rule to cover 10+ historical signals; pre-register rules before examining data. A match rate jump to >80% is a red flag.
 
-4. **Post-2019 change may be structural, not parametric** — the Cash state and rapid signal switching suggest an architectural change (new state, possibly new inputs like VIX or breadth), not just threshold tweaks; start with parameter tuning but be prepared to hypothesize new rule structures.
+4. **Era-dependent filter fragility** — Phase 9/10 confirmed a structural feature shift at Feb 2019 (EMA9-dominant pre-2019 vs EMA55-dominant post-2019 with zero overlap in top-2 features). Prevention: scope the hybrid model explicitly to post-2019; make filter rules configurable for future swapping; track quarterly match rate as a leading indicator of model drift.
 
-5. **Premature VN30 adaptation** — applying NASDAQ rules to VN30 before NASDAQ validation wastes effort; VN30's 7% price limits, T+2.5 settlement, and 30-stock index composition require separate calibration; treat VN30 as its own phase gated on NASDAQ success.
+5. **Indicator calculation divergence from TradingView** — Dr. K uses TradingView; subtle EMA initialization differences or MACD formula variations mean the model's boolean decisions may disagree with what Dr. K actually sees. Prevention: spot-check 5+ dates against TradingView screenshots before building any filters; use boolean features (MACD > 0, not MACD > 0.37) to absorb small numerical differences.
 
 ## Implications for Roadmap
 
-### Phase 1: Foundation and Data Integrity
-**Rationale:** All subsequent work depends on correct data and a valid comparison baseline. Normalization errors silently corrupt everything downstream. This phase has no dependencies and must be done first.
-**Delivers:** Unified data loader with proven normalization; published signal history as structured fixtures; baseline MDM classic run on NASDAQ data
-**Addresses features:** Data normalization layer, published signal parser, MDM classic on NASDAQ (features 1, 8, 3)
-**Avoids pitfall:** Data normalization errors (Pitfall 3), TECL vs. NASDAQ signal confusion (Pitfall 4)
-**Architecture work:** `core/types.py`, `core/data/loader.py`, `core/data/normalizer.py`, `core/data/signals.py`
+Based on the combined research, the hybrid engine requires five phases following strict dependency order. No phase can be safely started before its predecessor is validated against the regression baseline.
 
-### Phase 2: Signal Comparison Infrastructure + Code Consolidation
-**Rationale:** The comparison engine is the measurement instrument for all reverse-engineering. Building it before divergence analysis ensures every subsequent finding is reliably scored. Code consolidation must happen here to avoid building the comparison engine on duplicated infrastructure.
-**Delivers:** `core/backtesting/comparison.py` with match scoring; consolidated `core/` package; existing mdm_classic and vsa migrated to `strategies/` with verified identical output
-**Addresses features:** Signal comparison engine (feature 2)
-**Architecture work:** Full three-layer refactor; Strategy Protocol interface; migration verification tests
-**Research flag:** Migration verification is straightforward but tedious — standard pattern, no additional research needed
+### Phase 1: Architecture Foundation and Two-Phase Commit Refactor
+**Rationale:** The state machine corruption pitfall requires refactoring `process_day()` to separate proposal from commitment before any filter code is added. This is a precondition, not an optional improvement. Without two-phase commit, adding any indicator veto will corrupt the DD counter and create stuck states. Also establishes the `HybridConfig` dataclass and package structure.
+**Delivers:** `strategies/mdm_hybrid/` package skeleton; `HybridConfig` dataclass with v2 composition; `HybridPositionManager` with two-phase commit; unit tests proving vetoed FTD does not reset DD counter.
+**Addresses:** Parameterized config (table stakes), state machine foundation
+**Avoids:** P1 (signal authority ambiguity — defined in design doc), P4 (state machine corruption — fixed before filter code exists), P5 (Cash semantics — defined explicitly as DD-accumulation and stop-loss paths only)
 
-### Phase 3: Divergence Analysis
-**Rationale:** Can only be done once comparison infrastructure exists and MDM classic is running on NASDAQ. Output directly informs Phase 4 hypothesis work.
-**Delivers:** Report identifying every date/type divergence between classic MDM output and published post-2019 signals; classification of divergences (threshold, timing, structural, irreproducible)
-**Addresses features:** Divergence analysis report (feature 4)
-**Avoids pitfall:** Assuming post-2019 change is parametric before evidence (Pitfall 10); survivorship bias (Pitfall 6)
+### Phase 2: Indicator Filter Layer
+**Rationale:** `IndicatorFilter` depends only on `HybridConfig` and has no state machine dependency. Building and unit-testing it in isolation before wiring into the engine catches filter logic bugs with synthetic data rather than in a live engine loop. The TradingView spot-check belongs here — before any thresholds are calibrated.
+**Delivers:** `IndicatorFilter` class with all boolean condition methods; `evaluate()` returning CONFIRM/VETO/OVERRIDE verdicts; unit tests covering each condition with synthetic row data; TradingView spot-check validation of EMA/MACD boolean values at 5+ dates.
+**Uses:** `core/indicators.py` (existing, no changes)
+**Avoids:** P2 (look-ahead bias — verify causal computation in each method), P7 (indicator divergence — TradingView spot-check before any filter tuning)
 
-### Phase 4: Cash State and Parameterized Engine (MDM v2 Core)
-**Rationale:** Divergence analysis output tells us where and how the classic rules fail; this phase builds the v2 engine to fix them systematically. Cash state is the single most significant structural change confirmed by divergence analysis.
-**Delivers:** `strategies/mdm_v2/` engine with Cash intermediate state; parameterized threshold configuration; hypothesis testing framework; parameter sweep capability
-**Addresses features:** Cash state modeling, parameterized rule engine, hypothesis testing framework, parameter sweep (features 5, 6, 9, 11)
-**Avoids pitfall:** Overfitting (train/test split enforced here), lookahead bias (engine architecture established in Phase 1)
-**Research flag:** May need deeper research if divergence analysis reveals structural changes (new indicators, new state machine branches) not addressable via parameterization alone
+### Phase 3: HybridEngine Integration
+**Rationale:** Wire the three components (classic state machine, indicator filter, hybrid position manager) into the Propose-Filter-Decide pipeline. Must verify that when the filter is set to "always confirm," the hybrid engine produces identical output to the v2 engine — this is the regression baseline. Without this baseline, it is impossible to isolate whether accuracy changes come from filter rules or integration bugs.
+**Delivers:** `HybridEngine` with full daily processing loop; output DataFrame matching v2 format; regression test confirming identity with v2 when filter is disabled; `scripts/run_hybrid_backtest.py` entry point outputting three-way comparison.
+**Implements:** Full Propose-Filter-Decide pipeline; full data flow from DataLoader through validation scoring
+**Avoids:** P1 (authority chain enforced as assertion in `_resolve_action()`), P4 (two-phase commit already in place)
 
-### Phase 5: Validation and Analysis Tools
-**Rationale:** Before claiming v2 rules are discovered, validate on held-out 2023-2026 signals and build the visual/attribution tools that either confirm or challenge the rules.
-**Delivers:** Rolling window validation results; visual signal overlay charts; trade-by-trade attribution; full performance metrics vs. buy-and-hold
-**Addresses features:** Rolling window validation, visual signal overlay, trade-by-trade attribution, backtesting metrics (features 12, 10, 16, 7)
-**Avoids pitfall:** Overfitting to training signals (Pitfall 1)
+### Phase 4: Filter Tuning and Validation
+**Rationale:** Only after a working integration exists can filter rules be tested against published signals. Must hold out 19+ post-2019 signals before tuning begins — this partition must be selected and locked before any filter analysis runs. Target: hybrid accuracy > 56.7% on the post-2019 held-out set.
+**Delivers:** 2-3 indicator filter rules (maximum) validated with LOOCV; confusion matrix and per-type accuracy vs pure state machine and pure decision tree; cross-era regression check (pre-2019 accuracy must not catastrophically degrade); signal log recording "proposed X, filter said Y, final Z" for every day.
+**Addresses:** Validation scoring (table stakes), era-aware evaluation
+**Avoids:** P3 (overfitting — LOOCV required; 10+ signal rule threshold enforced), P6 (era fragility — post-2019 explicit scope; held-out 2024-2026 accuracy reported separately)
 
-### Phase 6: VN30 Adaptation
-**Rationale:** Only possible after NASDAQ rules are validated. VN30's microstructure differences (7% price limits, T+2.5, 30-stock index) require deliberate threshold recalibration, not blind parameter copy.
-**Delivers:** VN30-tuned MDM v2 parameters; filters for price-limit days and derivative expiry; volume threshold adjustments; VN30 backtest vs. buy-and-hold
-**Addresses features:** VN30 market adaptation module (feature 13)
-**Avoids pitfall:** Different market microstructure (Pitfall 7), volume interpretation differences (Pitfall 8), index composition effects (Pitfall 9), premature VN30 application (Pitfall 11)
-**Research flag:** May need research on VN30-specific parameter ranges; Vietnamese market microstructure is sparsely documented
+### Phase 5: Enhancements (Post-Validation, Conditional)
+**Rationale:** Only warranted if Phase 4 validates the hybrid approach by exceeding 56.7% on the held-out set. Enhancements add accuracy and usability but do not change the core architecture.
+**Delivers:** Indicator confidence scoring (weighted majority confirmation); transition cooldown (N-day persistence); grid search over filter boolean combinations; three-way visual comparison dashboard.
+**Addresses:** Differentiator features — confidence scoring, contextual transitions, cooldown, parameter sweep
+**Condition:** Phase 4 must demonstrate > 56.7% post-2019 accuracy before this phase is authorized.
 
 ### Phase Ordering Rationale
 
-- Data integrity (Phase 1) must precede everything — a normalization bug silently corrupts all rule-discovery work
-- Signal comparison (Phase 2) must precede divergence analysis (Phase 3) — you cannot measure divergences without a measurement tool
-- Divergence analysis (Phase 3) must precede v2 hypothesis work (Phase 4) — without knowing where the rules fail you are guessing
-- NASDAQ validation (Phases 1-5) must precede VN30 adaptation (Phase 6) — different market, separate calibration problem
-- Version-control every rule hypothesis as a named configuration file — this prevents the process pitfall of losing track of what was tried
+- **Phase 1 before all others:** Two-phase commit is a structural precondition. Adding filter logic to eagerly-mutating state machine code creates the DD counter corruption bug. Retrofitting two-phase commit after filter code exists would require rewriting all integration points simultaneously — high risk.
+- **Phase 2 before Phase 3:** `IndicatorFilter` is stateless and independently testable. Building it in isolation with synthetic unit tests (known indicator values, expected verdicts) is far safer than debugging filter logic inside a live engine loop where the source of errors is ambiguous.
+- **Phase 3 establishes regression baseline before Phase 4 begins:** The baseline (hybrid-with-filter-disabled = v2 output) must be locked in git before filter rules are added. Without it, there is no way to isolate accuracy changes.
+- **Phase 4 test set must be selected at end of Phase 3:** The 19+ held-out post-2019 signals must be selected and locked immediately after Phase 3 completes — before any filter analysis begins. Selecting them after seeing partial results would introduce data leakage.
+- **Phase 5 is conditional on Phase 4 success:** If hybrid accuracy does not exceed 56.7%, Phase 5 enhancements are premature. The correct response to Phase 4 failure is to revisit Phase 4 with a different filter hypothesis, not to add more features.
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 4:** If divergence analysis reveals structural changes (e.g., new indicator inputs like VIX, breadth, or relative strength), the v2 architecture may need redesign — flag for research-phase before implementation
-- **Phase 6:** VN30-specific parameter ranges and market microstructure (price limit behavior, T+2.5 sequencing) may require dedicated research before calibration
+- **Phase 1 (Two-phase commit refactor):** The exact mutation points in `DistributionDayCounter`, `RallyAttemptTracker`, and `FTDSignalDetector` need a code-level audit before the design is finalized. Specifically: where does `dd_counter.reset()` get called in the FTD detection call chain? This must be mapped before writing `HybridPositionManager`.
+- **Phase 4 (Pre-registration of filter rules):** The specific 2-3 filter rules to pre-register before examining the data require a hypothesis-first design session informed by Phase 9 feature importances (close_above_ema55 dominant post-2019, importance=0.687). Consider a brief research-phase to select and document candidate rules before Phase 4 execution begins.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1:** Data loading, normalization, and CSV parsing are well-understood; unit test coverage is sufficient
-- **Phase 2:** Code consolidation and Strategy Protocol are standard refactoring patterns
-- **Phase 5:** Backtesting metrics, rolling window validation, and matplotlib charting are all well-documented
+- **Phase 2 (IndicatorFilter):** Straightforward class with boolean condition methods. Pattern already established in `core/feature_snapshot.py`. No research needed.
+- **Phase 3 (Engine integration):** The `strategies/mdm_v2/mdm_v2_engine.py` wiring pattern is the exact template. Propose-Filter-Decide is a standard pipeline. No research needed.
+- **Phase 5 (Enhancements):** All enhancements extend established project patterns. Confidence scoring and parameter sweeps follow existing conventions in `analysis/`.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Existing codebase validates pandas+numpy; custom engine rationale is well-established; only optional additions (polars, vectorbt) are MEDIUM |
-| Features | HIGH (table stakes) / MEDIUM (differentiators) | Table stakes are directly derivable from project goals; differentiator ROI rankings are research-based estimates |
-| Architecture | HIGH | Component boundaries and data flow are clear; VSA multi-stock abstraction is the one open question |
-| Pitfalls | HIGH (data/implementation) / MEDIUM-HIGH (VN30) | Data and lookahead pitfalls are empirically validated concerns; VN30 microstructure risks are well-reasoned but less tested |
+| Stack | HIGH | No new dependencies needed; all alternatives evaluated and rejected with clear rationale grounded in project specifics (962 samples, 3-state machine, existing infrastructure) |
+| Features | HIGH | Grounded in existing codebase analysis, Dr. K's known TradingView setup, and Phase 9/10 validated findings; differentiator features are clearly flagged as post-validation |
+| Architecture | HIGH | Fully specified with existing module interfaces documented; proposed structure follows established project conventions; build order follows strict dependency chain |
+| Pitfalls | HIGH | Pitfalls derived from project-specific Phase 9/10 findings — P3 (95-signal overfitting) and P4 (DD counter reset) are precisely located in existing code, not generic advice |
 
-**Overall confidence:** HIGH for execution approach; MEDIUM for how long post-2019 rule discovery will take
+**Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **2019 rule change nature:** Whether the "material change" is parametric or structural cannot be determined until divergence analysis is complete. Phase 4 scope may expand significantly if the change is structural.
-- **Same-day signal events:** Some published signals show same-day state switching (e.g., Buy→Cash same day) that may be irreproducible with daily OHLCV bars. Establish an acceptable match-rate floor (e.g., 85% within 2 days) rather than targeting 100%.
-- **FTD threshold ambiguity:** Whether the 2% FTD threshold applies pre- or post-2019 is unresolved. Document and test both variants in Phase 4.
-- **VSA abstraction:** Multi-stock portfolio iteration in VSA is structurally different from single-index MDM; the generic backtesting engine loop may need a separate code path. Resolve during Phase 2 migration.
+- **Exact mutation points in v2 components:** Phase 1 requires auditing where `dd_counter.reset()`, `rally_tracker` state updates, and `ftd_detector` internal state mutations occur in the call chain. This is a code-reading task (run `grep -n "reset\|self\." strategies/mdm_v2/*.py`) that must complete before Phase 1 design is finalized.
+- **TradingView indicator parity:** `core/indicators.py` uses `adjust=False` for EMA alignment with TradingView. MACD and HA Smoothed parity have not been formally verified. Must spot-check in Phase 2 before any filter thresholds are established.
+- **Held-out test set selection:** The specific 19+ post-2019 signals to hold out for Phase 4 final evaluation must be selected before Phase 3 completes — selecting them after seeing engine output would introduce data leakage. Select at start of Phase 4, lock in config, never touch until final evaluation.
+- **Pre-registered filter rule candidates:** The 2-3 filter rules to test in Phase 4 must be decided based on domain logic and Phase 9 feature importances, not by scanning data. This design decision belongs at the start of Phase 4 planning.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Existing codebase (`models/`, `vn30_vsa/`) — confirmed duplicated infrastructure, confirmed existing state-machine engine
-- Dr. K's published MDM rules documentation (`rules.md`) — confirmed signal definitions, state machine states, FTD/DD criteria
-- Published signal history (implied by PROJECT.md) — signal dates and types used as ground truth
+- Existing codebase (`core/indicators.py`, `core/feature_snapshot.py`, `strategies/mdm_v2/`, `analysis/rule_discovery.py`, `analysis/validate_discovery.py`) — interfaces, integration patterns, confirmed working
+- Phase 9 findings: 962 signals, pre-2019 CV=53.9%, post-2019 CV=58.9%, feature importances, structural shift confirmed at Feb 2019 (EMA9 dominant pre vs EMA55 dominant post, zero overlap in top-2 features)
+- Phase 10 findings: 21.3% cross-era degradation, era-specific trees required, confusion matrices per signal type
 
 ### Secondary (MEDIUM confidence)
-- O'Neil methodology literature — FTD and Distribution Day definitions; behavioral basis for rule spirit vs. curve-fitting constraint
-- TA-Lib documentation — indicator availability and calculation correctness
-- pandas 2.2 release notes — DataFrame API stability
+- [Hybrid AI-Driven Trading System (ComSIA 2026)](https://arxiv.org/html/2601.19504v1) — regime-adaptive hybrid combining technical indicators with ML
+- [Heuristic Based Trading System on Forex Data](https://www.sciencedirect.com/science/article/abs/pii/S1568494616300369) — signal conflict resolution via weighted majority voting
+- [Understanding Look-Ahead Bias in Trading Strategies](https://www.marketcalls.in/machine-learning/understanding-look-ahead-bias-and-how-to-avoid-it-in-trading-strategies.html)
+- Dr. K's known TradingView indicator setup (EMA 9/21/55, MA 200, MACD 12-26-9, HA Smoothed 55) — from PROJECT.md context
 
-### Tertiary (LOW confidence / needs validation)
-- VN30 microstructure specifics (T+2.5 effects on re-entry, price limit frequency) — needs empirical validation against actual VN30 data
-- Post-2019 structural change hypotheses — unverified until divergence analysis runs
+### Tertiary (LOW confidence)
+- `transitions` library (v0.9.2) and `python-statemachine` (v3.0.0) — evaluated and rejected; documentation reviewed to confirm rationale for rejection
+- IBD distribution day analysis resources — corroborating signal definitions, not primary sources for hybrid design
 
 ---
-*Research completed: 2026-03-27*
+*Research completed: 2026-03-29*
 *Ready for roadmap: yes*
