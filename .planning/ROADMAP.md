@@ -124,7 +124,7 @@ Plans:
 
 - [ ] **Phase 7: Data Foundation** - Full NASDAQ OHLCV from 1974+ and 962-signal history loaded as ground truth
 - [ ] **Phase 8: Indicator Engine** - Multi-indicator feature engineering with feature snapshots at every signal date
-- [ ] **Phase 9: Rule Discovery** - Statistical analysis and decision tree extraction of indicator-based signal rules
+- [x] **Phase 9: Rule Discovery** - Statistical analysis and decision tree extraction of indicator-based signal rules (completed 2026-03-29)
 - [ ] **Phase 10: Discovery Validation** - Match rate scoring, train/test split, and visual comparison of discovered rules
 
 ## Phase Details
@@ -168,11 +168,11 @@ Plans:
   2. Decision tree classifier achieves meaningfully above-chance accuracy on classifying signal transitions from indicator features
   3. Human-readable rules are extracted from the decision tree with confidence scores (e.g., "Buy when EMA9 > EMA21 AND MACD histogram > 0: 78% confidence")
   4. Era comparison shows quantifiable differences in rule patterns pre-2019 vs post-2019, confirming or refining the structural change hypothesis
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 09-01-PLAN.md -- Dependency setup, test scaffold, and era-aware statistical profiling (DISC-01, DISC-04)
-- [ ] 09-02-PLAN.md -- Decision tree training, rule extraction, and full report generation (DISC-02, DISC-03, DISC-04)
+- [x] 09-02-PLAN.md -- Decision tree training, rule extraction, and full report generation (DISC-02, DISC-03, DISC-04)
 
 ### Phase 10: Discovery Validation
 **Goal**: Discovered rules are validated against the full signal history and presented alongside published signals for visual confirmation
@@ -200,5 +200,5 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 6. VN30 Adaptation | v1.0 | 3/3 | Complete | 2026-03-28 |
 | 7. Data Foundation | v2.0 | 0/2 | Not started | - |
 | 8. Indicator Engine | v2.0 | 0/2 | Planned    |  |
-| 9. Rule Discovery | v2.0 | 1/2 | In Progress|  |
+| 9. Rule Discovery | v2.0 | 2/2 | Complete   | 2026-03-29 |
 | 10. Discovery Validation | v2.0 | 0/? | Not started | - |
