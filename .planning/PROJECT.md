@@ -8,17 +8,17 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
-## Current Milestone: v2.0 MDM Rule Discovery
+## Current Milestone: v3.0 Hybrid MDM Engine
 
-**Goal:** Reverse-engineer Dr. K's MDM decision rules using 962 published signals and multi-indicator feature engineering (EMA 9/21/55, MA 200, MACD, Heikin Ashi).
+**Goal:** Kết hợp state machine cổ điển (Distribution Days, Follow-Through Days, Rally Attempts) với indicator filters (EMA/MACD) thành hybrid model — state machine đề xuất signal, indicators xác nhận/ghi đè.
 
 **Target features:**
-- Full 52-year signal history loaded as ground truth (962 signals, 1974-2026)
-- NASDAQ OHLCV data from 1974+ for indicator computation
-- Multi-indicator feature engineering (EMA 9/21/55, MA 200, MACD 12-26-9, Heikin Ashi Smoothed)
-- Statistical pattern analysis and rule extraction from indicator states at signal dates
-- Era-aware analysis (model evolved over time, confirmed structural change post-2019)
-- Validation on held-out periods
+- State machine MDM classic (DD counting, FTD detection, Rally Attempts) làm tầng quyết định chính
+- EMA 9/21/55, MACD, MA 200 làm bộ lọc xác nhận/ghi đè signal
+- Cash state logic mới (không có trong classic, thêm vào post-2019)
+- Chuỗi chuyển trạng thái có ngữ cảnh (Buy→Cash→Sell phụ thuộc trạng thái trước)
+- Validation trên 962 signals với hybrid model (target: accuracy cao hơn 56.7%)
+- So sánh hybrid vs pure decision tree vs pure state machine
 
 ## Requirements
 
@@ -132,4 +132,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 10: Discovery Validation complete (v2.0 milestone final phase)*
+*Last updated: 2026-03-29 after v3.0 Hybrid MDM Engine milestone started*

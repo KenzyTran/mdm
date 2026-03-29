@@ -1,7 +1,7 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: MDM Rule Discovery
+milestone: v3.0
+milestone_name: Hybrid MDM Engine
 status: executing
 stopped_at: Completed 10-02-PLAN.md
 last_updated: "2026-03-29T06:25:25.391Z"
@@ -20,15 +20,15 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-03-29)
 
-**Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators
-**Current focus:** Phase 10 — discovery-validation
+**Core value:** Kết hợp state machine cổ điển với indicator filters thành hybrid MDM model có accuracy cao hơn
+**Current focus:** Defining requirements
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-03-29
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-29 — Milestone v3.0 started
 
 Progress: [░░░░░░░░░░] 0%
 
