@@ -5,11 +5,16 @@ that join indicator-enriched OHLCV data with signal dates to produce
 a single DataFrame for rule discovery.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 
+from core.data_loader import DataLoader
 from core.feature_snapshot import extract_feature_snapshot, snap_to_trading_day
+from core.indicators import build_indicator_dataframe
+from core.signal_loader import load_signal_fixture
 
 
 # ---------------------------------------------------------------------------
@@ -214,3 +219,131 @@ class TestExtractFeatureSnapshot:
         ]
         for col in indicator_cols:
             assert result[col].notna().all(), f"NaN found in {col} after warmup"
+
+
+# ===========================================================================
+# Integration Tests: real 962-signal NASDAQ data
+# ===========================================================================
+
+def _find_data_dir() -> str:
+    """Find the data directory containing NASDAQ.csv.
+
+    Checks the project root first, then traverses up to find the
+    main repo (worktrees may not have gitignored data files).
+    """
+    project_root = Path(__file__).resolve().parent.parent
+    if (project_root / "data" / "NASDAQ.csv").exists():
+        return str(project_root)
+    # In a worktree, find the main repo via .git file
+    git_path = project_root / ".git"
+    if git_path.is_file():
+        content = git_path.read_text().strip()
+        if content.startswith("gitdir:"):
+            git_dir = Path(content.split("gitdir:", 1)[1].strip())
+            main_repo = git_dir.resolve().parent.parent.parent
+            if (main_repo / "data" / "NASDAQ.csv").exists():
+                return str(main_repo)
+    pytest.skip("NASDAQ.csv not found (data directory unavailable)")
+
+
+@pytest.fixture(scope="module")
+def full_snapshot():
+    """Load full 962-signal feature snapshot from real NASDAQ data.
+
+    This is expensive (~5s), so scope="module" ensures it runs once.
+    """
+    data_dir = _find_data_dir()
+    ohlcv = DataLoader(market="nasdaq", data_dir=data_dir).load()
+    indicators = build_indicator_dataframe(ohlcv)
+    signals = load_signal_fixture(
+        str(Path(data_dir) / "data" / "signals" / "nasdaq_signals_full.csv")
+    )
+    return extract_feature_snapshot(indicators, signals)
+
+
+class TestFeatureSnapshotIntegration:
+    """Integration tests using real 962-signal NASDAQ data."""
+
+    @pytest.mark.integration
+    def test_full_snapshot_row_count(self, full_snapshot):
+        """Full snapshot has exactly 962 rows (all signals represented)."""
+        assert len(full_snapshot) == 962, (
+            f"Expected 962 rows, got {len(full_snapshot)}"
+        )
+
+    @pytest.mark.integration
+    def test_full_snapshot_no_nan_after_warmup(self, full_snapshot):
+        """After 1975-06-01 warmup, no NaN in any indicator column."""
+        after_warmup = full_snapshot[
+            full_snapshot["date"] >= pd.Timestamp("1975-06-01")
+        ]
+        indicator_cols = [
+            "ema9", "ema21", "ema55", "ma200",
+            "macd", "macd_signal", "macd_histogram",
+            "ha_smooth_open", "ha_smooth_high", "ha_smooth_low", "ha_smooth_close",
+        ]
+        for col in indicator_cols:
+            nan_count = after_warmup[col].isna().sum()
+            assert nan_count == 0, (
+                f"{col} has {nan_count} NaN values after warmup"
+            )
+
+    @pytest.mark.integration
+    def test_full_snapshot_boolean_columns_complete(self, full_snapshot):
+        """All 8 boolean columns have no NaN for signals after warmup."""
+        after_warmup = full_snapshot[
+            full_snapshot["date"] >= pd.Timestamp("1975-06-01")
+        ]
+        bool_cols = [
+            "ema9_above_ema21", "ema21_above_ema55", "close_above_ma200",
+            "close_above_ema9", "close_above_ema21", "close_above_ema55",
+            "macd_histogram_positive", "macd_above_signal",
+        ]
+        for col in bool_cols:
+            assert col in after_warmup.columns, f"Missing bool column: {col}"
+            nan_count = after_warmup[col].isna().sum()
+            assert nan_count == 0, (
+                f"{col} has {nan_count} NaN values after warmup"
+            )
+
+    @pytest.mark.integration
+    def test_weekend_signals_snapped(self, full_snapshot):
+        """Weekend signal dates are present and have valid indicator values."""
+        # Check that the snapshot contains dates that fall on weekends
+        # (these were snapped but preserved with original date)
+        weekend_rows = full_snapshot[
+            full_snapshot["date"].dt.dayofweek >= 5
+        ]
+        # There are 10 known weekend signals in the dataset
+        assert len(weekend_rows) == 10, (
+            f"Expected 10 weekend signal dates, got {len(weekend_rows)}"
+        )
+        # All weekend-snapped rows should have valid indicator values
+        # (ema9 is always computed, so check it as proxy)
+        assert weekend_rows["ema9"].notna().all(), (
+            "Some weekend-snapped rows have NaN ema9"
+        )
+
+    @pytest.mark.integration
+    def test_signal_types_preserved(self, full_snapshot):
+        """Signal column contains only Buy/Sell/Cash with all three present."""
+        signal_values = set(full_snapshot["signal"].unique())
+        assert signal_values == {"Buy", "Sell", "Cash"}, (
+            f"Unexpected signal values: {signal_values}"
+        )
+
+    @pytest.mark.integration
+    def test_full_snapshot_columns(self, full_snapshot):
+        """Snapshot contains all required columns for rule discovery."""
+        required_cols = [
+            "date", "signal",
+            "ema9", "ema21", "ema55", "ma200",
+            "macd", "macd_signal", "macd_histogram",
+            "ha_smooth_open", "ha_smooth_close",
+            "ema9_above_ema21", "ema21_above_ema55", "close_above_ma200",
+            "macd_histogram_positive", "macd_above_signal",
+        ]
+        for col in required_cols:
+            assert col in full_snapshot.columns, (
+                f"Missing required column: {col}"
+            )
