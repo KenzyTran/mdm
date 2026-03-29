@@ -14,10 +14,13 @@ def load_signal_fixture(filepath: str) -> pd.DataFrame:
     """Load a published signal history CSV into a structured DataFrame.
 
     Args:
-        filepath: Path to signal CSV with columns date, signal, gain_loss_pct
+        filepath: Path to signal CSV. Supports both 3-column
+                  (date, signal, gain_loss_pct) and 4-column
+                  (+ dollar_becomes) formats.
 
     Returns:
-        DataFrame with parsed dates, validated signal types, numeric gain_loss_pct
+        DataFrame with parsed dates, validated signal types, numeric
+        gain_loss_pct, and optional dollar_becomes column.
 
     Raises:
         ValueError: If any signal type is not in {Buy, Sell, Cash}
@@ -37,6 +40,12 @@ def load_signal_fixture(filepath: str) -> pd.DataFrame:
 
     # Convert gain_loss_pct to numeric (NaN for empty/missing)
     df["gain_loss_pct"] = pd.to_numeric(df["gain_loss_pct"], errors="coerce")
+
+    # Parse dollar_becomes if present (backward compatible per D-01)
+    if "dollar_becomes" in df.columns:
+        df["dollar_becomes"] = pd.to_numeric(
+            df["dollar_becomes"], errors="coerce"
+        )
 
     # Sort by date ascending and reset index
     df = df.sort_values("date").reset_index(drop=True)

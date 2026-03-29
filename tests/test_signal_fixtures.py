@@ -94,6 +94,79 @@ class TestSignalFixtureLoader:
         assert df["signal"].iloc[0] == "Buy"
         assert df["signal"].iloc[1] == "Sell"
 
+    def test_load_4_column_csv(self, tmp_path):
+        """load_signal_fixture handles 4-column CSV with dollar_becomes."""
+        csv = self._write_csv(tmp_path, (
+            "date,signal,gain_loss_pct,dollar_becomes\n"
+            "2020-04-02,Buy,,1000.00\n"
+            "2020-06-24,Sell,15.3,1153.00\n"
+        ))
+        df = load_signal_fixture(csv)
+        assert "dollar_becomes" in df.columns
+        assert df["dollar_becomes"].dtype == "float64"
+        assert df["dollar_becomes"].iloc[1] == pytest.approx(1153.00)
+
+    def test_3_column_csv_no_dollar_becomes(self, tmp_path):
+        """3-column CSV does not produce dollar_becomes column."""
+        csv = self._write_csv(tmp_path, (
+            "date,signal,gain_loss_pct\n"
+            "2020-04-02,Buy,\n"
+            "2020-06-24,Sell,15.3\n"
+        ))
+        df = load_signal_fixture(csv)
+        assert "dollar_becomes" not in df.columns
+
+
+class TestFullSignalHistory:
+    """Integration tests for the full 962-signal NASDAQ history."""
+
+    FULL_PATH = "data/signals/nasdaq_signals_full.csv"
+
+    def test_full_signal_history_loads(self):
+        """Full 962-signal CSV loads successfully."""
+        df = load_signal_fixture(self.FULL_PATH)
+        assert len(df) == 962, f"Expected 962 signals, got {len(df)}"
+
+    def test_full_signal_has_dollar_becomes(self):
+        """Full signal file includes dollar_becomes column."""
+        df = load_signal_fixture(self.FULL_PATH)
+        assert "dollar_becomes" in df.columns
+
+    def test_full_signal_dollar_becomes_all_populated(self):
+        """All 962 signals have dollar_becomes values (no NaN)."""
+        df = load_signal_fixture(self.FULL_PATH)
+        assert df["dollar_becomes"].notna().all()
+
+    def test_full_signal_date_range(self):
+        """Signals span from 1974 to 2026."""
+        df = load_signal_fixture(self.FULL_PATH)
+        assert df["date"].min() >= pd.Timestamp("1974-01-01")
+        assert df["date"].min() <= pd.Timestamp("1975-01-01")
+        assert df["date"].max() >= pd.Timestamp("2026-01-01")
+
+    def test_full_signal_gain_loss_partial(self):
+        """gain_loss_pct has ~623 non-null values (Buy/Cash lack this)."""
+        df = load_signal_fixture(self.FULL_PATH)
+        non_null = df["gain_loss_pct"].notna().sum()
+        assert 600 <= non_null <= 650, f"Expected ~623, got {non_null}"
+
+    def test_full_signal_types(self):
+        """All signals are Buy, Sell, or Cash."""
+        df = load_signal_fixture(self.FULL_PATH)
+        assert set(df["signal"].unique()) == {"Buy", "Sell", "Cash"}
+
+    def test_backward_compat_partial_nasdaq(self):
+        """Existing 3-column nasdaq_signals.csv still loads correctly."""
+        df = load_signal_fixture("data/signals/nasdaq_signals.csv")
+        assert len(df) > 10
+        assert "dollar_becomes" not in df.columns
+
+    def test_backward_compat_tecl(self):
+        """Existing 3-column tecl_signals.csv still loads correctly."""
+        df = load_signal_fixture("data/signals/tecl_signals.csv")
+        assert len(df) > 10
+        assert "dollar_becomes" not in df.columns
+
 
 class TestSignalFixtureIntegration:
     """Integration tests for actual signal fixture CSV files."""
