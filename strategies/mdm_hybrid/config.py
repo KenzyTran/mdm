@@ -2,13 +2,15 @@
 MDM Hybrid Configuration Module
 
 Parameterized configuration for the hybrid engine composing v2 state machine
-config with two-phase commit flags.
+config with two-phase commit flags and indicator filter configuration.
 
 Phase 11: two_phase_enabled + filter_enabled only.
-Phase 12 will add indicator filter configuration fields.
+Phase 12: Added FilterConfig composition for indicator filter layer.
 """
 
 from dataclasses import dataclass, field
+
+from .indicator_filter import FilterConfig
 
 
 @dataclass
@@ -63,14 +65,19 @@ MDMConfig = MDMV2Config
 class HybridConfig:
     """Hybrid MDM engine configuration.
 
-    Composes v2 state machine config with hybrid control flags.
+    Composes v2 state machine config with hybrid control flags and
+    indicator filter configuration.
+
     Phase 11: two_phase_enabled + filter_enabled only.
-    Phase 12 will add indicator filter configuration fields.
+    Phase 12: Added filter_config for indicator filter layer.
     """
     v2_config: MDMV2Config = field(default_factory=MDMV2Config)
     two_phase_enabled: bool = True   # per D-05: defaults True
     filter_enabled: bool = False     # per D-07: Phase 11 has no filter
+    filter_config: FilterConfig = field(default_factory=FilterConfig)
 
     def __post_init__(self):
         if isinstance(self.v2_config, dict):
             self.v2_config = MDMV2Config(**self.v2_config)
+        if isinstance(self.filter_config, dict):
+            self.filter_config = FilterConfig(**self.filter_config)
