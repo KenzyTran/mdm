@@ -65,6 +65,13 @@ class DataLoader:
     # Reference values for spot-check validation (market -> [(date, close_price)])
     SPOT_CHECKS = {
         'nasdaq': [
+            # 1974 bear market bottom area
+            ('1974-10-03', 54.87),
+            # Dot-com peak (March 10, 2000)
+            ('2000-03-10', 5048.62),
+            # Financial crisis low (Nov 20, 2008)
+            ('2008-11-20', 1316.12),
+            # Existing 2020-2021 checks
             ('2020-01-02', 9092.19),
             ('2020-03-23', 6860.67),
             ('2021-11-19', 16057.4375),

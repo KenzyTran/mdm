@@ -126,10 +126,51 @@ class TestSpotCheckNasdaq:
         row = nasdaq_df[nasdaq_df['date'] == '2020-03-23']
         assert row['close'].iloc[0] == pytest.approx(6860.67, rel=0.001)
 
+    def test_nasdaq_1974_10_03(self, nasdaq_df):
+        """1974 bear market bottom area."""
+        row = nasdaq_df[nasdaq_df['date'] == '1974-10-03']
+        assert len(row) == 1
+        assert row['close'].iloc[0] == pytest.approx(54.87, rel=0.001)
+
+    def test_nasdaq_2000_03_10(self, nasdaq_df):
+        """Dot-com peak."""
+        row = nasdaq_df[nasdaq_df['date'] == '2000-03-10']
+        assert len(row) == 1
+        assert row['close'].iloc[0] == pytest.approx(5048.62, rel=0.001)
+
+    def test_nasdaq_2008_11_20(self, nasdaq_df):
+        """Financial crisis low."""
+        row = nasdaq_df[nasdaq_df['date'] == '2008-11-20']
+        assert len(row) == 1
+        assert row['close'].iloc[0] == pytest.approx(1316.12, rel=0.001)
+
     def test_nasdaq_2021_11_19(self, nasdaq_df):
         """Near all-time high."""
         row = nasdaq_df[nasdaq_df['date'] == '2021-11-19']
         assert row['close'].iloc[0] == pytest.approx(16057.4375, rel=0.001)
+
+
+class TestFullNasdaqRange:
+    """Test NASDAQ data covers full 1974+ range for indicator computation."""
+
+    @pytest.fixture
+    def nasdaq_df(self):
+        return DataLoader('nasdaq').load()
+
+    def test_earliest_date_before_1974(self, nasdaq_df):
+        """Data starts in 1973 or earlier."""
+        assert nasdaq_df['date'].min() <= pd.Timestamp('1974-01-01')
+
+    def test_row_count_over_13000(self, nasdaq_df):
+        """Full dataset has 13000+ trading days."""
+        assert len(nasdaq_df) > 13000
+
+    def test_no_gaps_over_5_trading_days(self, nasdaq_df):
+        """No gaps longer than 5 calendar days (weekends + holidays)."""
+        date_diffs = nasdaq_df['date'].diff().dropna()
+        max_gap = date_diffs.max()
+        # Longest gap should be ~9 days (holiday + weekend combo)
+        assert max_gap <= pd.Timedelta(days=10), f"Max gap: {max_gap}"
 
 
 class TestSpotCheckSP500:
