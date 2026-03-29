@@ -2,11 +2,23 @@
 
 ## What This Is
 
-A research and trading system project to reverse-engineer Dr. K's post-2019 Market Direction Model (MDM) by analyzing public signal history against NASDAQ/S&P500 price data, then adapt and apply the discovered rules to Vietnam's VN30 index. The project also maintains a separate VSA (Volume Spread Analysis) strategy as an independent trading system.
+A research and trading system project to reverse-engineer Dr. K's Market Direction Model (MDM) using 52 years of published signal history (962 signals, 1974-2026) and multi-indicator feature engineering. The project discovers which technical indicator conditions (EMA crossovers, MACD, MA relationships) trigger Buy/Sell/Cash transitions, then applies discovered rules to both NASDAQ and VN30. Also maintains a separate VSA (Volume Spread Analysis) strategy.
 
 ## Core Value
 
-Accurately reverse-engineer the post-2019 MDM logic so that backtested signals match Dr. K's published signal history — this is the foundation everything else depends on.
+Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
+
+## Current Milestone: v2.0 MDM Rule Discovery
+
+**Goal:** Reverse-engineer Dr. K's MDM decision rules using 962 published signals and multi-indicator feature engineering (EMA 9/21/55, MA 200, MACD, Heikin Ashi).
+
+**Target features:**
+- Full 52-year signal history loaded as ground truth (962 signals, 1974-2026)
+- NASDAQ OHLCV data from 1974+ for indicator computation
+- Multi-indicator feature engineering (EMA 9/21/55, MA 200, MACD 12-26-9, Heikin Ashi Smoothed)
+- Statistical pattern analysis and rule extraction from indicator states at signal dates
+- Era-aware analysis (model evolved over time, confirmed structural change post-2019)
+- Validation on held-out periods
 
 ## Requirements
 
@@ -67,9 +79,18 @@ Accurately reverse-engineer the post-2019 MDM logic so that backtested signals m
 - Data format: US data normalized (Phase 1), VN30 data is native scale
 
 **Published signal data (embedded in project):**
+- Full NASDAQ signal history: 1974-07-17 to 2026-02-27 (962 signals) — `data/signals/nasdaq_signals_full.csv`
 - TECL signals: 2017-01-30 to 2026-02-26 (100+ signals)
-- NASDAQ Composite signals: same period
-- Both include Buy/Sell/Cash with % gain/loss per trade
+- NASDAQ Composite signals (partial): same period — `data/signals/nasdaq_signals.csv`
+- All include Buy/Sell/Cash with % gain/loss per trade and $1 growth tracking
+
+**Dr. K's known indicators (from TradingView chart):**
+- EMA 9, EMA 21, EMA 55 (multiple exponential moving averages)
+- MA 200 (simple moving average, long-term trend)
+- MACD Strategy 12 26 9 (momentum)
+- Heikin Ashi Smoothed Buy Sell v4 55 (trend confirmation)
+- Global Liquidity Index (macro)
+- Volume Profile (VRVP)
 
 ## Constraints
 
@@ -105,4 +126,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after Phase 5 completion*
+*Last updated: 2026-03-29 after v2.0 milestone start*

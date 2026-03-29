@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: complete
-stopped_at: Phase 06 complete - all v1.0 milestone phases done
-last_updated: "2026-03-28T11:35:00.000Z"
-last_activity: 2026-03-28
+milestone: v2.0
+milestone_name: mdm-rule-discovery
+status: defining
+stopped_at: Defining requirements for v2.0
+last_updated: "2026-03-29T00:00:00.000Z"
+last_activity: 2026-03-29
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -20,17 +20,17 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-03-27)
 
-**Core value:** Accurately reverse-engineer the post-2019 MDM logic so that backtested signals match Dr. K's published signal history
-**Current focus:** Phase 06 — vn30-adaptation
+**Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators
+**Current focus:** v2.0 milestone — defining requirements
 
 ## Current Position
 
-Phase: 06 (vn30-adaptation) — COMPLETE
-Plan: 3 of 3
-Status: All plans complete
-Last activity: 2026-03-28
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-29 — Milestone v2.0 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
