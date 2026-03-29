@@ -125,7 +125,7 @@ Plans:
 - [ ] **Phase 7: Data Foundation** - Full NASDAQ OHLCV from 1974+ and 962-signal history loaded as ground truth
 - [ ] **Phase 8: Indicator Engine** - Multi-indicator feature engineering with feature snapshots at every signal date
 - [x] **Phase 9: Rule Discovery** - Statistical analysis and decision tree extraction of indicator-based signal rules (completed 2026-03-29)
-- [ ] **Phase 10: Discovery Validation** - Match rate scoring, train/test split, and visual comparison of discovered rules
+- [x] **Phase 10: Discovery Validation** - Match rate scoring, train/test split, and visual comparison of discovered rules (completed 2026-03-29)
 
 ## Phase Details
 
@@ -182,11 +182,11 @@ Plans:
   1. Match rate report scores discovered rules against all 962 signals with per-type breakdown (Buy/Sell/Cash match rates separately)
   2. Train/test validation shows rules trained on pre-2019 data achieve acceptable match rate on post-2019 held-out period (and vice versa)
   3. Comparison dashboard overlays discovered-rule signals and published signals on NASDAQ price chart, making agreement and divergence visually apparent
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 10-01-PLAN.md -- Match rate scoring, confusion matrices, and cross-era validation (VAL-01, VAL-02)
-- [ ] 10-02-PLAN.md -- Two-era comparison dashboard and end-to-end pipeline (VAL-03)
+- [x] 10-02-PLAN.md -- Two-era comparison dashboard and end-to-end pipeline (VAL-03)
 **UI hint**: yes
 
 ## Progress
@@ -205,4 +205,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 7. Data Foundation | v2.0 | 0/2 | Not started | - |
 | 8. Indicator Engine | v2.0 | 0/2 | Planned    |  |
 | 9. Rule Discovery | v2.0 | 2/2 | Complete   | 2026-03-29 |
-| 10. Discovery Validation | v2.0 | 1/2 | In Progress|  |
+| 10. Discovery Validation | v2.0 | 2/2 | Complete   | 2026-03-29 |
