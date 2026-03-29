@@ -188,3 +188,167 @@ def test_hybrid_config_v2_defaults_match():
     assert hybrid_v2.cash_deterioration_days == direct_v2.cash_deterioration_days
     assert hybrid_v2.stop_loss_pct == direct_v2.stop_loss_pct
     assert hybrid_v2.name == direct_v2.name
+
+
+# ====================================================================
+# Integration tests for Propose-Filter-Decide pipeline (Plan 02)
+# HYB-03: Filter confirmation and veto
+# HYB-04: Override forces Cash
+# HYB-05: Cash insertion from BUY/SELL, no degradation from CASH
+# D-09/D-10: Signal log columns populated
+# ====================================================================
+
+
+def test_filter_confirms_buy(nasdaq_data):
+    """HYB-03: Filter confirms BUY when bullish conditions are met."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # With filter enabled, some BUY transitions should still occur (confirmed)
+    buy_actions = results[results['action'].str.contains('BUY', na=False)]
+    assert len(buy_actions) > 0, "At least one BUY should be confirmed by filter"
+
+    # Confirmed BUYs should have verdict=CONFIRM
+    confirmed_buys = results[
+        (results['action'].str.contains('BUY', na=False)) &
+        (results['verdict'] == 'CONFIRM')
+    ]
+    assert len(confirmed_buys) > 0, "At least one BUY should have CONFIRM verdict"
+
+
+def test_filter_vetoes_buy_restores_snapshot(nasdaq_data):
+    """HYB-03: Filter vetoes BUY proposal, state does not change."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # Look for rows where proposal was BUY but verdict was VETO
+    vetoed_buys = results[
+        (results['proposed'] == 'BUY') &
+        (results['verdict'] == 'VETO')
+    ]
+    # When a BUY is vetoed, final state should NOT be BUY (should remain old_state)
+    for _, row in vetoed_buys.iterrows():
+        assert row['state'] != 'BUY' or row['old_state'] == 'BUY', (
+            f"Vetoed BUY on {row['date']} should not transition to BUY "
+            f"(old_state={row['old_state']}, final={row['state']})"
+        )
+
+
+def test_override_forces_cash_from_buy(nasdaq_data):
+    """HYB-04: OVERRIDE forces Cash regardless of proposal."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # Any OVERRIDE verdict should result in CASH state
+    overrides = results[results['verdict'] == 'OVERRIDE']
+    for _, row in overrides.iterrows():
+        assert row['state'] == 'CASH', (
+            f"OVERRIDE on {row['date']} should force CASH, got {row['state']}"
+        )
+
+
+def test_override_forces_cash_from_sell(nasdaq_data):
+    """HYB-04: OVERRIDE from SELL state uses degrade_to_cash (no P&L)."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+    trades = engine.get_trades()
+
+    # Check for STATE_DEGRADE trades (SELL->CASH degradation)
+    degrade_trades = [t for t in trades if t['type'] == 'STATE_DEGRADE']
+    # STATE_DEGRADE trades should have no 'pnl' key
+    for t in degrade_trades:
+        assert 'pnl' not in t, f"STATE_DEGRADE trade should not have pnl: {t}"
+
+
+def test_cash_insertion_from_buy(nasdaq_data):
+    """HYB-05: Indicator degradation inserts Cash from BUY state."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # Look for cash insertion: old_state=BUY, no state change proposed (proposed=BUY),
+    # verdict=VETO or OVERRIDE, final_state=CASH
+    cash_insertions = results[
+        (results['old_state'] == 'BUY') &
+        (results['proposed'] == 'BUY') &
+        (results['verdict'].isin(['VETO', 'OVERRIDE'])) &
+        (results['state'] == 'CASH')
+    ]
+    assert len(cash_insertions) > 0, (
+        "At least one cash insertion from BUY should occur on real NASDAQ data"
+    )
+    # These should have action mentioning indicator degradation or filter override
+    for _, row in cash_insertions.iterrows():
+        assert 'indicator degradation' in row['action'].lower() or 'filter override' in row['action'].lower(), (
+            f"Cash insertion action should mention degradation: {row['action']}"
+        )
+
+
+def test_cash_insertion_from_sell(nasdaq_data):
+    """HYB-05: Indicator degradation inserts Cash from SELL state (symmetric)."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # SELL->CASH degradation: old_state=SELL, proposed=SELL, verdict=VETO/OVERRIDE, state=CASH
+    sell_degradations = results[
+        (results['old_state'] == 'SELL') &
+        (results['proposed'] == 'SELL') &
+        (results['verdict'].isin(['VETO', 'OVERRIDE'])) &
+        (results['state'] == 'CASH')
+    ]
+    # May not always occur depending on data -- if it does, verify correctness
+    if len(sell_degradations) > 0:
+        trades = engine.get_trades()
+        degrade_trades = [t for t in trades if t['type'] == 'STATE_DEGRADE'
+                          and 'SELL' in t.get('reason', '')]
+        assert len(degrade_trades) > 0, "SELL degradation should produce STATE_DEGRADE trade"
+
+
+def test_no_degradation_from_cash(nasdaq_data):
+    """HYB-05: CASH state never degrades further (Pitfall 5)."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # When old_state=CASH and verdict=VETO/OVERRIDE on confirm-CASH,
+    # final state should still be CASH (no "degradation" action)
+    cash_confirms = results[
+        (results['old_state'] == 'CASH') &
+        (results['proposed'] == 'CASH') &
+        (results['verdict'].isin(['VETO', 'OVERRIDE']))
+    ]
+    for _, row in cash_confirms.iterrows():
+        assert 'degradation' not in row['action'].lower(), (
+            f"CASH state should not degrade: action={row['action']}"
+        )
+
+
+def test_signal_log_columns_populated(nasdaq_data):
+    """D-09/D-10: Signal log columns populated for every trading day."""
+    config = HybridConfig(filter_enabled=True)
+    engine = HybridEngine(config)
+    results = engine.run(nasdaq_data)
+
+    # Skip first row (idx=0 is skipped in engine loop)
+    active_rows = results.iloc[1:]
+
+    # old_state, proposed, verdict should be populated for all active rows
+    assert (active_rows['old_state'] != '').any(), "old_state should be populated"
+    assert (active_rows['proposed'] != '').any(), "proposed should be populated"
+    assert (active_rows['verdict'] != '').any(), "verdict should be populated"
+
+    # Check that most rows have all three populated
+    populated = active_rows[
+        (active_rows['old_state'] != '') &
+        (active_rows['proposed'] != '') &
+        (active_rows['verdict'] != '')
+    ]
+    assert len(populated) == len(active_rows), (
+        f"All {len(active_rows)} rows should have signal log data, "
+        f"only {len(populated)} do"
+    )
