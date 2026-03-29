@@ -1,7 +1,7 @@
 # Requirements: MDM Reverse-Engineering & VN30 Market Timing
 
 **Defined:** 2026-03-27
-**Core Value:** Accurately reverse-engineer the post-2019 MDM logic so that backtested signals match Dr. K's published signal history
+**Core Value:** Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators
 
 ## v1 Requirements
 
@@ -45,7 +45,35 @@
 - [x] **VN30-02**: MDM v2 parameters recalibrated for VN30 market characteristics
 - [x] **VN30-03**: Full VN30 backtest with performance report and comparison vs buy-and-hold
 
-## v2 Requirements
+## v2.0 Requirements
+
+### Data Infrastructure (Extended)
+
+- [ ] **DATA-05**: Full NASDAQ OHLCV data available from 1974+ for indicator computation across entire signal history
+- [ ] **DATA-06**: Full signal history loader parses 962 signals (1974-2026) from nasdaq_signals_full.csv with date, signal type, gain/loss, dollar-becomes columns
+
+### Indicator Engine
+
+- [ ] **IND-01**: EMA 9, EMA 21, EMA 55 computed on daily NASDAQ close prices
+- [ ] **IND-02**: MA 200 (simple) computed on daily NASDAQ close prices
+- [ ] **IND-03**: MACD (12, 26, 9) with signal line and histogram computed on daily close
+- [ ] **IND-04**: Heikin Ashi Smoothed candles computed from OHLC data
+- [ ] **IND-05**: Feature snapshot extracted at each signal date: all indicator values, crossover states, price-vs-MA relationships
+
+### Rule Discovery
+
+- [ ] **DISC-01**: Statistical profile of indicator conditions at each signal type (Buy/Sell/Cash) showing frequency distributions
+- [ ] **DISC-02**: Decision tree model trained on indicator features to classify signal transitions
+- [ ] **DISC-03**: Extracted human-readable rules from decision tree with confidence scores
+- [ ] **DISC-04**: Era-aware analysis comparing pre-2019 vs post-2019 rule patterns to identify structural changes
+
+### Validation (Extended)
+
+- [ ] **VAL-01**: Match rate scoring of discovered rules against full 962-signal history with per-type breakdown
+- [ ] **VAL-02**: Train/test validation with configurable split point (default: pre-2019 train, post-2019 test)
+- [ ] **VAL-03**: Comparison dashboard showing discovered rules' signals vs published signals on price chart
+
+## v3 Requirements
 
 ### Advanced Analysis
 
@@ -53,18 +81,20 @@
 - **ADV-02**: Regime detection classifying market periods (trending, ranging, volatile)
 - **ADV-03**: Multi-timeframe analysis cross-referencing daily signals with weekly trend
 - **ADV-04**: Signal confidence scoring based on condition strength
+- **ADV-05**: Global Liquidity Index integration as macro filter
 
 ### Extended Markets
 
 - **EXT-01**: Rolling window validation with expanding train window
-- **EXT-02**: Interactive analysis Jupyter notebooks
+- **EXT-02**: Interactive analysis Jupyter notebooks for rule exploration
 - **EXT-03**: Breadth indicator filter for VN30 (advance/decline check)
+- **EXT-04**: Apply discovered NASDAQ rules to VN30 with recalibration
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| ML/genetic programming for rule discovery | Model is rule-based; ~100 signals guarantees overfitting |
+| Neural network / deep learning models | MDM is rule-based; interpretability required |
 | Real-time trading or live signals | Research/backtesting only |
 | Web dashboard or mobile app | CLI/notebook analysis sufficient |
 | Automated data scraping | Explicit project boundary |
@@ -99,11 +129,16 @@
 | VN30-02 | Phase 6 | Complete |
 | VN30-03 | Phase 6 | Complete |
 
-**Coverage:**
+**v1.0 Coverage:**
 - v1 requirements: 22 total
 - Mapped to phases: 22
 - Unmapped: 0 ✓
 
+**v2.0 Coverage:**
+- v2 requirements: 13 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 13
+
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after initial definition*
+*Last updated: 2026-03-29 after v2.0 milestone requirements*
