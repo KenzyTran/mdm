@@ -1,7 +1,7 @@
 # Requirements: MDM Reverse-Engineering & VN30 Market Timing
 
 **Defined:** 2026-03-27
-**Core Value:** Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators
+**Core Value:** Kết hợp state machine cổ điển với indicator filters thành hybrid MDM model có accuracy cao hơn
 
 ## v1 Requirements
 
@@ -73,15 +73,35 @@
 - [x] **VAL-02**: Train/test validation with configurable split point (default: pre-2019 train, post-2019 test)
 - [x] **VAL-03**: Comparison dashboard showing discovered rules' signals vs published signals on price chart
 
-## v3 Requirements
+## v3.0 Requirements
 
-### Advanced Analysis
+### Hybrid Engine
 
-- **ADV-01**: Trade-by-trade attribution explaining which rules triggered each signal
-- **ADV-02**: Regime detection classifying market periods (trending, ranging, volatile)
-- **ADV-03**: Multi-timeframe analysis cross-referencing daily signals with weekly trend
-- **ADV-04**: Signal confidence scoring based on condition strength
-- **ADV-05**: Global Liquidity Index integration as macro filter
+- [ ] **HYB-01**: State machine layer tái sử dụng v2 logic (DD counting, FTD detection, Rally Attempts) làm tầng đề xuất signal
+- [ ] **HYB-02**: Indicator filter layer dùng EMA 9/21/55, MACD, MA 200 để xác nhận hoặc veto signal từ state machine
+- [ ] **HYB-03**: Signal confirmation logic — state machine đề xuất, indicator filter xác nhận/chặn dựa trên điều kiện boolean
+- [ ] **HYB-04**: Signal override logic — indicators có thể ghi đè signal khi điều kiện đủ mạnh
+- [ ] **HYB-05**: Cash state insertion dựa trên indicator degradation (post-2019 logic)
+- [ ] **HYB-06**: Two-phase commit cho state machine — không mutate state trước khi filter xác nhận
+
+### Advanced Features
+
+- [ ] **ADV-01**: Contextual state transitions — chuyển trạng thái phụ thuộc lịch sử trạng thái trước đó
+- [ ] **ADV-02**: Heikin Ashi Smoothed 55 làm bộ lọc trend confirmation bổ sung
+- [ ] **ADV-03**: Indicator confidence scoring — đếm số indicators đồng thuận, tạo điểm tự tin
+- [ ] **ADV-04**: Three-way comparison dashboard — pure state machine vs pure decision tree vs hybrid
+
+### Validation
+
+- [ ] **VAL-04**: Validate hybrid model trên toàn bộ 962 published signals với confusion matrix và per-type accuracy
+
+## Future Requirements
+
+### Deferred from v3.0
+
+- **FUT-01**: Era-aware evaluation riêng pre/post 2019
+- **FUT-02**: Configurable/parameterized rules cho parameter sweep
+- **FUT-03**: Cooldown/anti-whipsaw logic
 
 ### Extended Markets
 
@@ -94,6 +114,10 @@
 
 | Feature | Reason |
 |---------|--------|
+| ML ensemble (XGBoost, Random Forest) | 95 post-2019 signals quá ít, sẽ overfit |
+| Continuous indicator values | Boolean features tổng quát hóa tốt hơn qua các era |
+| Sentiment/macro indicators | Không nằm trong indicator set đã biết của Dr. K |
+| Per-stock signals | MDM là market-level model |
 | Neural network / deep learning models | MDM is rule-based; interpretability required |
 | Real-time trading or live signals | Research/backtesting only |
 | Web dashboard or mobile app | CLI/notebook analysis sufficient |
@@ -155,4 +179,4 @@
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-29 after v2.0 roadmap creation*
+*Last updated: 2026-03-29 after v3.0 milestone requirements*
