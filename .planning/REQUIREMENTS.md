@@ -69,8 +69,8 @@
 
 ### Validation (Extended)
 
-- [ ] **VAL-01**: Match rate scoring of discovered rules against full 962-signal history with per-type breakdown
-- [ ] **VAL-02**: Train/test validation with configurable split point (default: pre-2019 train, post-2019 test)
+- [x] **VAL-01**: Match rate scoring of discovered rules against full 962-signal history with per-type breakdown
+- [x] **VAL-02**: Train/test validation with configurable split point (default: pre-2019 train, post-2019 test)
 - [ ] **VAL-03**: Comparison dashboard showing discovered rules' signals vs published signals on price chart
 
 ## v3 Requirements
@@ -139,8 +139,8 @@
 | DISC-02 | Phase 9 | Complete |
 | DISC-03 | Phase 9 | Complete |
 | DISC-04 | Phase 9 | Complete |
-| VAL-01 | Phase 10 | Pending |
-| VAL-02 | Phase 10 | Pending |
+| VAL-01 | Phase 10 | Complete |
+| VAL-02 | Phase 10 | Complete |
 | VAL-03 | Phase 10 | Pending |
 
 **v1.0 Coverage:**

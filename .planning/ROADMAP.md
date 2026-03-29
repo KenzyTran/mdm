@@ -182,10 +182,10 @@ Plans:
   1. Match rate report scores discovered rules against all 962 signals with per-type breakdown (Buy/Sell/Cash match rates separately)
   2. Train/test validation shows rules trained on pre-2019 data achieve acceptable match rate on post-2019 held-out period (and vice versa)
   3. Comparison dashboard overlays discovered-rule signals and published signals on NASDAQ price chart, making agreement and divergence visually apparent
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 10-01-PLAN.md -- Match rate scoring, confusion matrices, and cross-era validation (VAL-01, VAL-02)
+- [x] 10-01-PLAN.md -- Match rate scoring, confusion matrices, and cross-era validation (VAL-01, VAL-02)
 - [ ] 10-02-PLAN.md -- Two-era comparison dashboard and end-to-end pipeline (VAL-03)
 **UI hint**: yes
 
@@ -205,4 +205,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 7. Data Foundation | v2.0 | 0/2 | Not started | - |
 | 8. Indicator Engine | v2.0 | 0/2 | Planned    |  |
 | 9. Rule Discovery | v2.0 | 2/2 | Complete   | 2026-03-29 |
-| 10. Discovery Validation | v2.0 | 0/2 | Not started | - |
+| 10. Discovery Validation | v2.0 | 1/2 | In Progress|  |
