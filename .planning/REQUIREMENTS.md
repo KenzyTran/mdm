@@ -78,7 +78,7 @@
 ### Hybrid Engine
 
 - [x] **HYB-01**: State machine layer tái sử dụng v2 logic (DD counting, FTD detection, Rally Attempts) làm tầng đề xuất signal
-- [ ] **HYB-02**: Indicator filter layer dùng EMA 9/21/55, MACD, MA 200 để xác nhận hoặc veto signal từ state machine
+- [x] **HYB-02**: Indicator filter layer dùng EMA 9/21/55, MACD, MA 200 để xác nhận hoặc veto signal từ state machine
 - [ ] **HYB-03**: Signal confirmation logic — state machine đề xuất, indicator filter xác nhận/chặn dựa trên điều kiện boolean
 - [ ] **HYB-04**: Signal override logic — indicators có thể ghi đè signal khi điều kiện đủ mạnh
 - [ ] **HYB-05**: Cash state insertion dựa trên indicator degradation (post-2019 logic)
@@ -168,7 +168,7 @@
 | VAL-03 | Phase 10 | Complete |
 | HYB-01 | Phase 11 | Complete |
 | HYB-06 | Phase 11 | Complete |
-| HYB-02 | Phase 12 | Pending |
+| HYB-02 | Phase 12 | Complete |
 | HYB-03 | Phase 13 | Pending |
 | HYB-04 | Phase 13 | Pending |
 | HYB-05 | Phase 13 | Pending |

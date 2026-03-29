@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Hybrid MDM Engine
-status: executing
-stopped_at: Phase 12 context gathered
-last_updated: "2026-03-29T07:52:28.693Z"
+status: verifying
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-03-29T08:16:13.926Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Combine v2 state machine with indicator filters into hybrid MDM model that beats 56.7% accuracy
-**Current focus:** Phase 11 — foundation-two-phase-commit
+**Current focus:** Phase 12 — indicator-filter-layer
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
-Status: Executing Phase 11
+Phase: 12 (indicator-filter-layer) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
 Last activity: 2026-03-29
 
 Progress: [░░░░░░░░░░] 0%
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: Stable (~5min avg)
 
 *Updated after each plan completion*
+| Phase 12 P01 | 5min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - [v3.0 Research]: Indicators can only CONFIRM/VETO, never originate signals independently
 - [v3.0 Research]: Max 2-3 filter rules to avoid overfitting on 95 post-2019 signals
 - [v3.0 Roadmap]: 5-phase structure: Foundation -> Filter -> Integration -> Validation -> Advanced
+- [Phase 12]: majority_threshold set to 2/3 (not 0.67) for correct 2-out-of-3 behavior
+- [Phase 12]: Bearish conditions use explicit direction checks, not negation of bullish (D-06)
+- [Phase 12]: OVERRIDE requires 3+ active conditions with 0 agreement
 
 ### Pending Todos
 
@@ -79,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T07:52:28.690Z
-Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-indicator-filter-layer/12-CONTEXT.md
+Last session: 2026-03-29T08:16:13.922Z
+Stopped at: Completed 12-01-PLAN.md
+Resume file: None

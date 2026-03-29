@@ -194,7 +194,7 @@ Plans:
 **Milestone Goal:** Combine v2 state machine (DD/FTD/Rally) with indicator filters (EMA/MACD) into a hybrid model that beats 56.7% accuracy on 962 published signals.
 
 - [x] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos (completed 2026-03-29)
-- [ ] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check
+- [x] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check (completed 2026-03-29)
 - [ ] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic
 - [ ] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy
 - [ ] **Phase 15: Advanced Features** - Contextual transitions, HA Smoothed filter, confidence scoring, three-way dashboard
@@ -224,10 +224,10 @@ Plans:
   2. `evaluate(row, proposal, current_state)` returns a typed verdict (CONFIRM, VETO, or OVERRIDE) based on configured indicator conditions
   3. Each condition method is unit-tested with synthetic row data producing expected boolean outputs
   4. EMA and MACD boolean values spot-checked against TradingView at 5+ known dates and confirmed matching
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 12-01-PLAN.md -- FilterConfig, Verdict enum, IndicatorFilter with 6 boolean conditions, evaluate() verdict logic, unit tests, TradingView parity (HYB-02)
+- [x] 12-01-PLAN.md -- FilterConfig, Verdict enum, IndicatorFilter with 6 boolean conditions, evaluate() verdict logic, unit tests, TradingView parity (HYB-02)
 
 ### Phase 13: Hybrid Engine Integration
 **Goal**: The full Propose-Filter-Decide pipeline runs on NASDAQ data, producing signal output in the same format as v2
@@ -291,7 +291,7 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 9. Rule Discovery | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 10. Discovery Validation | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 12. Indicator Filter Layer | v3.0 | 0/1 | Not started | - |
+| 12. Indicator Filter Layer | v3.0 | 1/1 | Complete   | 2026-03-29 |
 | 13. Hybrid Engine Integration | v3.0 | 0/? | Not started | - |
 | 14. Hybrid Validation | v3.0 | 0/? | Not started | - |
 | 15. Advanced Features | v3.0 | 0/? | Not started | - |
