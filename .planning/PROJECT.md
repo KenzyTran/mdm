@@ -39,6 +39,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - [x] Analyze signal patterns to hypothesize new MDM v2 rules (Cash state behavior, faster signal switching, modified DD counting) — Validated in Phase 4: MDM V2 Engine
 - [x] Implement MDM v2 candidate rules — Validated in Phase 4: MDM V2 Engine
 - [x] Validate MDM v2 against published signal history (target: high match rate) — Validated in Phase 5: Validation & Performance
+- [x] Use decision trees to discover indicator conditions that predict signal types per era — Validated in Phase 9: Rule Discovery
 - [ ] Adapt MDM v2 parameters for VN30 market characteristics
 - [ ] Backtest MDM v2 on VN30 with performance reporting
 
@@ -76,6 +77,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - `notebooks/v2_validation.ipynb` — Interactive Jupyter validation notebook
 - `core/indicators.py` — Indicator engine: EMA 9/21/55, MA 200, MACD (12,26,9), Heikin Ashi Smoothed
 - `core/feature_snapshot.py` — Feature snapshot extraction: joins indicators with 962 signal dates + 8 boolean features
+- `analysis/rule_discovery.py` — Rule discovery pipeline: era splitting, statistical profiling, decision tree training, human-readable rule extraction
 - `analysis/` — Analysis tools (`analyze_drawdown.py`, `diagnose_vn30.py`)
 - `data/` — NASDAQ, S&P500, VN30 OHLCV data
 - Data format: US data normalized (Phase 1), VN30 data is native scale
