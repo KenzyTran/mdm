@@ -141,7 +141,7 @@ Plans:
 
 Plans:
 - [x] 07-01-PLAN.md -- Extend DataLoader spot-checks and signal loader for dollar_becomes (DATA-05, DATA-06)
-- [ ] 07-02-PLAN.md -- Date alignment gap report and integration tests (DATA-05, DATA-06)
+- [x] 07-02-PLAN.md -- Date alignment gap report and integration tests (DATA-05, DATA-06)
 
 ### Phase 8: Indicator Engine
 **Goal**: All known Dr. K indicators are computed across the full NASDAQ history and feature snapshots are extracted at every signal date
