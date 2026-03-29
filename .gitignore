@@ -6,3 +6,4 @@ data/
 !data/signals/
 .env
 output/
+results/
