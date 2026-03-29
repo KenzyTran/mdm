@@ -62,7 +62,7 @@ class FilterConfig:
     ma200_enabled: bool = False
     ema9_enabled: bool = False
     macd_signal_enabled: bool = False
-    majority_threshold: float = 0.67
+    majority_threshold: float = 2 / 3  # 0.6667: 2-out-of-3 majority
 
     def __post_init__(self):
         assert 0.0 < self.majority_threshold <= 1.0, (
