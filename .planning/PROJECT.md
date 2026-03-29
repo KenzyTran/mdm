@@ -91,6 +91,8 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - `strategies/mdm_hybrid/indicator_filter.py` — IndicatorFilter: 6-condition filter with CONFIRM/VETO/OVERRIDE verdicts for hybrid signal validation
 - `strategies/mdm_hybrid/mdm_hybrid_engine.py` — HybridEngine with Propose-Filter-Decide pipeline: state machine proposes, indicators confirm/veto/override
 - `scripts/run_hybrid_backtest.py` — Hybrid backtest entry point with signal log CSV output
+- `analysis/validate_hybrid.py` — Hybrid validation pipeline: confusion matrices, per-type accuracy, v2 baseline comparison, held-out discipline
+- `tests/test_hybrid_validation.py` — Integration tests for hybrid validation pipeline
 - `analysis/` — Analysis tools (`analyze_drawdown.py`, `diagnose_vn30.py`)
 - `data/` — NASDAQ, S&P500, VN30 OHLCV data
 - Data format: US data normalized (Phase 1), VN30 data is native scale
@@ -143,4 +145,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 13: Hybrid Engine Integration complete*
+*Last updated: 2026-03-29 after Phase 14: Hybrid Validation complete*
