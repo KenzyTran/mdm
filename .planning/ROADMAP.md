@@ -189,11 +189,11 @@ Plans:
 
 </details>
 
-### 🚧 v3.0 Hybrid MDM Engine (In Progress)
+### v3.0 Hybrid MDM Engine (In Progress)
 
 **Milestone Goal:** Combine v2 state machine (DD/FTD/Rally) with indicator filters (EMA/MACD) into a hybrid model that beats 56.7% accuracy on 962 published signals.
 
-- [x] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos (completed 2026-03-29)
+- [x] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos (completed 2026-03-29)
 - [ ] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check
 - [ ] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic
 - [ ] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy
@@ -227,7 +227,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
+- [ ] 12-01-PLAN.md -- FilterConfig, Verdict enum, IndicatorFilter with 6 boolean conditions, evaluate() verdict logic, unit tests, TradingView parity (HYB-02)
 
 ### Phase 13: Hybrid Engine Integration
 **Goal**: The full Propose-Filter-Decide pipeline runs on NASDAQ data, producing signal output in the same format as v2
@@ -239,10 +239,10 @@ Plans:
   3. Signal override logic forces state transitions when indicator conditions are sufficiently strong, even without a state machine proposal
   4. Cash state is inserted when indicator degradation is detected (EMA crossover bearish) independent of DD count threshold
   5. `scripts/run_hybrid_backtest.py` entry point runs end-to-end and produces output file with signal log
-**Plans:** 1 plan
+**Plans:** [to be planned]
 
 Plans:
-- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
+- [ ] TBD
 
 ### Phase 14: Hybrid Validation
 **Goal**: Hybrid model accuracy is measured against all 962 published signals and compared to the v2 baseline of 56.7%
@@ -253,10 +253,10 @@ Plans:
   2. Post-2019 accuracy is reported separately and compared against 56.7% v2 baseline with clear delta
   3. Signal log records "proposed X, filter said Y, final Z" for every trading day, enabling diagnosis of where filter helps or hurts
   4. Held-out test set (19+ post-2019 signals) selected and locked before any filter tuning begins -- tuning results reported on held-out set separately
-**Plans:** 1 plan
+**Plans:** [to be planned]
 
 Plans:
-- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
+- [ ] TBD
 
 ### Phase 15: Advanced Features
 **Goal**: Hybrid model enhanced with contextual awareness, additional filters, and comparative analysis tools
@@ -267,10 +267,10 @@ Plans:
   2. Heikin Ashi Smoothed 55 operates as an additional trend confirmation filter that can be toggled on/off via config
   3. Indicator confidence score (count of agreeing indicators out of total) is computed per day and available in the output DataFrame
   4. Three-way comparison dashboard shows pure state machine vs pure decision tree vs hybrid accuracy side-by-side on a single chart
-**Plans:** 1 plan
+**Plans:** [to be planned]
 
 Plans:
-- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
+- [ ] TBD
 **UI hint**: yes
 
 ## Progress
@@ -291,7 +291,7 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 9. Rule Discovery | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 10. Discovery Validation | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 12. Indicator Filter Layer | v3.0 | 0/? | Not started | - |
+| 12. Indicator Filter Layer | v3.0 | 0/1 | Not started | - |
 | 13. Hybrid Engine Integration | v3.0 | 0/? | Not started | - |
 | 14. Hybrid Validation | v3.0 | 0/? | Not started | - |
 | 15. Advanced Features | v3.0 | 0/? | Not started | - |
