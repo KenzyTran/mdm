@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Hybrid MDM Engine
 status: executing
-stopped_at: Phase 15 context gathered
-last_updated: "2026-03-29T12:12:41.105Z"
+stopped_at: Completed 15-01-PLAN.md
+last_updated: "2026-03-29T12:58:17.605Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 8
+  completed_plans: 6
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Combine v2 state machine with indicator filters into hybrid MDM model that beats 56.7% accuracy
-**Current focus:** Phase 14 — hybrid-validation
+**Current focus:** Phase 15 — advanced-features
 
 ## Current Position
 
-Phase: 15
-Plan: Not started
-Status: Executing Phase 14
+Phase: 15 (advanced-features) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-03-29
 
 Progress: [░░░░░░░░░░] 0%
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 12 P01 | 5min | 2 tasks | 5 files |
 | Phase 13 P01 | 4min | 2 tasks | 2 files |
 | Phase 13 P02 | 20min | 2 tasks | 3 files |
+| Phase 15 P01 | 22min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Recent decisions affecting current work:
 - [Phase 13]: Cash insertion reuses majority-vote from IndicatorFilter, no separate threshold (D-08)
 - [Phase 13]: Integration tests use real NASDAQ data for realistic filter behavior coverage
 - [Phase 13]: Signal log CSV format: date, old_state, proposed, verdict, final_state, action
+- [Phase 15]: evaluate() returns tuple(Verdict, float) for confidence score exposure
+- [Phase 15]: ha_smooth_enabled defaults False preserving Phase 14 baseline
 
 ### Pending Todos
 
@@ -89,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T12:12:41.100Z
-Stopped at: Phase 15 context gathered
-Resume file: .planning/phases/15-advanced-features/15-CONTEXT.md
+Last session: 2026-03-29T12:58:17.600Z
+Stopped at: Completed 15-01-PLAN.md
+Resume file: None
