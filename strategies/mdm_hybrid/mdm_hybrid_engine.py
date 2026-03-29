@@ -20,6 +20,7 @@ from .ftd_signal import FTDSignalDetector
 from .stop_loss import StopLossChecker
 from .position_manager import V2PositionManager, V2MarketState
 from .config import HybridConfig, MDMV2Config
+from .indicator_filter import IndicatorFilter, Verdict
 
 
 class HybridEngine:
@@ -47,6 +48,7 @@ class HybridEngine:
         self.position_manager = V2PositionManager(v2)
 
         self.results: Optional[pd.DataFrame] = None
+        self.indicator_filter = IndicatorFilter(self.config.filter_config) if self.config.filter_enabled else None
 
     def reset(self):
         """Reset all components."""
@@ -98,6 +100,11 @@ class HybridEngine:
         df['prev_ma50'] = df['ma50'].shift(1)
         df['prev_ma10'] = df['ma10'].shift(1)
 
+        # Add EMA/MACD indicator columns for filter evaluation (per D-03, Phase 13)
+        if self.config.filter_enabled:
+            from core.indicators import build_indicator_dataframe
+            df = build_indicator_dataframe(df)
+
         # Suppress DD counting on derivative expiry days (VN30 microstructure, per D-05)
         # Guard: only apply if is_expiry_day column exists (NASDAQ runs without it, per Pitfall 5)
         if 'is_expiry_day' in df.columns:
@@ -116,6 +123,11 @@ class HybridEngine:
         df['action'] = ''
         df['buy_price'] = 0.0
         df['drawdown_pct'] = 0.0
+
+        # Signal log columns for Phase 14 diagnosis (per D-09, D-10)
+        df['old_state'] = ''
+        df['proposed'] = ''
+        df['verdict'] = ''
 
         all_dates = df['date'].tolist()
 

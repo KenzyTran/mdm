@@ -129,6 +129,28 @@ class V2PositionManager:
             ma10_below_count=0,
         )
 
+    def degrade_to_cash(self, date: pd.Timestamp, reason: str):
+        """Degrade current state to CASH without P&L calculation.
+
+        Used for indicator-driven cash insertion (D-06/D-07) when there is
+        no position to close (e.g., SELL->CASH) or when override forces
+        Cash independent of state machine logic.
+
+        Args:
+            date: Current date.
+            reason: Reason for degradation.
+        """
+        self.trades.append({
+            'type': 'STATE_DEGRADE',
+            'date': date,
+            'reason': reason,
+        })
+        self.position = V2Position(
+            state=V2MarketState.CASH,
+            days_in_cash=0,
+            ma10_below_count=0,
+        )
+
     def process_day(
         self,
         date: pd.Timestamp,
