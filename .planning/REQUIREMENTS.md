@@ -58,7 +58,7 @@
 - [x] **IND-02**: MA 200 (simple) computed on daily NASDAQ close prices
 - [x] **IND-03**: MACD (12, 26, 9) with signal line and histogram computed on daily close
 - [x] **IND-04**: Heikin Ashi Smoothed candles computed from OHLC data
-- [ ] **IND-05**: Feature snapshot extracted at each signal date: all indicator values, crossover states, price-vs-MA relationships
+- [x] **IND-05**: Feature snapshot extracted at each signal date: all indicator values, crossover states, price-vs-MA relationships
 
 ### Rule Discovery
 
@@ -134,7 +134,7 @@
 | IND-02 | Phase 8 | Complete |
 | IND-03 | Phase 8 | Complete |
 | IND-04 | Phase 8 | Complete |
-| IND-05 | Phase 8 | Pending |
+| IND-05 | Phase 8 | Complete |
 | DISC-01 | Phase 9 | Pending |
 | DISC-02 | Phase 9 | Pending |
 | DISC-03 | Phase 9 | Pending |
