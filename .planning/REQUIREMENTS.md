@@ -93,7 +93,7 @@
 
 ### Validation
 
-- [ ] **VAL-04**: Validate hybrid model trên toàn bộ 962 published signals với confusion matrix và per-type accuracy
+- [x] **VAL-04**: Validate hybrid model trên toàn bộ 962 published signals với confusion matrix và per-type accuracy
 
 ## Future Requirements
 
@@ -172,7 +172,7 @@
 | HYB-03 | Phase 13 | Complete |
 | HYB-04 | Phase 13 | Complete |
 | HYB-05 | Phase 13 | Complete |
-| VAL-04 | Phase 14 | Pending |
+| VAL-04 | Phase 14 | Complete |
 | ADV-01 | Phase 15 | Pending |
 | ADV-02 | Phase 15 | Pending |
 | ADV-03 | Phase 15 | Pending |

@@ -196,7 +196,7 @@ Plans:
 - [x] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos (completed 2026-03-29)
 - [x] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check (completed 2026-03-29)
 - [x] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic (completed 2026-03-29)
-- [ ] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy
+- [x] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy (completed 2026-03-29)
 - [ ] **Phase 15: Advanced Features** - Contextual transitions, HA Smoothed filter, confidence scoring, three-way dashboard
 
 ## Phase Details
@@ -254,10 +254,10 @@ Plans:
   2. Post-2019 accuracy is reported separately and compared against 56.7% v2 baseline with clear delta
   3. Signal log records "proposed X, filter said Y, final Z" for every trading day, enabling diagnosis of where filter helps or hurts
   4. Held-out test set (19+ post-2019 signals) selected and locked before any filter tuning begins -- tuning results reported on held-out set separately
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 14-01-PLAN.md -- Hybrid validation with confusion matrix, v2 baseline comparison, signal diagnosis, held-out split (VAL-04)
+- [x] 14-01-PLAN.md -- Hybrid validation with confusion matrix, v2 baseline comparison, signal diagnosis, held-out split (VAL-04)
 
 ### Phase 15: Advanced Features
 **Goal**: Hybrid model enhanced with contextual awareness, additional filters, and comparative analysis tools
@@ -294,5 +294,5 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 12. Indicator Filter Layer | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 13. Hybrid Engine Integration | v3.0 | 1/2 | Complete    | 2026-03-29 |
-| 14. Hybrid Validation | v3.0 | 0/1 | Not started | - |
+| 14. Hybrid Validation | v3.0 | 1/1 | Complete   | 2026-03-29 |
 | 15. Advanced Features | v3.0 | 0/? | Not started | - |
