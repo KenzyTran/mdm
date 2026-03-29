@@ -210,7 +210,10 @@ Plans:
   2. State machine proposes signal transitions without mutating internal state (DD counter, rally tracker) until explicit commit is called
   3. A vetoed FTD proposal does not reset the DD counter -- verified by unit test with known scenario
   4. With two-phase commit enabled and no filter active, hybrid position manager produces identical state transitions to v2 position manager
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
 
 ### Phase 12: Indicator Filter Layer
 **Goal**: Indicator conditions can evaluate any market day and return a CONFIRM/VETO/OVERRIDE verdict independently of the state machine
@@ -221,7 +224,10 @@ Plans:
   2. `evaluate(row, proposal, current_state)` returns a typed verdict (CONFIRM, VETO, or OVERRIDE) based on configured indicator conditions
   3. Each condition method is unit-tested with synthetic row data producing expected boolean outputs
   4. EMA and MACD boolean values spot-checked against TradingView at 5+ known dates and confirmed matching
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
 
 ### Phase 13: Hybrid Engine Integration
 **Goal**: The full Propose-Filter-Decide pipeline runs on NASDAQ data, producing signal output in the same format as v2
@@ -233,7 +239,10 @@ Plans:
   3. Signal override logic forces state transitions when indicator conditions are sufficiently strong, even without a state machine proposal
   4. Cash state is inserted when indicator degradation is detected (EMA crossover bearish) independent of DD count threshold
   5. `scripts/run_hybrid_backtest.py` entry point runs end-to-end and produces output file with signal log
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
 
 ### Phase 14: Hybrid Validation
 **Goal**: Hybrid model accuracy is measured against all 962 published signals and compared to the v2 baseline of 56.7%
@@ -244,7 +253,10 @@ Plans:
   2. Post-2019 accuracy is reported separately and compared against 56.7% v2 baseline with clear delta
   3. Signal log records "proposed X, filter said Y, final Z" for every trading day, enabling diagnosis of where filter helps or hurts
   4. Held-out test set (19+ post-2019 signals) selected and locked before any filter tuning begins -- tuning results reported on held-out set separately
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
 
 ### Phase 15: Advanced Features
 **Goal**: Hybrid model enhanced with contextual awareness, additional filters, and comparative analysis tools
@@ -255,7 +267,10 @@ Plans:
   2. Heikin Ashi Smoothed 55 operates as an additional trend confirmation filter that can be toggled on/off via config
   3. Indicator confidence score (count of agreeing indicators out of total) is computed per day and available in the output DataFrame
   4. Three-way comparison dashboard shows pure state machine vs pure decision tree vs hybrid accuracy side-by-side on a single chart
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
 **UI hint**: yes
 
 ## Progress
