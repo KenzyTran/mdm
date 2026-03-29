@@ -86,7 +86,8 @@ def test_high_confidence_filtering():
 def test_cross_era_validation():
     """VAL-02, D-04: cross_era_validation returns same-era, cross-era, and degradation metrics."""
     snapshot = _make_mock_snapshot(200)
-    # Dates already span from 2010-01-01, so we have pre/post 2019 coverage
+    # Override dates to span pre/post 2019 boundary (ERA_SPLIT_DATE = 2019-02-09)
+    snapshot['date'] = pd.date_range('2016-01-01', periods=200, freq='14D')
     results = cross_era_validation(snapshot, BOOLEAN_FEATURES)
 
     # Check return dict has required keys
@@ -100,6 +101,8 @@ def test_cross_era_validation():
 def test_degradation_quantification():
     """VAL-02, D-05: degradation delta equals same-era minus cross-era accuracy."""
     snapshot = _make_mock_snapshot(200)
+    # Override dates to span pre/post 2019 boundary
+    snapshot['date'] = pd.date_range('2016-01-01', periods=200, freq='14D')
     results = cross_era_validation(snapshot, BOOLEAN_FEATURES)
 
     # pre_degradation = pre_same_era - pre_on_post
