@@ -261,16 +261,61 @@ class HybridEngine:
             if is_ftd:
                 self.rally_tracker.full_reset()
 
-            # Two-phase commit: decide whether to keep or rollback
+            # Two-phase commit: Propose-Filter-Decide pipeline (Phase 13)
             if self.config.two_phase_enabled and self.config.filter_enabled:
-                # Phase 12 will implement filter decision logic here.
-                # For now, filter_enabled=False means this block never executes.
-                vetoed = False  # placeholder for Phase 12
-                if vetoed:
-                    self._restore_components(snapshot)
-                    # Recalculate new_state and action from restored position manager
-                    new_state = self.position_manager.get_state()
-                    action = ''
+                old_state = snapshot['position_manager'].get_state()
+
+                # Derive proposal from diff (D-01)
+                if new_state != old_state:
+                    # State changed: proposal is the new state
+                    proposal = new_state.value  # "BUY", "CASH", or "SELL"
+                else:
+                    # No change: proposal is "confirm current state" (D-02)
+                    proposal = old_state.value
+
+                verdict = self.indicator_filter.evaluate(row, proposal, old_state)
+
+                if new_state != old_state:
+                    # State machine proposed a change
+                    if verdict == Verdict.VETO:
+                        # Rollback: restore snapshot, discard mutations (D-01)
+                        self._restore_components(snapshot)
+                        new_state = self.position_manager.get_state()
+                        action = ''
+                    elif verdict == Verdict.OVERRIDE:
+                        # OVERRIDE = force Cash (D-04)
+                        if new_state == V2MarketState.CASH:
+                            # Already going to Cash -- keep state machine's transition (Pitfall 4)
+                            pass
+                        else:
+                            # Force to Cash regardless of proposal
+                            self._restore_components(snapshot)
+                            if old_state == V2MarketState.BUY:
+                                self.position_manager.exit_to_cash(close, date, "OVERRIDE: indicator disagreement")
+                            else:
+                                self.position_manager.degrade_to_cash(date, "OVERRIDE: indicator disagreement")
+                            new_state = V2MarketState.CASH
+                            action = "CASH exit: filter override"
+                    # verdict == Verdict.CONFIRM: keep mutations as-is
+                else:
+                    # No state change proposed -- check for cash insertion (D-06)
+                    if verdict in (Verdict.VETO, Verdict.OVERRIDE):
+                        if old_state == V2MarketState.BUY:
+                            # BUY degradation: exit with P&L (D-07)
+                            self.position_manager.exit_to_cash(close, date, "indicator degradation")
+                            new_state = V2MarketState.CASH
+                            action = "CASH exit: indicator degradation"
+                        elif old_state == V2MarketState.SELL:
+                            # SELL degradation: no P&L (D-07 symmetric)
+                            self.position_manager.degrade_to_cash(date, "indicator degradation from SELL")
+                            new_state = V2MarketState.CASH
+                            action = "CASH: indicator degradation from SELL"
+                        # old_state == CASH: skip -- already in CASH, nothing to degrade (Pitfall 5)
+
+                # Record signal log columns for every trading day (D-09, D-10)
+                df.at[idx, 'old_state'] = old_state.value
+                df.at[idx, 'proposed'] = proposal
+                df.at[idx, 'verdict'] = verdict.value
 
             # Update DataFrame
             df.at[idx, 'in_correction'] = in_correction
