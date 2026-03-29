@@ -153,7 +153,7 @@ Plans:
   3. Heikin Ashi Smoothed candles are computed from OHLC data with visually verifiable smoothing behavior
   4. Feature snapshot at each of the 962 signal dates contains all indicator values, EMA crossover states (9/21, 21/55), price-vs-MA relationships, and MACD histogram sign
   5. Feature snapshot DataFrame has no NaN values for signal dates after indicator warm-up period (~200 trading days)
-**Plans:** 2 plans
+**Plans:** 0/2 plans executed
 
 Plans:
 - [ ] 08-01-PLAN.md -- Indicator computation module: EMA, SMA, MACD, Heikin Ashi Smoothed (IND-01, IND-02, IND-03, IND-04)
@@ -195,6 +195,6 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 5. Validation & Performance | v1.0 | 2/2 | Complete | 2026-03-28 |
 | 6. VN30 Adaptation | v1.0 | 3/3 | Complete | 2026-03-28 |
 | 7. Data Foundation | v2.0 | 0/2 | Not started | - |
-| 8. Indicator Engine | v2.0 | 0/2 | Not started | - |
+| 8. Indicator Engine | v2.0 | 0/2 | Planned    |  |
 | 9. Rule Discovery | v2.0 | 0/? | Not started | - |
 | 10. Discovery Validation | v2.0 | 0/? | Not started | - |

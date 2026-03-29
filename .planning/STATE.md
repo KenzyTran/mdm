@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: MDM Rule Discovery
 status: executing
-stopped_at: Completed 07-02-PLAN.md
-last_updated: "2026-03-29T02:11:44.921Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-29T02:51:34.162Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
+  total_plans: 4
   completed_plans: 2
   percent: 0
 ---
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators
-**Current focus:** Phase 07 — data-foundation
+**Current focus:** Phase 08 — indicator-engine
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
+Phase: 08 (indicator-engine) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -66,6 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06 P02 | 4min | 2 tasks | 3 files |
 | Phase 06 P03 | 14min | 2 tasks | 2 files |
 | Phase 07 P02 | 3min | 2 tasks | 2 files |
+| Phase 08 P01 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - Roadmap v2.0: IND-01 through IND-04 grouped together since all are independent indicator computations
 - Roadmap v2.0: DISC phase depends on IND-05 feature snapshots being complete first
 - [Phase 07]: Gap report warns but does not fail, per D-05 design requirement
+- [Phase 08]: Module-level pure functions for indicators (no class) - stateless transformations per research
+- [Phase 08]: Two-stage HA Smoothed (EMA then HA) as primary variant; Phase 9 will evaluate correlation with signals
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T02:07:58.110Z
-Stopped at: Completed 07-02-PLAN.md
+Last session: 2026-03-29T02:51:34.155Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None
