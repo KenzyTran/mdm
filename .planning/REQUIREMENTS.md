@@ -128,17 +128,31 @@
 | VN30-01 | Phase 6 | Complete |
 | VN30-02 | Phase 6 | Complete |
 | VN30-03 | Phase 6 | Complete |
+| DATA-05 | Phase 7 | Pending |
+| DATA-06 | Phase 7 | Pending |
+| IND-01 | Phase 8 | Pending |
+| IND-02 | Phase 8 | Pending |
+| IND-03 | Phase 8 | Pending |
+| IND-04 | Phase 8 | Pending |
+| IND-05 | Phase 8 | Pending |
+| DISC-01 | Phase 9 | Pending |
+| DISC-02 | Phase 9 | Pending |
+| DISC-03 | Phase 9 | Pending |
+| DISC-04 | Phase 9 | Pending |
+| VAL-01 | Phase 10 | Pending |
+| VAL-02 | Phase 10 | Pending |
+| VAL-03 | Phase 10 | Pending |
 
 **v1.0 Coverage:**
 - v1 requirements: 22 total
 - Mapped to phases: 22
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 **v2.0 Coverage:**
 - v2 requirements: 13 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 13
+- Mapped to phases: 13
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-29 after v2.0 milestone requirements*
+*Last updated: 2026-03-29 after v2.0 roadmap creation*

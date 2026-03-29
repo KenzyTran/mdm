@@ -1,8 +1,9 @@
 # Roadmap: MDM Reverse-Engineering & VN30 Market Timing
 
-## Overview
+## Milestones
 
-This roadmap takes the project from its current state (working but duplicated MDM classic and VSA implementations) to a validated reverse-engineered MDM v2 model adapted for VN30. The journey follows a strict dependency chain: correct data first, then organized code, then measurement infrastructure, then rule discovery, then validation, and finally VN30 adaptation. Each phase delivers a complete, verifiable capability that the next phase depends on.
+- [x] **v1.0 MDM Classic & VN30** - Phases 1-6 (shipped 2026-03-28)
+- [ ] **v2.0 MDM Rule Discovery** - Phases 7-10 (in progress)
 
 ## Phases
 
@@ -12,14 +13,15 @@ This roadmap takes the project from its current state (working but duplicated MD
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Data Integrity** - Unified data loading with proven normalization and published signal fixtures
-- [ ] **Phase 2: Codebase Organization** - Three-layer architecture with migrated strategies and verified identical output
-- [ ] **Phase 3: Signal Divergence Analysis** - Comparison engine and divergence report identifying where classic rules fail post-2019
-- [ ] **Phase 4: MDM v2 Engine** - Cash state machine, parameterized rules, and systematic hypothesis testing
-- [x] **Phase 5: Validation & Performance** - Held-out validation, performance metrics, and visual analysis tools (completed 2026-03-28)
-- [x] **Phase 6: VN30 Adaptation** - MDM v2 recalibrated for Vietnamese market microstructure
+<details>
+<summary>v1.0 MDM Classic & VN30 (Phases 1-6) - SHIPPED 2026-03-28</summary>
 
-## Phase Details
+- [x] **Phase 1: Data Integrity** - Unified data loading with proven normalization and published signal fixtures
+- [x] **Phase 2: Codebase Organization** - Three-layer architecture with migrated strategies and verified identical output
+- [x] **Phase 3: Signal Divergence Analysis** - Comparison engine and divergence report identifying where classic rules fail post-2019
+- [x] **Phase 4: MDM v2 Engine** - Cash state machine, parameterized rules, and systematic hypothesis testing
+- [x] **Phase 5: Validation & Performance** - Held-out validation, performance metrics, and visual analysis tools
+- [x] **Phase 6: VN30 Adaptation** - MDM v2 recalibrated for Vietnamese market microstructure
 
 ### Phase 1: Data Integrity
 **Goal**: All market data loads correctly and published signal history is available as structured test fixtures
@@ -114,16 +116,77 @@ Plans:
 - [x] 06-02-PLAN.md -- Parameter sweep Sharpe adaptation and VN30 grid search (VN30-02)
 - [x] 06-03-PLAN.md -- VN30 backtest report with performance metrics and buy-and-hold comparison (VN30-03)
 
+</details>
+
+### v2.0 MDM Rule Discovery
+
+**Milestone Goal:** Reverse-engineer Dr. K's MDM decision rules using 962 published signals and multi-indicator feature engineering (EMA 9/21/55, MA 200, MACD 12-26-9, Heikin Ashi Smoothed).
+
+- [ ] **Phase 7: Data Foundation** - Full NASDAQ OHLCV from 1974+ and 962-signal history loaded as ground truth
+- [ ] **Phase 8: Indicator Engine** - Multi-indicator feature engineering with feature snapshots at every signal date
+- [ ] **Phase 9: Rule Discovery** - Statistical analysis and decision tree extraction of indicator-based signal rules
+- [ ] **Phase 10: Discovery Validation** - Match rate scoring, train/test split, and visual comparison of discovered rules
+
+## Phase Details
+
+### Phase 7: Data Foundation
+**Goal**: Full 52-year NASDAQ price history and complete 962-signal ground truth are loaded and ready for indicator computation
+**Depends on**: Phase 6 (v1.0 complete)
+**Requirements**: DATA-05, DATA-06
+**Success Criteria** (what must be TRUE):
+  1. NASDAQ OHLCV data loads from 1974 onward with no gaps in trading days, correct dtypes, and prices matching known historical values
+  2. Full signal history loader parses all 962 signals from nasdaq_signals_full.csv with date, signal type (Buy/Sell/Cash), gain/loss, and dollar-becomes columns
+  3. Signal dates align with available OHLCV dates (every signal date has a corresponding price row)
+**Plans**: TBD
+
+### Phase 8: Indicator Engine
+**Goal**: All known Dr. K indicators are computed across the full NASDAQ history and feature snapshots are extracted at every signal date
+**Depends on**: Phase 7
+**Requirements**: IND-01, IND-02, IND-03, IND-04, IND-05
+**Success Criteria** (what must be TRUE):
+  1. EMA 9, EMA 21, EMA 55, and MA 200 are computed on daily NASDAQ close prices and spot-checked against known values
+  2. MACD (12, 26, 9) with signal line and histogram produces values consistent with standard implementations
+  3. Heikin Ashi Smoothed candles are computed from OHLC data with visually verifiable smoothing behavior
+  4. Feature snapshot at each of the 962 signal dates contains all indicator values, EMA crossover states (9/21, 21/55), price-vs-MA relationships, and MACD histogram sign
+  5. Feature snapshot DataFrame has no NaN values for signal dates after indicator warm-up period (~200 trading days)
+**Plans**: TBD
+
+### Phase 9: Rule Discovery
+**Goal**: Indicator-based rules that drive Buy/Sell/Cash signal transitions are discovered through statistical analysis and machine learning
+**Depends on**: Phase 8
+**Requirements**: DISC-01, DISC-02, DISC-03, DISC-04
+**Success Criteria** (what must be TRUE):
+  1. Statistical profile shows frequency distributions of indicator conditions (EMA crossover states, MACD sign, price-vs-MA position) at each signal type, revealing clear separation between Buy/Sell/Cash
+  2. Decision tree classifier achieves meaningfully above-chance accuracy on classifying signal transitions from indicator features
+  3. Human-readable rules are extracted from the decision tree with confidence scores (e.g., "Buy when EMA9 > EMA21 AND MACD histogram > 0: 78% confidence")
+  4. Era comparison shows quantifiable differences in rule patterns pre-2019 vs post-2019, confirming or refining the structural change hypothesis
+**Plans**: TBD
+
+### Phase 10: Discovery Validation
+**Goal**: Discovered rules are validated against the full signal history and presented alongside published signals for visual confirmation
+**Depends on**: Phase 9
+**Requirements**: VAL-01, VAL-02, VAL-03
+**Success Criteria** (what must be TRUE):
+  1. Match rate report scores discovered rules against all 962 signals with per-type breakdown (Buy/Sell/Cash match rates separately)
+  2. Train/test validation shows rules trained on pre-2019 data achieve acceptable match rate on post-2019 held-out period (and vice versa)
+  3. Comparison dashboard overlays discovered-rule signals and published signals on NASDAQ price chart, making agreement and divergence visually apparent
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Data Integrity | 0/2 | Planning complete | - |
-| 2. Codebase Organization | 0/4 | Gap closure planned | - |
-| 3. Signal Divergence Analysis | 1/2 | Executing | - |
-| 4. MDM v2 Engine | 0/2 | Planning complete | - |
-| 5. Validation & Performance | 2/2 | Complete   | 2026-03-28 |
-| 6. VN30 Adaptation | 3/3 | Complete | 2026-03-28 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Data Integrity | v1.0 | 2/2 | Complete | 2026-03-27 |
+| 2. Codebase Organization | v1.0 | 4/4 | Complete | 2026-03-27 |
+| 3. Signal Divergence Analysis | v1.0 | 2/2 | Complete | 2026-03-27 |
+| 4. MDM v2 Engine | v1.0 | 2/2 | Complete | 2026-03-28 |
+| 5. Validation & Performance | v1.0 | 2/2 | Complete | 2026-03-28 |
+| 6. VN30 Adaptation | v1.0 | 3/3 | Complete | 2026-03-28 |
+| 7. Data Foundation | v2.0 | 0/? | Not started | - |
+| 8. Indicator Engine | v2.0 | 0/? | Not started | - |
+| 9. Rule Discovery | v2.0 | 0/? | Not started | - |
+| 10. Discovery Validation | v2.0 | 0/? | Not started | - |
