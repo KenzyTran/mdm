@@ -62,10 +62,10 @@
 
 ### Rule Discovery
 
-- [ ] **DISC-01**: Statistical profile of indicator conditions at each signal type (Buy/Sell/Cash) showing frequency distributions
+- [x] **DISC-01**: Statistical profile of indicator conditions at each signal type (Buy/Sell/Cash) showing frequency distributions
 - [ ] **DISC-02**: Decision tree model trained on indicator features to classify signal transitions
 - [ ] **DISC-03**: Extracted human-readable rules from decision tree with confidence scores
-- [ ] **DISC-04**: Era-aware analysis comparing pre-2019 vs post-2019 rule patterns to identify structural changes
+- [x] **DISC-04**: Era-aware analysis comparing pre-2019 vs post-2019 rule patterns to identify structural changes
 
 ### Validation (Extended)
 
@@ -135,10 +135,10 @@
 | IND-03 | Phase 8 | Complete |
 | IND-04 | Phase 8 | Complete |
 | IND-05 | Phase 8 | Complete |
-| DISC-01 | Phase 9 | Pending |
+| DISC-01 | Phase 9 | Complete |
 | DISC-02 | Phase 9 | Pending |
 | DISC-03 | Phase 9 | Pending |
-| DISC-04 | Phase 9 | Pending |
+| DISC-04 | Phase 9 | Complete |
 | VAL-01 | Phase 10 | Pending |
 | VAL-02 | Phase 10 | Pending |
 | VAL-03 | Phase 10 | Pending |
