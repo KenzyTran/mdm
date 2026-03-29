@@ -197,7 +197,7 @@ Plans:
 - [x] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check (completed 2026-03-29)
 - [x] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic (completed 2026-03-29)
 - [x] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy (completed 2026-03-29)
-- [ ] **Phase 15: Advanced Features** - Contextual transitions, HA Smoothed filter, confidence scoring, three-way dashboard
+- [x] **Phase 15: Advanced Features** - Contextual transitions, HA Smoothed filter, confidence scoring, three-way dashboard (completed 2026-03-29)
 
 ## Phase Details
 
@@ -268,12 +268,12 @@ Plans:
   2. Heikin Ashi Smoothed 55 operates as an additional trend confirmation filter that can be toggled on/off via config
   3. Indicator confidence score (count of agreeing indicators out of total) is computed per day and available in the output DataFrame
   4. Three-way comparison dashboard shows pure state machine vs pure decision tree vs hybrid accuracy side-by-side on a single chart
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 15-01-PLAN.md -- HA Smoothed 55 filter condition + confidence score exposure (ADV-02, ADV-03)
 - [x] 15-02-PLAN.md -- Contextual state transitions with state history tracking (ADV-01)
-- [ ] 15-03-PLAN.md -- Three-way model comparison dashboard (ADV-04)
+- [x] 15-03-PLAN.md -- Three-way model comparison dashboard (ADV-04)
 **UI hint**: yes
 
 ## Progress
@@ -297,4 +297,4 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 12. Indicator Filter Layer | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 13. Hybrid Engine Integration | v3.0 | 1/2 | Complete    | 2026-03-29 |
 | 14. Hybrid Validation | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 15. Advanced Features | v3.0 | 2/3 | In Progress|  |
+| 15. Advanced Features | v3.0 | 3/3 | Complete    | 2026-03-29 |
