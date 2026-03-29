@@ -252,14 +252,16 @@ def extract_rules(tree, feature_names, class_names):
     def _walk(node, conditions):
         # Leaf node
         if tree_.feature[node] == _tree.TREE_UNDEFINED:
-            counts = tree_.value[node][0]
-            total = int(counts.sum())
-            predicted_idx = int(np.argmax(counts))
-            confidence = counts[predicted_idx] / total if total > 0 else 0
+            weighted_counts = tree_.value[node][0]
+            weighted_total = weighted_counts.sum()
+            predicted_idx = int(np.argmax(weighted_counts))
+            confidence = weighted_counts[predicted_idx] / weighted_total if weighted_total > 0 else 0
             class_name = class_names[predicted_idx]
+            # Use actual sample count (not weighted) for N
+            n_samples = int(tree_.n_node_samples[node])
             cond_str = " AND ".join(conditions) if conditions else "always"
             rules.append(
-                f"{class_name} when {cond_str}: {confidence:.0%} confidence (N={total})"
+                f"{class_name} when {cond_str}: {confidence:.0%} confidence (N={n_samples})"
             )
             return
 
@@ -284,6 +286,154 @@ def extract_rules(tree, feature_names, class_names):
 
 
 # ---------------------------------------------------------------------------
+# Full report generation (Plan 02)
+# ---------------------------------------------------------------------------
+
+def generate_full_report(snapshot: pd.DataFrame) -> str:
+    """Generate a complete rule discovery report with statistical profiles,
+    decision trees, extracted rules, and era comparison.
+
+    Args:
+        snapshot: Full feature snapshot DataFrame with 'date', 'signal',
+                  and all boolean/continuous feature columns.
+
+    Returns:
+        Markdown-formatted report string.
+    """
+    from datetime import date as _date
+
+    pre, post = split_by_era(snapshot)
+    feature_cols = BOOLEAN_FEATURES
+
+    lines = []
+    lines.append("# Rule Discovery Report")
+    lines.append(f"Generated: {_date.today().isoformat()}")
+    lines.append("")
+
+    # --- Dataset Summary ---
+    lines.append("## Dataset Summary")
+    lines.append(f"- Total signals: {len(snapshot)}")
+    pre_counts = pre['signal'].value_counts()
+    post_counts = post['signal'].value_counts()
+    pre_summary = ", ".join(f"{c}={pre_counts.get(c, 0)}" for c in CLASS_NAMES)
+    post_summary = ", ".join(f"{c}={post_counts.get(c, 0)}" for c in CLASS_NAMES)
+    lines.append(f"- Pre-2019 (before {ERA_SPLIT_DATE}): {len(pre)} signals ({pre_summary})")
+    lines.append(f"- Post-2019 (from {ERA_SPLIT_DATE}): {len(post)} signals ({post_summary})")
+    lines.append("")
+
+    # --- Statistical Profiles ---
+    lines.append(generate_statistical_report(pre, "Pre-2019"))
+    lines.append("")
+    lines.append(generate_statistical_report(post, "Post-2019"))
+    lines.append("")
+
+    # --- Decision Tree: Pre-2019 ---
+    pre_clf, pre_cv, pre_feat = train_era_tree(pre, feature_cols, max_depth=4)
+    pre_train_acc = pre_clf.score(pre[feature_cols].values, pre['signal'].values)
+    pre_tree_text = export_text(pre_clf, feature_names=pre_feat, class_names=CLASS_NAMES, show_weights=True)
+    pre_rules = extract_rules(pre_clf, pre_feat, CLASS_NAMES)
+
+    lines.append("## Decision Tree: Pre-2019")
+    lines.append(f"Feature set: {', '.join(feature_cols)}")
+    lines.append(f"Train accuracy: {pre_train_acc:.1%}")
+    lines.append(f"Cross-validated accuracy: {pre_cv:.1%}")
+    lines.append("")
+    lines.append("```")
+    lines.append(pre_tree_text.rstrip())
+    lines.append("```")
+    lines.append("")
+    lines.append("### Extracted Rules (Pre-2019)")
+    lines.append("")
+    for i, rule in enumerate(pre_rules, 1):
+        lines.append(f"{i}. {rule}")
+    lines.append("")
+
+    # --- Decision Tree: Post-2019 ---
+    post_clf, post_cv, post_feat = train_era_tree(post, feature_cols, max_depth=4)
+    post_train_acc = post_clf.score(post[feature_cols].values, post['signal'].values)
+    post_tree_text = export_text(post_clf, feature_names=post_feat, class_names=CLASS_NAMES, show_weights=True)
+    post_rules = extract_rules(post_clf, post_feat, CLASS_NAMES)
+
+    sell_count = post_counts.get('Sell', 0)
+    lines.append("## Decision Tree: Post-2019")
+    lines.append(f"Feature set: {', '.join(feature_cols)}")
+    lines.append(f"Train accuracy: {post_train_acc:.1%}")
+    lines.append(f"Cross-validated accuracy: {post_cv:.1%}")
+    lines.append(f"**NOTE:** Post-2019 has only {len(post)} samples (Sell={sell_count}). Rules are tentative.")
+    lines.append("")
+    lines.append("```")
+    lines.append(post_tree_text.rstrip())
+    lines.append("```")
+    lines.append("")
+    lines.append("### Extracted Rules (Post-2019)")
+    lines.append("")
+    for i, rule in enumerate(post_rules, 1):
+        lines.append(f"{i}. {rule}")
+    lines.append("")
+
+    # --- Era Comparison (DISC-04) ---
+    lines.append("## Era Comparison (DISC-04)")
+    lines.append("")
+
+    # Feature importance table
+    lines.append("### Feature Importance Changes")
+    lines.append("")
+    lines.append("| Feature | Pre-2019 Importance | Post-2019 Importance | Change |")
+    lines.append("| --- | --- | --- | --- |")
+    pre_imp = dict(zip(pre_feat, pre_clf.feature_importances_))
+    post_imp = dict(zip(post_feat, post_clf.feature_importances_))
+    for feat in feature_cols:
+        p = pre_imp.get(feat, 0)
+        q = post_imp.get(feat, 0)
+        change = q - p
+        sign = "+" if change >= 0 else ""
+        lines.append(f"| {feat} | {p:.3f} | {q:.3f} | {sign}{change:.3f} |")
+    lines.append("")
+
+    # Rule pattern differences narrative
+    lines.append("### Rule Pattern Differences")
+    lines.append("")
+
+    # Determine top features per era
+    pre_sorted = sorted(pre_imp.items(), key=lambda x: x[1], reverse=True)
+    post_sorted = sorted(post_imp.items(), key=lambda x: x[1], reverse=True)
+    pre_top = [f for f, v in pre_sorted if v > 0.05][:3]
+    post_top = [f for f, v in post_sorted if v > 0.05][:3]
+
+    lines.append(f"**Pre-2019 top features:** {', '.join(pre_top) if pre_top else 'none above 5%'}")
+    lines.append(f"**Post-2019 top features:** {', '.join(post_top) if post_top else 'none above 5%'}")
+    lines.append("")
+
+    overlap = set(pre_top) & set(post_top)
+    if overlap:
+        lines.append(f"Shared dominant features: {', '.join(overlap)}")
+    else:
+        lines.append("No overlap in top features between eras -- suggests structural rule change.")
+    lines.append("")
+
+    # Confidence comparison
+    def avg_confidence(rules_list):
+        confs = []
+        for r in rules_list:
+            try:
+                pct = r.split(": ")[1].split(" confidence")[0]
+                confs.append(int(pct.replace("%", "")) / 100)
+            except (IndexError, ValueError):
+                pass
+        return np.mean(confs) if confs else 0
+
+    pre_avg = avg_confidence(pre_rules)
+    post_avg = avg_confidence(post_rules)
+    lines.append(f"Average rule confidence: Pre-2019={pre_avg:.0%}, Post-2019={post_avg:.0%}")
+    lines.append("")
+    lines.append(f"**Warning:** Post-2019 era has only {len(post)} samples with "
+                 f"Sell={sell_count}. Rules from this era should be treated as tentative "
+                 f"hypotheses requiring out-of-sample validation, not definitive trading rules.")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # Main script
 # ---------------------------------------------------------------------------
 
@@ -294,7 +444,7 @@ if __name__ == '__main__':
     from core.feature_snapshot import extract_feature_snapshot
 
     print("=" * 70)
-    print("MDM Rule Discovery: Era-Aware Statistical Profiling")
+    print("MDM Rule Discovery: Full Report Generation")
     print("=" * 70)
     print()
 
@@ -318,18 +468,18 @@ if __name__ == '__main__':
     snapshot = extract_feature_snapshot(indicators, signals)
     print(f"  Snapshot: {len(snapshot)} signal-date rows")
 
-    # Step 5: Split by era
-    pre, post = split_by_era(snapshot)
-    print()
-    print(f"Era split at {ERA_SPLIT_DATE}:")
-    print(f"  Pre-2019:  {len(pre)} signals")
-    print(f"  Post-2019: {len(post)} signals")
-    print()
+    # Step 5: Generate full report
+    print("Generating full rule discovery report...")
+    report = generate_full_report(snapshot)
 
-    # Step 6: Generate and print statistical reports
-    pre_report = generate_statistical_report(pre, "Pre-2019")
-    post_report = generate_statistical_report(post, "Post-2019")
-
-    print(pre_report)
+    # Print to console
     print()
-    print(post_report)
+    print(report)
+
+    # Save to file
+    os.makedirs('output', exist_ok=True)
+    output_path = 'output/rule_discovery_report.md'
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(report)
+    print()
+    print(f"Report saved to {output_path}")
