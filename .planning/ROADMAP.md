@@ -239,10 +239,10 @@ Plans:
   3. Signal override logic forces state transitions when indicator conditions are sufficiently strong, even without a state machine proposal
   4. Cash state is inserted when indicator degradation is detected (EMA crossover bearish) independent of DD count threshold
   5. `scripts/run_hybrid_backtest.py` entry point runs end-to-end and produces output file with signal log
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 13-01-PLAN.md -- Wire Propose-Filter-Decide pipeline into engine with degrade_to_cash and indicator columns (HYB-03, HYB-04, HYB-05)
+- [x] 13-01-PLAN.md -- Wire Propose-Filter-Decide pipeline into engine with degrade_to_cash and indicator columns (HYB-03, HYB-04, HYB-05)
 - [ ] 13-02-PLAN.md -- Integration tests for filter pipeline and hybrid backtest entry point script (HYB-03, HYB-04, HYB-05)
 
 ### Phase 14: Hybrid Validation
@@ -293,6 +293,6 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 10. Discovery Validation | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 12. Indicator Filter Layer | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 13. Hybrid Engine Integration | v3.0 | 0/2 | Not started | - |
+| 13. Hybrid Engine Integration | v3.0 | 1/2 | In Progress|  |
 | 14. Hybrid Validation | v3.0 | 0/? | Not started | - |
 | 15. Advanced Features | v3.0 | 0/? | Not started | - |

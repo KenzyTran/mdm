@@ -79,9 +79,9 @@
 
 - [x] **HYB-01**: State machine layer tái sử dụng v2 logic (DD counting, FTD detection, Rally Attempts) làm tầng đề xuất signal
 - [x] **HYB-02**: Indicator filter layer dùng EMA 9/21/55, MACD, MA 200 để xác nhận hoặc veto signal từ state machine
-- [ ] **HYB-03**: Signal confirmation logic — state machine đề xuất, indicator filter xác nhận/chặn dựa trên điều kiện boolean
-- [ ] **HYB-04**: Signal override logic — indicators có thể ghi đè signal khi điều kiện đủ mạnh
-- [ ] **HYB-05**: Cash state insertion dựa trên indicator degradation (post-2019 logic)
+- [x] **HYB-03**: Signal confirmation logic — state machine đề xuất, indicator filter xác nhận/chặn dựa trên điều kiện boolean
+- [x] **HYB-04**: Signal override logic — indicators có thể ghi đè signal khi điều kiện đủ mạnh
+- [x] **HYB-05**: Cash state insertion dựa trên indicator degradation (post-2019 logic)
 - [x] **HYB-06**: Two-phase commit cho state machine — không mutate state trước khi filter xác nhận
 
 ### Advanced Features
@@ -169,9 +169,9 @@
 | HYB-01 | Phase 11 | Complete |
 | HYB-06 | Phase 11 | Complete |
 | HYB-02 | Phase 12 | Complete |
-| HYB-03 | Phase 13 | Pending |
-| HYB-04 | Phase 13 | Pending |
-| HYB-05 | Phase 13 | Pending |
+| HYB-03 | Phase 13 | Complete |
+| HYB-04 | Phase 13 | Complete |
+| HYB-05 | Phase 13 | Complete |
 | VAL-04 | Phase 14 | Pending |
 | ADV-01 | Phase 15 | Pending |
 | ADV-02 | Phase 15 | Pending |
