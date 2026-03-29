@@ -193,7 +193,7 @@ Plans:
 
 **Milestone Goal:** Combine v2 state machine (DD/FTD/Rally) with indicator filters (EMA/MACD) into a hybrid model that beats 56.7% accuracy on 962 published signals.
 
-- [ ] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos
+- [x] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos (completed 2026-03-29)
 - [ ] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check
 - [ ] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic
 - [ ] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy
@@ -210,10 +210,10 @@ Plans:
   2. State machine proposes signal transitions without mutating internal state (DD counter, rally tracker) until explicit commit is called
   3. A vetoed FTD proposal does not reset the DD counter -- verified by unit test with known scenario
   4. With two-phase commit enabled and no filter active, hybrid position manager produces identical state transitions to v2 position manager
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
+- [x] 11-01-PLAN.md -- Fork v2 package, HybridConfig, HybridEngine with two-phase commit, regression tests (HYB-01, HYB-06)
 
 ### Phase 12: Indicator Filter Layer
 **Goal**: Indicator conditions can evaluate any market day and return a CONFIRM/VETO/OVERRIDE verdict independently of the state machine
@@ -290,7 +290,7 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 8. Indicator Engine | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 9. Rule Discovery | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 10. Discovery Validation | v2.0 | 2/2 | Complete | 2026-03-29 |
-| 11. Foundation & Two-Phase Commit | v3.0 | 0/? | Not started | - |
+| 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete   | 2026-03-29 |
 | 12. Indicator Filter Layer | v3.0 | 0/? | Not started | - |
 | 13. Hybrid Engine Integration | v3.0 | 0/? | Not started | - |
 | 14. Hybrid Validation | v3.0 | 0/? | Not started | - |
