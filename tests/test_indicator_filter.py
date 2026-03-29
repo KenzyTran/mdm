@@ -40,6 +40,8 @@ def _make_row(**overrides):
         'macd': 1.5,
         'macd_signal': 1.0,
         'macd_histogram': 0.5,
+        'ha_smooth_close': 102.0,
+        'ha_smooth_open': 98.0,
     }
     defaults.update(overrides)
     return pd.Series(defaults)
@@ -56,6 +58,8 @@ def _make_bearish_row(**overrides):
         'macd': -1.5,
         'macd_signal': -1.0,
         'macd_histogram': -0.5,
+        'ha_smooth_close': 88.0,
+        'ha_smooth_open': 92.0,
     }
     defaults.update(overrides)
     return pd.Series(defaults)
@@ -199,31 +203,36 @@ class TestVerdict:
         """All 3 default conditions bullish -> CONFIRM for BUY."""
         row = _make_row(close=100, ema55=95, ema9=99, ema21=98, macd_histogram=0.5)
         f = IndicatorFilter()
-        assert f.evaluate(row, "BUY", None) == Verdict.CONFIRM
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.CONFIRM
 
     def test_all_bearish_overrides_buy(self):
         """All 3 default conditions bearish -> OVERRIDE for BUY (0/3)."""
         row = _make_row(close=80, ema55=95, ema9=90, ema21=92, macd_histogram=-0.5)
         f = IndicatorFilter()
-        assert f.evaluate(row, "BUY", None) == Verdict.OVERRIDE
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.OVERRIDE
 
     def test_mixed_vetoes_buy(self):
         """1/3 bullish (ema55 only) -> VETO for BUY."""
         row = _make_row(close=100, ema55=95, ema9=90, ema21=92, macd_histogram=-0.5)
         f = IndicatorFilter()
-        assert f.evaluate(row, "BUY", None) == Verdict.VETO
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.VETO
 
     def test_two_thirds_confirms_buy(self):
         """2/3 bullish (ema55 + ema9>ema21) -> CONFIRM for BUY (0.67 threshold)."""
         row = _make_row(close=100, ema55=95, ema9=99, ema21=98, macd_histogram=-0.5)
         f = IndicatorFilter()
-        assert f.evaluate(row, "BUY", None) == Verdict.CONFIRM
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.CONFIRM
 
     def test_unknown_proposal_confirms(self):
         """Unknown proposal type -> CONFIRM (no opinion)."""
         row = _make_row()
         f = IndicatorFilter()
-        assert f.evaluate(row, "UNKNOWN", None) == Verdict.CONFIRM
+        verdict, confidence = f.evaluate(row, "UNKNOWN", None)
+        assert verdict == Verdict.CONFIRM
 
 
 # =====================================================================
@@ -237,19 +246,22 @@ class TestProposalDirection:
         """All bearish row + SELL -> CONFIRM (bearish conditions agree with sell)."""
         row = _make_bearish_row()
         f = IndicatorFilter()
-        assert f.evaluate(row, "SELL", None) == Verdict.CONFIRM
+        verdict, confidence = f.evaluate(row, "SELL", None)
+        assert verdict == Verdict.CONFIRM
 
     def test_sell_all_bullish_overrides(self):
         """All bullish row + SELL -> OVERRIDE (no bearish conditions agree)."""
         row = _make_row()
         f = IndicatorFilter()
-        assert f.evaluate(row, "SELL", None) == Verdict.OVERRIDE
+        verdict, confidence = f.evaluate(row, "SELL", None)
+        assert verdict == Verdict.OVERRIDE
 
     def test_cash_uses_bearish(self):
         """CASH proposal uses bearish conditions same as SELL."""
         row = _make_bearish_row()
         f = IndicatorFilter()
-        assert f.evaluate(row, "CASH", None) == Verdict.CONFIRM
+        verdict, confidence = f.evaluate(row, "CASH", None)
+        assert verdict == Verdict.CONFIRM
 
 
 # =====================================================================
@@ -269,13 +281,15 @@ class TestOverride:
         # All bearish for the 2 enabled conditions
         row = _make_row(close=80, ema55=95, macd_histogram=-0.5)
         f = IndicatorFilter(config=cfg)
-        assert f.evaluate(row, "BUY", None) == Verdict.VETO
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.VETO
 
     def test_override_with_3_active(self):
         """Default config (3 active), all bearish row + BUY -> OVERRIDE."""
         row = _make_bearish_row()
         f = IndicatorFilter()
-        assert f.evaluate(row, "BUY", None) == Verdict.OVERRIDE
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.OVERRIDE
 
 
 # =====================================================================
@@ -322,7 +336,8 @@ class TestNaNHandling:
         # The test name says "CONFIRM" but the logic produces OVERRIDE.
         # Since the code matches the detailed spec (D-02, D-13), and the test
         # description contradicts the actual behavior, I'll test actual behavior.
-        assert f.evaluate(row, "BUY", None) == Verdict.OVERRIDE
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.OVERRIDE
 
     def test_partial_nan_uses_available(self):
         """Partial NaN: ema55=NaN (False), ema9>ema21=True, macd>0=True.
@@ -337,7 +352,112 @@ class TestNaNHandling:
             macd_histogram=0.5,
         )
         f = IndicatorFilter()
-        assert f.evaluate(row, "BUY", None) == Verdict.CONFIRM
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.CONFIRM
+
+
+# =====================================================================
+# TestHASmoothCondition: 5 tests
+# =====================================================================
+
+class TestHASmoothCondition:
+    """Test HA Smoothed 55 boolean conditions and toggle."""
+
+    def test_ha_smooth_bullish(self):
+        """ha_smooth_close > ha_smooth_open -> bullish."""
+        row = _make_row(ha_smooth_close=100.0, ha_smooth_open=95.0)
+        assert IndicatorFilter.ha_smooth_bullish(row) is True
+
+    def test_ha_smooth_bearish(self):
+        """ha_smooth_close < ha_smooth_open -> bearish."""
+        row = _make_row(ha_smooth_close=90.0, ha_smooth_open=95.0)
+        assert IndicatorFilter.ha_smooth_bearish(row) is True
+
+    def test_ha_smooth_nan_safe(self):
+        """NaN ha_smooth_close -> False for both bullish and bearish."""
+        row = _make_row(ha_smooth_close=float('nan'))
+        assert IndicatorFilter.ha_smooth_bullish(row) is False
+        assert IndicatorFilter.ha_smooth_bearish(row) is False
+
+    def test_ha_smooth_toggle_off(self):
+        """ha_smooth_enabled=False (default): HA vote excluded from bullish votes."""
+        cfg = FilterConfig()  # ha_smooth_enabled=False by default
+        f = IndicatorFilter(config=cfg)
+        row = _make_row()
+        votes = f._get_bullish_votes(row)
+        # Default 3 conditions, no HA
+        assert len(votes) == 3
+
+    def test_ha_smooth_toggle_on(self):
+        """ha_smooth_enabled=True: HA vote included (list length +1)."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            cfg = FilterConfig(ha_smooth_enabled=True)
+        f = IndicatorFilter(config=cfg)
+        row = _make_row()
+        votes = f._get_bullish_votes(row)
+        # Default 3 + HA = 4 conditions
+        assert len(votes) == 4
+
+    def test_active_count_includes_ha(self):
+        """FilterConfig(ha_smooth_enabled=True) -> active_count includes it."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            cfg = FilterConfig(ha_smooth_enabled=True)
+        assert cfg.active_count() == 4  # 3 default + 1 HA
+
+
+# =====================================================================
+# TestConfidence: 5 tests
+# =====================================================================
+
+class TestConfidence:
+    """Test confidence score returned by evaluate()."""
+
+    def test_confidence_returned(self):
+        """evaluate() returns tuple (Verdict, float)."""
+        row = _make_row()
+        f = IndicatorFilter()
+        result = f.evaluate(row, "BUY", None)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        verdict, confidence = result
+        assert isinstance(verdict, Verdict)
+        assert isinstance(confidence, float)
+
+    def test_confidence_all_agree(self):
+        """3/3 bullish agree -> confidence = 1.0."""
+        row = _make_row(close=100, ema55=95, ema9=99, ema21=98, macd_histogram=0.5)
+        f = IndicatorFilter()
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.CONFIRM
+        assert confidence == 1.0
+
+    def test_confidence_none_agree(self):
+        """0/3 agree -> confidence = 0.0, verdict = OVERRIDE."""
+        row = _make_row(close=80, ema55=95, ema9=90, ema21=92, macd_histogram=-0.5)
+        f = IndicatorFilter()
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.OVERRIDE
+        assert confidence == 0.0
+
+    def test_confidence_partial(self):
+        """2/3 agree -> confidence approx 0.667."""
+        row = _make_row(close=100, ema55=95, ema9=99, ema21=98, macd_histogram=-0.5)
+        f = IndicatorFilter()
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.CONFIRM
+        assert confidence == pytest.approx(2 / 3, rel=1e-3)
+
+    def test_baseline_verdict_unchanged(self):
+        """With ha_smooth_enabled=False, evaluate() returns same Verdict as before (now as tuple)."""
+        cfg = FilterConfig(ha_smooth_enabled=False)
+        f = IndicatorFilter(config=cfg)
+        row = _make_row(close=100, ema55=95, ema9=99, ema21=98, macd_histogram=0.5)
+        verdict, confidence = f.evaluate(row, "BUY", None)
+        assert verdict == Verdict.CONFIRM
+        # All 3 agree -> confidence = 1.0
+        assert confidence == 1.0
 
 
 # =====================================================================
