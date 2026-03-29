@@ -1,14 +1,18 @@
-"""Unit tests for core indicator functions.
+"""Unit and integration tests for core indicator functions.
 
 Tests EMA, SMA, MACD, Heikin Ashi, Heikin Ashi Smoothed, and
-build_indicator_dataframe against known values using small synthetic data.
+build_indicator_dataframe against known values using small synthetic data,
+plus spot-check integration tests on real NASDAQ data.
 """
+
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
 
+from core.data_loader import DataLoader
 from core.indicators import (
     build_indicator_dataframe,
     compute_ema,
@@ -173,3 +177,105 @@ class TestBuildIndicatorDataframe:
         result = build_indicator_dataframe(sample_ohlcv)
         assert result["ma200"].iloc[:199].isna().all()
         assert result["ma200"].iloc[199:].notna().all()
+
+
+class TestIndicatorSpotChecks:
+    """Integration tests using real NASDAQ data to verify indicator reasonableness."""
+
+    @staticmethod
+    def _find_data_dir():
+        """Find the data directory containing NASDAQ.csv.
+
+        Checks the project root first, then traverses up to find the
+        main repo (worktrees may not have gitignored data files).
+        """
+        project_root = Path(__file__).resolve().parent.parent
+        if (project_root / "data" / "NASDAQ.csv").exists():
+            return str(project_root)
+        # In a worktree, find the main repo via .git file
+        git_path = project_root / ".git"
+        if git_path.is_file():
+            content = git_path.read_text().strip()
+            if content.startswith("gitdir:"):
+                git_dir = Path(content.split("gitdir:", 1)[1].strip())
+                main_repo = git_dir.resolve().parent.parent.parent
+                if (main_repo / "data" / "NASDAQ.csv").exists():
+                    return str(main_repo)
+        pytest.skip("NASDAQ.csv not found - skipping integration tests")
+
+    @pytest.fixture(scope="class")
+    def indicator_df(self):
+        """Load NASDAQ data and compute all indicators."""
+        data_dir = self._find_data_dir()
+        ohlcv = DataLoader(market="nasdaq", data_dir=data_dir).load()
+        return build_indicator_dataframe(ohlcv)
+
+    @pytest.mark.integration
+    def test_ema9_close_to_recent_prices(self, indicator_df):
+        """EMA9 within 5% of close on 2020-01-02 (normal market)."""
+        row = indicator_df[indicator_df["date"] == "2020-01-02"].iloc[0]
+        rel_diff = abs(row["ema9"] - row["close"]) / row["close"]
+        assert rel_diff < 0.05, (
+            f"EMA9 too far from close: {row['ema9']:.2f} vs {row['close']:.2f} "
+            f"(rel_diff={rel_diff:.4f})"
+        )
+
+    @pytest.mark.integration
+    def test_ma200_below_close_in_bull_market(self, indicator_df):
+        """MA200 below close on 2020-01-02 (NASDAQ near all-time highs)."""
+        row = indicator_df[indicator_df["date"] == "2020-01-02"].iloc[0]
+        assert row["ma200"] < row["close"], (
+            f"MA200 ({row['ma200']:.2f}) should be below close "
+            f"({row['close']:.2f}) in bull market"
+        )
+
+    @pytest.mark.integration
+    def test_ma200_nan_first_199_rows(self, indicator_df):
+        """First 199 rows have NaN for ma200, row 199 has valid value."""
+        assert indicator_df["ma200"].iloc[:199].isna().all(), (
+            "First 199 rows of ma200 should be NaN"
+        )
+        assert pd.notna(indicator_df["ma200"].iloc[199]), (
+            "Row 199 (200th row) of ma200 should have a valid value"
+        )
+
+    @pytest.mark.integration
+    def test_macd_histogram_changes_sign(self, indicator_df):
+        """MACD histogram has both positive and negative values."""
+        hist = indicator_df["macd_histogram"].dropna()
+        assert (hist > 0).any(), "MACD histogram has no positive values"
+        assert (hist < 0).any(), "MACD histogram has no negative values"
+
+    @pytest.mark.integration
+    def test_ha_smoothed_smoother_than_raw(self, indicator_df):
+        """HA smoothed close has lower std of daily changes than raw close."""
+        raw_changes = indicator_df["close"].diff().dropna().std()
+        smooth_changes = indicator_df["ha_smooth_close"].diff().dropna().std()
+        assert smooth_changes < raw_changes, (
+            f"Smoothed std ({smooth_changes:.4f}) should be less than "
+            f"raw std ({raw_changes:.4f})"
+        )
+
+    @pytest.mark.integration
+    def test_no_nan_after_warmup(self, indicator_df):
+        """No NaN in any indicator column after row 250 (past 200-day warmup)."""
+        indicator_cols = [
+            "ema9", "ema21", "ema55", "ma200",
+            "macd", "macd_signal", "macd_histogram",
+            "ha_smooth_close",
+        ]
+        after_warmup = indicator_df.iloc[250:]
+        for col in indicator_cols:
+            nan_count = after_warmup[col].isna().sum()
+            assert nan_count == 0, (
+                f"Column {col} has {nan_count} NaN values after row 250"
+            )
+
+    @pytest.mark.integration
+    def test_build_indicator_dataframe_row_count(self, indicator_df):
+        """Output has same number of rows as input OHLCV DataFrame."""
+        data_dir = self._find_data_dir()
+        ohlcv = DataLoader(market="nasdaq", data_dir=data_dir).load()
+        assert len(indicator_df) == len(ohlcv), (
+            f"Row count mismatch: {len(indicator_df)} vs {len(ohlcv)}"
+        )
