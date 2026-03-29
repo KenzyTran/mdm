@@ -137,7 +137,11 @@ Plans:
   1. NASDAQ OHLCV data loads from 1974 onward with no gaps in trading days, correct dtypes, and prices matching known historical values
   2. Full signal history loader parses all 962 signals from nasdaq_signals_full.csv with date, signal type (Buy/Sell/Cash), gain/loss, and dollar-becomes columns
   3. Signal dates align with available OHLCV dates (every signal date has a corresponding price row)
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md -- Extend DataLoader spot-checks and signal loader for dollar_becomes (DATA-05, DATA-06)
+- [ ] 07-02-PLAN.md -- Date alignment gap report and integration tests (DATA-05, DATA-06)
 
 ### Phase 8: Indicator Engine
 **Goal**: All known Dr. K indicators are computed across the full NASDAQ history and feature snapshots are extracted at every signal date
@@ -186,7 +190,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 4. MDM v2 Engine | v1.0 | 2/2 | Complete | 2026-03-28 |
 | 5. Validation & Performance | v1.0 | 2/2 | Complete | 2026-03-28 |
 | 6. VN30 Adaptation | v1.0 | 3/3 | Complete | 2026-03-28 |
-| 7. Data Foundation | v2.0 | 0/? | Not started | - |
+| 7. Data Foundation | v2.0 | 0/2 | Not started | - |
 | 8. Indicator Engine | v2.0 | 0/? | Not started | - |
 | 9. Rule Discovery | v2.0 | 0/? | Not started | - |
 | 10. Discovery Validation | v2.0 | 0/? | Not started | - |
