@@ -49,8 +49,8 @@
 
 ### Data Infrastructure (Extended)
 
-- [ ] **DATA-05**: Full NASDAQ OHLCV data available from 1974+ for indicator computation across entire signal history
-- [ ] **DATA-06**: Full signal history loader parses 962 signals (1974-2026) from nasdaq_signals_full.csv with date, signal type, gain/loss, dollar-becomes columns
+- [x] **DATA-05**: Full NASDAQ OHLCV data available from 1974+ for indicator computation across entire signal history
+- [x] **DATA-06**: Full signal history loader parses 962 signals (1974-2026) from nasdaq_signals_full.csv with date, signal type, gain/loss, dollar-becomes columns
 
 ### Indicator Engine
 
@@ -128,8 +128,8 @@
 | VN30-01 | Phase 6 | Complete |
 | VN30-02 | Phase 6 | Complete |
 | VN30-03 | Phase 6 | Complete |
-| DATA-05 | Phase 7 | Pending |
-| DATA-06 | Phase 7 | Pending |
+| DATA-05 | Phase 7 | Complete |
+| DATA-06 | Phase 7 | Complete |
 | IND-01 | Phase 8 | Pending |
 | IND-02 | Phase 8 | Pending |
 | IND-03 | Phase 8 | Pending |
