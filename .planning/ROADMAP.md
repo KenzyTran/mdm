@@ -195,7 +195,7 @@ Plans:
 
 - [x] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos (completed 2026-03-29)
 - [x] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check (completed 2026-03-29)
-- [ ] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic
+- [x] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic (completed 2026-03-29)
 - [ ] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy
 - [ ] **Phase 15: Advanced Features** - Contextual transitions, HA Smoothed filter, confidence scoring, three-way dashboard
 
@@ -239,7 +239,7 @@ Plans:
   3. Signal override logic forces state transitions when indicator conditions are sufficiently strong, even without a state machine proposal
   4. Cash state is inserted when indicator degradation is detected (EMA crossover bearish) independent of DD count threshold
   5. `scripts/run_hybrid_backtest.py` entry point runs end-to-end and produces output file with signal log
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 13-01-PLAN.md -- Wire Propose-Filter-Decide pipeline into engine with degrade_to_cash and indicator columns (HYB-03, HYB-04, HYB-05)
@@ -293,6 +293,6 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 10. Discovery Validation | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete    | 2026-03-29 |
 | 12. Indicator Filter Layer | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 13. Hybrid Engine Integration | v3.0 | 1/2 | In Progress|  |
+| 13. Hybrid Engine Integration | v3.0 | 1/2 | Complete    | 2026-03-29 |
 | 14. Hybrid Validation | v3.0 | 0/? | Not started | - |
 | 15. Advanced Features | v3.0 | 0/? | Not started | - |
