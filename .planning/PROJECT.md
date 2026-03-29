@@ -62,10 +62,18 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - Published signal history available from 2017-2026 on virtueofselfishinvesting.com
 
 **Key observations about post-2019 behavior:**
-1. Cash state appears between Buy and Sell — original rules don't have this intermediate state
-2. Signal switching is much faster (sometimes same-day Buy→Cash)
-3. Sell signals appear to trigger without full 5-DD accumulation
-4. Model appears more responsive to short-term price action
+1. Cash state switching is much faster (sometimes same-day Buy→Cash)
+2. Sell signals appear to trigger without full 5-DD accumulation
+3. Model appears more responsive to short-term price action
+
+**Key observations from 2012 VMAP webinar (Dr. K transcript):**
+1. Cash state existed pre-2019 — MDM issued "neutral signal" on Oct 15, 2012 (bác bỏ giả thuyết Cash chỉ post-2019)
+2. 6% rally attempt threshold: NASDAQ must fall >= 6% before requiring classic FTD (day 4+); below 6% FTD can come anytime
+3. FTD requires "confirming action in leading stocks" — not just index price/volume
+4. "Banding width" concept: model performance depends on price oscillation amplitude — too narrow = whipsaw, implies volatility-aware filtering
+5. Cash→Sell triggered by "continued deterioration and selling pressure in leading stocks AND major indices"
+6. Dr. K: "the key is to not change the inherent logic in the model" — core rules are stable, only minor adjustments
+7. Worst drawdowns: 15.7% (Q2-Q3 1999), 18.1% (2012) on 1x ETF
 
 **Existing codebase:**
 - `strategies/mdm_classic/` — MDM classic implementation (migrated from `models/`)
@@ -81,6 +89,8 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - `analysis/rule_discovery.py` — Rule discovery pipeline: era splitting, statistical profiling, decision tree training, human-readable rule extraction
 - `analysis/validate_discovery.py` — Discovery validation: match rate scoring, confusion matrices, cross-era validation, degradation deltas, two-era dashboard
 - `strategies/mdm_hybrid/indicator_filter.py` — IndicatorFilter: 6-condition filter with CONFIRM/VETO/OVERRIDE verdicts for hybrid signal validation
+- `strategies/mdm_hybrid/mdm_hybrid_engine.py` — HybridEngine with Propose-Filter-Decide pipeline: state machine proposes, indicators confirm/veto/override
+- `scripts/run_hybrid_backtest.py` — Hybrid backtest entry point with signal log CSV output
 - `analysis/` — Analysis tools (`analyze_drawdown.py`, `diagnose_vn30.py`)
 - `data/` — NASDAQ, S&P500, VN30 OHLCV data
 - Data format: US data normalized (Phase 1), VN30 data is native scale
@@ -133,4 +143,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 12: Indicator Filter Layer completed*
+*Last updated: 2026-03-29 after Phase 13: Hybrid Engine Integration complete*
