@@ -245,3 +245,132 @@ Bắt đầu phiên
 8. **Pitfall - CASH override:** Nếu đề xuất là CASH và verdict là OVERRIDE, engine giữ nguyên chuyển CASH (không cần ép lại vì đã đúng hướng).
 
 9. **Pitfall - CASH degradation:** Khi ở CASH và verdict là VETO/OVERRIDE, engine bỏ qua (không làm gì vì đã ở CASH rồi).
+
+---
+
+## X. VỊ THẾ SHORT TRONG HYBRID ENGINE
+
+*Cập nhật v4.0: Hybrid Engine hỗ trợ vị thế short thật sự khi ở trạng thái SELL, tích hợp với two-phase commit và indicator filter.*
+
+### 1. Mở vị thế Short trong Hybrid:
+* Khi hybrid engine chuyển sang **SELL** (sau khi qua two-phase commit và indicator filter), vị thế short được mở.
+* **Quan trọng:** Trong hybrid, SELL có thể bị **VETO** bởi indicator filter → short chỉ được mở khi filter **CONFIRM** hoặc khi `filter_enabled = False`.
+* Giá entry = Giá đóng cửa phiên chuyển sang SELL.
+* Config: `short_mode = True` (mặc định).
+
+### 2. Tương tác giữa Short và Indicator Filter:
+
+| Tình huống | Verdict | Hành động |
+| :--- | :--- | :--- |
+| V2 đề xuất SELL | CONFIRM | Mở short, chuyển sang SELL |
+| V2 đề xuất SELL | VETO | Rollback — **không mở short**, giữ trạng thái cũ |
+| V2 đề xuất SELL | OVERRIDE | Ép về CASH — **không mở short** |
+| Đang ở SELL, V2 giữ SELL | VETO/OVERRIDE | Cover short qua `cover_short()`, chuyển về CASH |
+| Đang ở SELL, V2 giữ SELL | CONFIRM | Giữ nguyên vị thế short |
+
+**Điểm quan trọng:** Indicator filter có thể **OVERRIDE** từ SELL về CASH → tương đương cover short với P&L. Trong trường hợp này, engine gọi `cover_short()` (không phải `degrade_to_cash()`) để ghi nhận P&L short.
+
+### 3. Short Cover Triggers (giống V2):
+
+**Điều kiện 1: Short Stop Loss (DD5 high)** — Ưu tiên cao nhất, kiểm tra trước filter.
+
+**Điều kiện 2: FTD được phát hiện** → cover short, chuyển về CASH.
+
+**Điều kiện 3: MA50 breakout** → cover short, chuyển về CASH.
+
+**Điều kiện 4 (Hybrid-specific): Indicator degradation** → Khi V2 không đề xuất thay đổi nhưng chỉ báo xấu đi (VETO/OVERRIDE khi ở SELL), engine tự động cover short về CASH.
+
+### 4. Short P&L:
+$$pnl = \frac{gia\_entry - gia\_cover}{gia\_entry}$$
+* Dương khi thị trường giảm, âm khi thị trường tăng.
+
+### 5. Equity Curve:
+* Khi `prev_state = SELL` (có short): sử dụng inverse return $equity[i] = equity[i-1] \times \frac{close[i-1]}{close[i]}$
+* Khi `long_only_equity = True`: equity giữ nguyên (flat) khi ở SELL.
+
+---
+
+## XI. QUY TẮC CHUYỂN TRẠNG THÁI MỞ RỘNG (v4.0)
+
+*Cập nhật v4.0: Enforce đúng chuỗi chuyển trạng thái SELL -> CASH -> BUY, bao gồm hybrid OVERRIDE paths.*
+
+### 1. Quy tắc bắt buộc: SELL -> CASH -> BUY
+
+* **KHÔNG cho phép** chuyển trực tiếp từ SELL sang BUY.
+* `enter_buy()` sẽ raise `ValueError` nếu trạng thái hiện tại là SELL.
+* Tất cả chuyển từ SELL về CASH **phải** qua `cover_short()` để tính P&L.
+* Sau khi cover short về CASH, engine mới có thể chuyển sang BUY.
+
+### 2. MA50 Breakout từ SELL:
+* Khi ở SELL và giá vượt MA50: chỉ **cover short về CASH**.
+* **Không mua trực tiếp** — phải chờ tín hiệu mua riêng khi đã ở CASH.
+
+### 3. Hybrid-specific: OVERRIDE verdict từ SELL:
+* Khi indicator filter trả về OVERRIDE khi đang ở SELL: engine cover short về CASH qua `cover_short()`.
+* OVERRIDE từ SELL **không** chuyển thẳng sang BUY — luôn qua CASH.
+* Đây là cơ chế bảo vệ bổ sung so với V2: indicator filter có thể ép cover short sớm hơn khi chỉ báo cải thiện.
+
+### 4. Sơ đồ chuyển trạng thái cập nhật (v4.0 + Hybrid):
+
+```
+BUY -> SELL    : DD count >= threshold (CONFIRM bởi filter)
+BUY -> CASH    : Stop loss, MA10 breakdown, VETO/OVERRIDE từ filter
+SELL -> CASH   : FTD, MA50 breakout, Short stop loss (DD5 high),
+                 OVERRIDE/VETO từ filter (indicator degradation)
+CASH -> BUY    : FTD, MA50 breakout, 52-week breakout (CONFIRM bởi filter)
+SELL -> BUY    : KHÔNG CHO PHÉP (phải qua CASH trước)
+```
+
+### 5. So sánh với Hybrid cũ:
+
+| Chuyển trạng thái | Hybrid cũ | Hybrid v4.0 |
+| :--- | :--- | :--- |
+| SELL -> BUY | Cho phép (FTD/MA50 + CONFIRM) | **Cấm** — phải qua CASH |
+| SELL -> CASH (OVERRIDE) | `degrade_to_cash()` (không P&L) | `cover_short()` **(có P&L)** |
+| SELL -> CASH (indicator degradation) | `degrade_to_cash()` | `cover_short()` **(có P&L)** |
+
+---
+
+## XII. CẬP NHẬT STOP LOSS (v4.0)
+
+*Cập nhật v4.0: Stop loss linh hoạt theo volatility, giảm mặc định xuống 1.5%, thêm short stop loss dựa trên DD5 high.*
+
+### 1. Long Stop Loss — Giảm xuống 1.5%:
+* Mặc định: $C < P_{buy} \times (1 - 0.015)$ (giảm **1.5%** từ giá mua).
+* Thay đổi từ 2.5% (cũ) xuống 1.5% theo quy tắc Dr. K.
+* Config: `stop_loss_pct = 0.015`.
+
+### 2. Volatility-Adaptive Stop Loss (ATR):
+* Sử dụng **ATR (Average True Range)** / baseline ratio để điều chỉnh stop loss.
+* Công thức: $effective\_pct = stop\_loss\_pct \times \frac{ATR_{current}}{ATR_{baseline}}$
+* Ratio được **clamp** trong khoảng **[0.5x, 2.5x]**:
+  * Khi ATR cao (thị trường volatile): stop loss rộng hơn (ví dụ $1.5\% \times 2.0 = 3.0\%$)
+  * Khi ATR thấp (thị trường ổn định): stop loss chặt hơn (ví dụ $1.5\% \times 0.7 = 1.05\%$)
+* Config: `atr_period = 14`, `volatility_adaptive = True`
+
+### 3. Short Stop Loss — DD5 High:
+* **DD5 high** = Giá cao nhất ($H$) của ngày phân phối thứ 5 (ngày DD kích hoạt chuyển sang SELL).
+* DD5 high được **lock** vào engine khi chuyển sang trạng thái SELL.
+* Mỗi phiên khi ở SELL, kiểm tra: $C > DD5_{high} \times (1 + short\_stop\_pct)$
+* Mặc định: 1% trên DD5 high → $C > DD5_{high} \times 1.01$
+* Khi kích hoạt: cover short, chuyển về **CASH**.
+* **Hybrid-specific:** Short stop loss được kiểm tra **TRƯỚC** khi indicator filter đánh giá — đảm bảo stop loss luôn được ưu tiên.
+* Config: `short_stop_pct_above_dd5 = 0.01`
+
+### 4. Thứ tự kiểm tra trong Hybrid Engine:
+
+```
+[1] Short stop loss (DD5 high)     ← Ưu tiên cao nhất, trước filter
+[2] V2 state machine xử lý        ← FTD, MA50, DD counting
+[3] Indicator filter đánh giá      ← CONFIRM/VETO/OVERRIDE
+[4] Long stop loss (1.5% + ATR)    ← Trong V2 processing
+```
+
+### 5. Bảng thông số Stop Loss cập nhật:
+
+| Thông số | Giá trị cũ | Giá trị v4.0 | Mô tả |
+| :--- | :---: | :---: | :--- |
+| `stop_loss_pct` | 0.025 (2.5%) | **0.015 (1.5%)** | Phần trăm cắt lỗ long từ giá mua |
+| `volatility_adaptive` | Không có | **True** | Bật/tắt ATR adaptive scaling |
+| `atr_period` | Không có | **14** | Số phiên tính ATR |
+| `short_stop_pct_above_dd5` | Không có | **0.01 (1%)** | Phần trăm trên DD5 high để cover short |
