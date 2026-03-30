@@ -280,7 +280,7 @@ Plans:
 
 **Milestone Goal:** Align MDM engine with Dr. K's actual model -- add real short positions on SELL signal, adaptive stop loss, enforce SELL->CASH->BUY transition, and validate long/short vs long-only performance.
 
-- [ ] **Phase 16: Short Position & State Transitions** - Short entry on SELL, short cover mechanics, and enforced SELL->CASH->BUY transition
+- [x] **Phase 16: Short Position & State Transitions** - Short entry on SELL, short cover mechanics, and enforced SELL->CASH->BUY transition (completed 2026-03-30)
 - [ ] **Phase 17: Stop Loss & Risk Management** - Long stop loss 1.5%, volatility-adaptive adjustment, and short-specific stop loss rules
 - [ ] **Phase 18: Short P&L & Comparative Validation** - Short P&L tracking, long-only vs long/short backtest comparison, and rule docs update
 
@@ -299,7 +299,7 @@ Plans:
 
 Plans:
 - [x] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
-- [ ] 16-02-PLAN.md -- Engine cover triggers, degrade_to_cash replacement, NASDAQ validation (SHORT-04, TRANS-01)
+- [x] 16-02-PLAN.md -- Engine cover triggers, degrade_to_cash replacement, NASDAQ validation (SHORT-04, TRANS-01)
 
 ### Phase 17: Stop Loss & Risk Management
 **Goal**: Stop loss rules align with Dr. K's model -- 1.5% default for long, volatility-adaptive scaling, and separate short stop loss logic
@@ -313,7 +313,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
+- [x] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
 - [ ] 16-02-PLAN.md -- Engine cover triggers, degrade_to_cash replacement, NASDAQ validation (SHORT-04, TRANS-01)
 
 ### Phase 18: Short P&L & Comparative Validation
@@ -354,6 +354,6 @@ Phases execute in numeric order: 16 -> 17 -> 18
 | 13. Hybrid Engine Integration | v3.0 | 2/2 | Complete | 2026-03-29 |
 | 14. Hybrid Validation | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
-| 16. Short Position & State Transitions | v4.0 | 1/2 | In Progress|  |
+| 16. Short Position & State Transitions | v4.0 | 2/2 | Complete   | 2026-03-30 |
 | 17. Stop Loss & Risk Management | v4.0 | 0/? | Not started | - |
 | 18. Short P&L & Comparative Validation | v4.0 | 0/? | Not started | - |
