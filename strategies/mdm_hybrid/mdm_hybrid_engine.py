@@ -149,6 +149,12 @@ class HybridEngine:
         df['prev_ma50'] = df['ma50'].shift(1)
         df['prev_ma10'] = df['ma10'].shift(1)
 
+        # ATR for volatility-adaptive stop loss (Phase 17, RISK-02)
+        df = Indicators.add_atr_column(df, period=self.config.v2_config.atr_period)
+        df['atr_baseline'] = df['atr'].rolling(
+            window=self.config.v2_config.atr_baseline_period, min_periods=1
+        ).mean()
+
         # Add EMA/MACD indicator columns for filter evaluation (per D-03, Phase 13)
         if self.config.filter_enabled:
             from core.indicators import build_indicator_dataframe
@@ -280,11 +286,18 @@ class HybridEngine:
             current_volume = row['volume']
             prev_volume = row['prev_volume']
             signal_type_held = self.position_manager.get_signal_type()
+
+            # Get ATR values for volatility-adaptive stop loss (Phase 17, RISK-02)
+            current_atr = row['atr'] if 'atr' in row and pd.notna(row['atr']) else None
+            current_atr_baseline = row['atr_baseline'] if 'atr_baseline' in row and pd.notna(row['atr_baseline']) else None
+
             stop_loss_result = self.stop_loss_checker.check(
                 close, buy_price, buy_day_low,
                 ma50=ma50, prev_close=prev_close, prev_ma50=prev_ma50_val,
                 current_volume=current_volume, prev_volume=prev_volume,
-                signal_type=signal_type_held
+                signal_type=signal_type_held,
+                atr=current_atr,
+                atr_baseline=current_atr_baseline,
             )
 
             # 5. Update position

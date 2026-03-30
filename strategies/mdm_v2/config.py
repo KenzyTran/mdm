@@ -39,7 +39,7 @@ class MDMV2Config:
     cash_deterioration_days: int = 10   # Days in Cash before auto-Sell
 
     # Stop Loss
-    stop_loss_pct: float = 0.025
+    stop_loss_pct: float = 0.015
 
     # Hypothesis metadata (per D-08)
     name: str = "default"

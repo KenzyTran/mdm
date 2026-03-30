@@ -33,7 +33,7 @@ class TestMDMV2ConfigDefaults:
 
     def test_stop_loss_pct_default(self):
         config = MDMV2Config()
-        assert config.stop_loss_pct == 0.025
+        assert config.stop_loss_pct == 0.015
 
     def test_name_default(self):
         config = MDMV2Config()
