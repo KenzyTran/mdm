@@ -4,7 +4,8 @@
 
 - ✅ **v1.0 MDM Classic & VN30** - Phases 1-6 (shipped 2026-03-28)
 - ✅ **v2.0 MDM Rule Discovery** - Phases 7-10 (shipped 2026-03-29)
-- 🚧 **v3.0 Hybrid MDM Engine** - Phases 11-15 (in progress)
+- ✅ **v3.0 Hybrid MDM Engine** - Phases 11-15 (shipped 2026-03-29)
+- 🚧 **v4.0 MDM Short Signal & Dr. K Alignment** - Phases 16-18 (in progress)
 
 ## Phases
 
@@ -189,17 +190,14 @@ Plans:
 
 </details>
 
-### v3.0 Hybrid MDM Engine (In Progress)
-
-**Milestone Goal:** Combine v2 state machine (DD/FTD/Rally) with indicator filters (EMA/MACD) into a hybrid model that beats 56.7% accuracy on 962 published signals.
+<details>
+<summary>v3.0 Hybrid MDM Engine (Phases 11-15) - SHIPPED 2026-03-29</summary>
 
 - [x] **Phase 11: Foundation & Two-Phase Commit** - Package skeleton, HybridConfig, and state machine refactor to prevent corruption from indicator vetos (completed 2026-03-29)
 - [x] **Phase 12: Indicator Filter Layer** - Stateless IndicatorFilter with boolean condition methods and TradingView parity check (completed 2026-03-29)
 - [x] **Phase 13: Hybrid Engine Integration** - Wire Propose-Filter-Decide pipeline with confirmation, override, and cash insertion logic (completed 2026-03-29)
 - [x] **Phase 14: Hybrid Validation** - Validate hybrid model against 962 signals with confusion matrix and per-type accuracy (completed 2026-03-29)
 - [x] **Phase 15: Advanced Features** - Contextual transitions, HA Smoothed filter, confidence scoring, three-way dashboard (completed 2026-03-29)
-
-## Phase Details
 
 ### Phase 11: Foundation & Two-Phase Commit
 **Goal**: Hybrid engine has a safe architectural foundation where indicator vetos cannot corrupt state machine internals
@@ -243,7 +241,7 @@ Plans:
 
 Plans:
 - [x] 13-01-PLAN.md -- Wire Propose-Filter-Decide pipeline into engine with degrade_to_cash and indicator columns (HYB-03, HYB-04, HYB-05)
-- [ ] 13-02-PLAN.md -- Integration tests for filter pipeline and hybrid backtest entry point script (HYB-03, HYB-04, HYB-05)
+- [x] 13-02-PLAN.md -- Integration tests for filter pipeline and hybrid backtest entry point script (HYB-03, HYB-04, HYB-05)
 
 ### Phase 14: Hybrid Validation
 **Goal**: Hybrid model accuracy is measured against all 962 published signals and compared to the v2 baseline of 56.7%
@@ -276,10 +274,56 @@ Plans:
 - [x] 15-03-PLAN.md -- Three-way model comparison dashboard (ADV-04)
 **UI hint**: yes
 
+</details>
+
+### v4.0 MDM Short Signal & Dr. K Alignment (In Progress)
+
+**Milestone Goal:** Align MDM engine with Dr. K's actual model -- add real short positions on SELL signal, adaptive stop loss, enforce SELL->CASH->BUY transition, and validate long/short vs long-only performance.
+
+- [ ] **Phase 16: Short Position & State Transitions** - Short entry on SELL, short cover mechanics, and enforced SELL->CASH->BUY transition
+- [ ] **Phase 17: Stop Loss & Risk Management** - Long stop loss 1.5%, volatility-adaptive adjustment, and short-specific stop loss rules
+- [ ] **Phase 18: Short P&L & Comparative Validation** - Short P&L tracking, long-only vs long/short backtest comparison, and rule docs update
+
+## Phase Details
+
+### Phase 16: Short Position & State Transitions
+**Goal**: SELL signal opens a real short position and the state machine enforces correct SELL->CASH->BUY transition sequence
+**Depends on**: Phase 15
+**Requirements**: SHORT-01, SHORT-04, TRANS-01
+**Success Criteria** (what must be TRUE):
+  1. When hybrid engine emits SELL signal, position manager opens a short position on the index (VN30: direct short, NASDAQ: inverse ETF concept) with entry price recorded
+  2. Short position is covered (closed) when FTD is detected or price breaks above MA50, transitioning to CASH state
+  3. State machine rejects any direct SELL->BUY transition -- a CASH state must always intervene between SELL and BUY
+  4. Running the engine on historical NASDAQ data produces a signal log where every BUY signal is preceded by a CASH signal (never directly by SELL)
+**Plans**: TBD
+
+### Phase 17: Stop Loss & Risk Management
+**Goal**: Stop loss rules align with Dr. K's model -- 1.5% default for long, volatility-adaptive scaling, and separate short stop loss logic
+**Depends on**: Phase 16
+**Requirements**: RISK-01, RISK-02, RISK-03, SHORT-03
+**Success Criteria** (what must be TRUE):
+  1. Long position stop loss defaults to 1.5% (down from 2.5%) and triggers position exit to CASH when breached
+  2. Volatility-adaptive mechanism widens stop loss during high-volatility periods (measured by ATR or similar) and tightens during low-volatility periods
+  3. Short stop loss triggers at 1% above DD5 high (the highest high of the last 5 distribution days), matching MDM classic rules
+  4. Backtest on NASDAQ shows stop loss triggers at expected points -- spot-checking 5+ known volatile periods confirms adaptive behavior
+**Plans**: TBD
+
+### Phase 18: Short P&L & Comparative Validation
+**Goal**: Short position P&L is tracked correctly and backtest proves whether long/short outperforms long-only
+**Depends on**: Phase 17
+**Requirements**: SHORT-02, TRANS-02, TRANS-03
+**Success Criteria** (what must be TRUE):
+  1. Short position P&L computes correctly -- gain when market drops from entry, loss when market rises from entry -- verified with manual calculation on 3+ trades
+  2. Backtest comparison report shows long-only vs long/short performance side-by-side on NASDAQ with equity curve, max drawdown, Sharpe ratio, and total return
+  3. Same comparison report generated for VN30, showing long-only vs long/short performance with VN30-specific parameters
+  4. Rule documentation files (rules_mdm_v2.md, rules_mdm_hybrid.md) updated with short signal rules, stop loss changes, and SELL->CASH->BUY transition requirement
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
+Phases execute in numeric order: 16 -> 17 -> 18
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -293,8 +337,11 @@ Phases execute in numeric order: 11 -> 12 -> 13 -> 14 -> 15
 | 8. Indicator Engine | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 9. Rule Discovery | v2.0 | 2/2 | Complete | 2026-03-29 |
 | 10. Discovery Validation | v2.0 | 2/2 | Complete | 2026-03-29 |
-| 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 12. Indicator Filter Layer | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 13. Hybrid Engine Integration | v3.0 | 1/2 | Complete    | 2026-03-29 |
-| 14. Hybrid Validation | v3.0 | 1/1 | Complete    | 2026-03-29 |
-| 15. Advanced Features | v3.0 | 3/3 | Complete    | 2026-03-29 |
+| 11. Foundation & Two-Phase Commit | v3.0 | 1/1 | Complete | 2026-03-29 |
+| 12. Indicator Filter Layer | v3.0 | 1/1 | Complete | 2026-03-29 |
+| 13. Hybrid Engine Integration | v3.0 | 2/2 | Complete | 2026-03-29 |
+| 14. Hybrid Validation | v3.0 | 1/1 | Complete | 2026-03-29 |
+| 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
+| 16. Short Position & State Transitions | v4.0 | 0/? | Not started | - |
+| 17. Stop Loss & Risk Management | v4.0 | 0/? | Not started | - |
+| 18. Short P&L & Comparative Validation | v4.0 | 0/? | Not started | - |

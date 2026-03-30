@@ -198,6 +198,16 @@
 | ADV-02 | Phase 15 | Complete |
 | ADV-03 | Phase 15 | Complete |
 | ADV-04 | Phase 15 | Pending |
+| SHORT-01 | Phase 16 | Pending |
+| SHORT-04 | Phase 16 | Pending |
+| TRANS-01 | Phase 16 | Pending |
+| RISK-01 | Phase 17 | Pending |
+| RISK-02 | Phase 17 | Pending |
+| RISK-03 | Phase 17 | Pending |
+| SHORT-03 | Phase 17 | Pending |
+| SHORT-02 | Phase 18 | Pending |
+| TRANS-02 | Phase 18 | Pending |
+| TRANS-03 | Phase 18 | Pending |
 
 **v1.0 Coverage:**
 - v1 requirements: 22 total
@@ -214,6 +224,11 @@
 - Mapped to phases: 11
 - Unmapped: 0
 
+**v4.0 Coverage:**
+- v4 requirements: 10 total
+- Mapped to phases: 10
+- Unmapped: 0
+
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-30 after v4.0 requirements definition*
+*Last updated: 2026-03-30 after v4.0 roadmap creation*

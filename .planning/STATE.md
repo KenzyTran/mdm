@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: MDM Short Signal & Dr. K Alignment
-status: defining-requirements
+status: ready-to-plan
 stopped_at: null
 last_updated: "2026-03-30T00:00:00.000Z"
 last_activity: 2026-03-30
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,15 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Defining requirements for v4.0 — MDM Short Signal & Dr. K Alignment
+**Current focus:** Phase 16 -- Short Position & State Transitions
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-30 — Milestone v4.0 started
-Last activity: 2026-03-30 - Completed quick task 260330-9b5: Organize root directory and create strategy rule docs
+Phase: 16 of 18 (Short Position & State Transitions)
+Plan: Ready to plan
+Status: Ready to plan
+Last activity: 2026-03-30 -- Roadmap created for v4.0
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -37,7 +36,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 0 (v3.0)
+- Total plans completed: 0 (v4.0)
 - Average duration: -
 - Total execution time: 0 hours
 
@@ -47,17 +46,12 @@ Progress: [░░░░░░░░░░] 0%
 |-------|-------|-------|----------|
 | - | - | - | - |
 
-**Recent Trend (from v1.0/v2.0):**
+**Recent Trend (from v3.0):**
 
-- Last 5 plans: 4min, 4min, 8min, 4min, 5min
-- Trend: Stable (~5min avg)
+- Last 5 plans: 5min, 4min, 20min, 22min, 48min
+- Trend: Variable (simple plans fast, complex plans longer)
 
 *Updated after each plan completion*
-| Phase 12 P01 | 5min | 2 tasks | 5 files |
-| Phase 13 P01 | 4min | 2 tasks | 2 files |
-| Phase 13 P02 | 20min | 2 tasks | 3 files |
-| Phase 15 P01 | 22min | 2 tasks | 4 files |
-| Phase 15 P02 | 48min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -66,24 +60,10 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Phase 9/10]: close_above_ema55 is dominant feature post-2019 (importance=0.687), EMA9 dominant pre-2019
-- [Phase 10]: 21.3% cross-era degradation confirms era-specific models needed
-- [v3.0 Research]: Two-phase commit MUST come before indicator filter to prevent DD counter corruption
-- [v3.0 Research]: Indicators can only CONFIRM/VETO, never originate signals independently
-- [v3.0 Research]: Max 2-3 filter rules to avoid overfitting on 95 post-2019 signals
-- [v3.0 Roadmap]: 5-phase structure: Foundation -> Filter -> Integration -> Validation -> Advanced
-- [Phase 12]: majority_threshold set to 2/3 (not 0.67) for correct 2-out-of-3 behavior
-- [Phase 12]: Bearish conditions use explicit direction checks, not negation of bullish (D-06)
-- [Phase 12]: OVERRIDE requires 3+ active conditions with 0 agreement
-- [Phase 13]: OVERRIDE always forces Cash regardless of state machine proposal (D-04)
-- [Phase 13]: Cash insertion reuses majority-vote from IndicatorFilter, no separate threshold (D-08)
-- [Phase 13]: Integration tests use real NASDAQ data for realistic filter behavior coverage
-- [Phase 13]: Signal log CSV format: date, old_state, proposed, verdict, final_state, action
-- [Phase 15]: evaluate() returns tuple(Verdict, float) for confidence score exposure
-- [Phase 15]: ha_smooth_enabled defaults False preserving Phase 14 baseline
-- [Phase 15]: State history only grows on state CHANGES, not every day (no memory leak)
-- [Phase 15]: Contextual threshold uses temporary IndicatorFilter to keep filter stateless
-- [Phase 15]: Only 2 contextual rules (long Cash, Cash-from-Sell) to avoid overfitting
+- [v4.0 Roadmap]: 3-phase structure: Short Mechanics -> Stop Loss -> P&L & Validation
+- [v4.0 Roadmap]: SHORT-01 + SHORT-04 + TRANS-01 grouped together (short entry/cover/transition are tightly coupled)
+- [v4.0 Roadmap]: All stop loss requirements (RISK-01/02/03 + SHORT-03) in one phase for unified risk management
+- [v4.0 Roadmap]: P&L tracking (SHORT-02) deferred to Phase 18 since it needs working short positions from Phase 16
 
 ### Pending Todos
 
@@ -91,9 +71,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- Exact mutation points in v2 DD counter/rally tracker need code audit before Phase 11 design
-- TradingView EMA/MACD parity not formally verified -- must spot-check in Phase 12
-- Only 95 post-2019 signals for filter tuning -- overfitting risk requires held-out set discipline
+- Existing position_manager in mdm_v2/mdm_hybrid supports long-only -- needs extension for short positions
+- VN30 short mechanics differ from NASDAQ (direct index short vs inverse ETF) -- may need market-specific adapters
+- DD5 high tracking for short stop loss requires access to distribution day history from state machine
 
 ### Quick Tasks Completed
 
@@ -103,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T14:11:11.486Z
-Stopped at: Completed 15-02-PLAN.md
+Last session: 2026-03-30
+Stopped at: Roadmap created for v4.0, ready to plan Phase 16
 Resume file: None
