@@ -283,6 +283,12 @@ $$equity[i] = equity[i-1] \times \frac{close[i-1]}{close[i]}$$
 * Đây là **inverse return** — equity tăng khi thị trường giảm, giảm khi thị trường tăng.
 * Khi `short_mode = False` hoặc `long_only_equity = True`: equity giữ nguyên (flat) khi ở SELL.
 
+**Quy tắc quan trọng — Tránh Look-Ahead Bias:**
+* Equity curve **phải** dùng trạng thái ngày hôm trước (`state[i-1]`) để quyết định return ngày hôm nay (`i`).
+* **Sai:** `if state[i] == 'BUY': capture return[i]` — nhìn trước signal hôm nay.
+* **Đúng:** `if state[i-1] == 'BUY': capture return[i]` — quyết định dựa trên signal đã có từ hôm qua.
+* Lý do: signal phát ra cuối ngày (dựa trên close), return được tính từ ngày hôm sau.
+
 ---
 
 ## XI. QUY TẮC CHUYỂN TRẠNG THÁI MỞ RỘNG (v4.0)
