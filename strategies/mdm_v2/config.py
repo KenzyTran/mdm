@@ -41,6 +41,11 @@ class MDMV2Config:
     # Stop Loss
     stop_loss_pct: float = 0.015
 
+    # Global Liquidity / QE Floor (v5.0, LIQ-03)
+    qe_floor_enabled: bool = False              # Master switch, default OFF
+    publication_lag_days: int = 7                # Days to offset liquidity data
+    liquidity_csv_path: str = "data/global_liquidity.csv"
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -49,6 +54,7 @@ class MDMV2Config:
         assert self.correction_threshold < 0, "Correction threshold must be negative"
         assert self.stop_loss_pct > 0, "Stop loss percentage must be positive"
         assert self.dd_cash_threshold > 0, "DD cash threshold must be positive"
+        assert self.publication_lag_days >= 0, "Publication lag must be non-negative"
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
