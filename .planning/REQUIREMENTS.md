@@ -106,8 +106,8 @@
 
 ### Stop Loss & Risk
 
-- [ ] **RISK-01**: Stop loss mặc định 1.5% cho vị thế long (thay vì 2.5% hiện tại)
-- [ ] **RISK-02**: Volatility-adaptive stop loss — stop loss rộng hơn khi market volatile
+- [x] **RISK-01**: Stop loss mặc định 1.5% cho vị thế long (thay vì 2.5% hiện tại)
+- [x] **RISK-02**: Volatility-adaptive stop loss — stop loss rộng hơn khi market volatile
 - [ ] **RISK-03**: Short stop loss riêng biệt — 1% trên DD5 high (từ MDM classic rules)
 
 ### Transition & Validation
@@ -201,8 +201,8 @@
 | SHORT-01 | Phase 16 | Complete |
 | SHORT-04 | Phase 16 | Complete |
 | TRANS-01 | Phase 16 | Complete |
-| RISK-01 | Phase 17 | Pending |
-| RISK-02 | Phase 17 | Pending |
+| RISK-01 | Phase 17 | Complete |
+| RISK-02 | Phase 17 | Complete |
 | RISK-03 | Phase 17 | Pending |
 | SHORT-03 | Phase 17 | Pending |
 | SHORT-02 | Phase 18 | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: MDM Short Signal & Dr. K Alignment
 status: executing
-stopped_at: Completed 16-02-PLAN.md
-last_updated: "2026-03-30T04:56:59.867Z"
-last_activity: 2026-03-30
+stopped_at: Completed 17-01-PLAN.md
+last_updated: "2026-03-30T06:33:23.128Z"
+last_activity: 2026-03-30 -- Completed 17-01-PLAN.md
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 0
+  total_plans: 4
+  completed_plans: 3
+  percent: 50
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Position
 
-Phase: 17
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-03-30
+Phase: 17 (stop-loss-risk-management) -- EXECUTING
+Plan: 1 of 2 (COMPLETE)
+Status: Executing Phase 17
+Last activity: 2026-03-30 -- Completed 17-01-PLAN.md
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 16 P01 | 33min | 2 tasks | 4 files |
 | Phase 16 P02 | 68min | 2 tasks | 4 files |
+| Phase 17 P01 | 48min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase 16]: enter_buy() raises ValueError from SELL state to enforce cover_short() first
 - [Phase 16]: MA50 breakout from SELL covers to CASH only (no direct buy per Pitfall 4)
 - [Phase 16]: All SELL->CASH transitions use cover_short() with P&L (replaces degrade_to_cash)
+- [Phase 17]: Long stop loss reduced from 2.5% to 1.5% per Dr. K documented rules
+- [Phase 17]: Volatility-adaptive stop loss uses ATR/baseline ratio clamped to [0.5x, 2.5x]
 
 ### Pending Todos
 
@@ -89,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T04:19:04.029Z
-Stopped at: Completed 16-02-PLAN.md
+Last session: 2026-03-30T06:33:09.155Z
+Stopped at: Completed 17-01-PLAN.md
 Resume file: None

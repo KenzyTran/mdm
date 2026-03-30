@@ -314,7 +314,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md -- Long stop loss 1.5%, ATR indicator, volatility-adaptive scaling (RISK-01, RISK-02)
+- [x] 17-01-PLAN.md -- Long stop loss 1.5%, ATR indicator, volatility-adaptive scaling (RISK-01, RISK-02)
 - [ ] 17-02-PLAN.md -- DD5 high tracking, short stop loss check_short(), engine SELL state integration (RISK-03, SHORT-03)
 
 ### Phase 18: Short P&L & Comparative Validation
@@ -356,5 +356,5 @@ Phases execute in numeric order: 16 -> 17 -> 18
 | 14. Hybrid Validation | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
 | 16. Short Position & State Transitions | v4.0 | 2/2 | Complete    | 2026-03-30 |
-| 17. Stop Loss & Risk Management | v4.0 | 0/2 | Not started | - |
+| 17. Stop Loss & Risk Management | v4.0 | 1/2 | In Progress|  |
 | 18. Short P&L & Comparative Validation | v4.0 | 0/? | Not started | - |
