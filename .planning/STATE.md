@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: MDM Short Signal & Dr. K Alignment
 status: executing
-stopped_at: Phase 18 context gathered
-last_updated: "2026-03-30T07:58:48.448Z"
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-03-30T08:23:12.581Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
   percent: 50
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 17 — stop-loss-risk-management
+**Current focus:** Phase 18 — short-p-l-comparative-validation
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
+Phase: 18 (short-p-l-comparative-validation) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -56,6 +56,7 @@ Progress: [█████░░░░░] 50%
 | Phase 16 P02 | 68min | 2 tasks | 4 files |
 | Phase 17 P01 | 48min | 2 tasks | 7 files |
 | Phase 17 P02 | 29min | 2 tasks | 6 files |
+| Phase 18 P01 | 6min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,7 @@ Recent decisions affecting current work:
 - [Phase 17]: Volatility-adaptive stop loss uses ATR/baseline ratio clamped to [0.5x, 2.5x]
 - [Phase 17]: DD5 high is high of specific 5th DD day, locked into engine on SELL entry
 - [Phase 17]: Short stop loss at 1% above DD5 high, checked before FTD/cover signals
+- [Phase 18]: Inverse return formula: equity * (closes[i-1] / closes[i]) for short P&L
 
 ### Pending Todos
 
@@ -95,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T07:58:48.445Z
-Stopped at: Phase 18 context gathered
-Resume file: .planning/phases/18-short-p-l-comparative-validation/18-CONTEXT.md
+Last session: 2026-03-30T08:23:12.578Z
+Stopped at: Completed 18-01-PLAN.md
+Resume file: None

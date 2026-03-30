@@ -100,7 +100,7 @@
 ### Short Signal
 
 - [x] **SHORT-01**: SELL signal mở vị thế short trên chỉ số (VN30: short trực tiếp, NASDAQ: inverse ETF concept)
-- [ ] **SHORT-02**: P&L tracking cho vị thế short — gain khi market giảm, loss khi market tăng
+- [x] **SHORT-02**: P&L tracking cho vị thế short — gain khi market giảm, loss khi market tăng
 - [x] **SHORT-03**: Short stop loss — cắt lỗ khi giá vượt ngưỡng từ giá short entry (Dr. K: 1% trên DD5 high)
 - [x] **SHORT-04**: Short cover — đóng vị thế short khi có FTD hoặc MA50 breakout (chuyển về CASH)
 
@@ -113,7 +113,7 @@
 ### Transition & Validation
 
 - [x] **TRANS-01**: Enforce SELL→CASH→BUY — không cho phép chuyển trực tiếp SELL→BUY
-- [ ] **TRANS-02**: Backtest comparison long-only vs long/short trên NASDAQ và VN30
+- [x] **TRANS-02**: Backtest comparison long-only vs long/short trên NASDAQ và VN30
 - [ ] **TRANS-03**: Cập nhật rule docs (rules_mdm_v2.md, rules_mdm_hybrid.md) với quy tắc short mới
 
 ## Future Requirements
@@ -205,8 +205,8 @@
 | RISK-02 | Phase 17 | Complete |
 | RISK-03 | Phase 17 | Complete |
 | SHORT-03 | Phase 17 | Complete |
-| SHORT-02 | Phase 18 | Pending |
-| TRANS-02 | Phase 18 | Pending |
+| SHORT-02 | Phase 18 | Complete |
+| TRANS-02 | Phase 18 | Complete |
 | TRANS-03 | Phase 18 | Pending |
 
 **v1.0 Coverage:**
