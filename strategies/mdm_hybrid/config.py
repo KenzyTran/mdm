@@ -46,6 +46,9 @@ class MDMV2Config:
     # Stop Loss
     stop_loss_pct: float = 0.015
 
+    # Short stop loss (Phase 17, RISK-03/SHORT-03)
+    short_stop_pct_above_dd5: float = 0.01  # Cover short when close > DD5 high * (1 + pct)
+
     # ATR / Volatility-adaptive stop loss (Phase 17, RISK-02)
     atr_period: int = 14
     atr_baseline_period: int = 50

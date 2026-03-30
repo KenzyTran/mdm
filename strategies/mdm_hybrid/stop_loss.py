@@ -147,3 +147,38 @@ class StopLossChecker:
             reason="OK",
             loss_pct=loss_pct
         )
+
+    def check_short(
+        self,
+        current_close: float,
+        dd5_high: float,
+        short_entry_price: float = 0.0,
+    ) -> StopLossResult:
+        """Check short position stop loss.
+
+        Rule: Cover short if close > DD5 high * 1.01 (1% above DD5 high).
+        Per MDM classic rules section IV.4.
+
+        Args:
+            current_close: Current close price.
+            dd5_high: High price of the day when DD count reached 5.
+            short_entry_price: Entry price for loss calculation.
+
+        Returns:
+            StopLossResult with trigger status and reason.
+        """
+        if dd5_high <= 0:
+            return StopLossResult(triggered=False, reason="No DD5 high", loss_pct=0.0)
+
+        short_stop_pct = getattr(self.config, 'short_stop_pct_above_dd5', 0.01)
+        stop_price = dd5_high * (1 + short_stop_pct)
+        loss_pct = (current_close - short_entry_price) / short_entry_price if short_entry_price > 0 else 0.0
+
+        if current_close > stop_price:
+            return StopLossResult(
+                triggered=True,
+                reason=f"Short stop loss: close {current_close:.2f} > DD5 high {dd5_high:.2f} * {1+short_stop_pct:.2f} = {stop_price:.2f}",
+                loss_pct=loss_pct,
+            )
+
+        return StopLossResult(triggered=False, reason="OK", loss_pct=loss_pct)
