@@ -1,219 +1,225 @@
-# Feature Research: Hybrid MDM Engine (v3.0)
+# Feature Research: Signal Quality & Macro Filter (v5.0)
 
-**Domain:** Hybrid state machine + indicator filter trading model
-**Researched:** 2026-03-29
-**Confidence:** HIGH (grounded in existing codebase + published research on hybrid trading architectures)
+**Domain:** Macro liquidity regime filter + momentum-based sell conditions + buy quality scoring for market timing model
+**Researched:** 2026-03-30
+**Confidence:** MEDIUM (Dr. K webinar quotes are direct evidence; implementation patterns draw from established market timing literature but specific parameterization requires backtesting)
 
 ## Feature Landscape
 
 ### Table Stakes (Users Expect These)
 
-Features required for the hybrid engine to function and beat the existing 56.7% accuracy baseline.
+Features that directly implement Dr. K's stated model behavior. Without these, the V2 engine contradicts known model characteristics.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| State machine layer (DD/FTD/Rally) | Core MDM logic -- the structural signal generator. Without it, this is just a pure indicator model | LOW | Reuse `strategies/mdm_v2/` state machine (BUY/CASH/SELL). Already implemented with DD counting, FTD detection, Rally Attempts, MA50 breakout |
-| Indicator filter layer (EMA/MACD) | The whole point of v3 -- indicators confirm/override state machine signals. Dr. K's known TradingView setup uses EMA 9/21/55, MA 200, MACD 12-26-9 | MEDIUM | Reuse `core/indicators.py` which already computes all required indicators via `build_indicator_dataframe()` |
-| Signal confirmation logic | State machine proposes signal, indicator layer confirms or blocks it. This is the fundamental hybrid interaction pattern | HIGH | Core new code. Needs well-defined confirmation rules (e.g., "BUY signal confirmed only when EMA9 > EMA21 AND MACD histogram positive") |
-| Signal override logic | Indicators can force signal changes the state machine wouldn't generate alone (e.g., force CASH when EMA9 < EMA21 even without 5 DDs) | HIGH | Most complex new feature. Must define which indicator conditions can override which state machine transitions |
-| Cash state insertion | Post-2019 MDM inserts Cash between Buy and Sell. Hybrid model needs indicator-driven Cash triggers beyond DD counting | HIGH | Existing v2 has DD-based and MA10-based Cash triggers. Hybrid adds EMA/MACD-based Cash triggers |
-| Validation against 962 signals | Must score hybrid model against published signal history. Target: beat 56.7% accuracy from pure decision tree | LOW | Reuse `analysis/validate_discovery.py` pattern -- confusion matrix, per-type match rates, cross-era validation |
-| Era-aware evaluation | Pre-2019 vs post-2019 eras have different rules. Hybrid model must handle both or be explicitly post-2019 focused | MEDIUM | Reuse `analysis/rule_discovery.py` era splitting. Must decide: unified model or era-specific weights? |
-| Configurable confirmation/override rules | Rules must be parameterized, not hardcoded. Enables hypothesis testing and parameter sweeps | MEDIUM | Follow `MDMV2Config` dataclass pattern from `strategies/mdm_v2/config.py` |
+| QE Floor: Suppress SELL when liquidity expanding | Dr. K 2013: "model refrained from going to a sell because it's factoring in the QE floor." This is a confirmed model feature, not an enhancement | MEDIUM | Data exists: `data/global_liquidity.csv` has `liquidity_roc_20w` and `qe_floor` columns (987 weeks, 2007-2026). Weekly data needs interpolation to daily. Implementation: when `liquidity_roc_20w > threshold`, block CASH->SELL transition |
+| SELL acceleration condition | Dr. K 2013: "as far as sell signals... it really needs to see an acceleration to the downside." Current V2 uses only DD count + time-in-cash -- no momentum/acceleration check | MEDIUM | Current SELL triggers: MA50 breakdown OR cash_deterioration_days exceeded. Neither checks for acceleration. Need: rate of price decline, DD clustering, or momentum divergence as required condition |
+| BUY selectivity filter | Dr. K 2013: "model often will not take the buy signals unless everything's set up just right." Current V2 accepts ALL FTD/MA50 breakout/52-week signals unconditionally | MEDIUM | Need quality gate on buy signals. Candidates: MA alignment (MA10 > MA50), price above key MAs, momentum direction, FTD strength (gain magnitude, volume ratio) |
+| Backtest comparison before/after | Cannot claim improvement without rigorous A/B comparison on same data | LOW | Reuse `V2PerformanceAnalyzer`. Compare: total return, CAGR, max drawdown, Sharpe, win rate, number of trades. Run on both VN30 and NASDAQ |
+| Dashboard visualization of new metrics | Liquidity regime, acceleration indicators, buy quality scores must be visible for debugging and trust | MEDIUM | Extends existing dashboard. Add: liquidity overlay on price chart, sell acceleration indicator panel, buy signal quality annotations |
 
 ### Differentiators (Competitive Advantage)
 
-Features that could significantly improve accuracy beyond the baseline.
+Features that go beyond confirmed Dr. K behavior to improve V2 performance.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Contextual state transitions | Buy->Cash->Sell transitions depend on prior state history (e.g., short-lived Buy->Cash suggests quick deterioration vs long Buy->Cash suggests trend exhaustion). Encodes sequential context | HIGH | Dr. K's post-2019 model shows rapid state switching (sometimes same-day Buy->Cash). Context-dependent transitions could capture this pattern |
-| Heikin Ashi Smoothed filter | Dr. K uses HA Smoothed v4 55 on TradingView. Use HA smooth color (bullish/bearish) as trend confirmation. Already computed in `core/indicators.py` | MEDIUM | `compute_heikin_ashi_smoothed(period=55)` already exists. Feature: `ha_smooth_close > ha_smooth_open` = bullish |
-| Indicator confidence scoring | Weight confirmation by indicator agreement strength (e.g., 3/4 indicators confirm = HIGH confidence, 1/4 = LOW). Threshold for action configurable | MEDIUM | Builds on 8 boolean features from `core/feature_snapshot.py`. Instead of binary confirm/deny, produce a confidence score |
-| Multi-indicator voting | Multiple indicator conditions vote on signal. Weighted majority wins. Weights tunable per era | MEDIUM | Natural extension of confirmation logic. Voting threshold is a key parameter to sweep |
-| Three-way comparison dashboard | Side-by-side: pure state machine vs pure decision tree vs hybrid model. Shows where hybrid wins/loses | MEDIUM | Reuse `analysis/validate_discovery.py` dashboard pattern. Adds a third panel for hybrid |
-| Transition delay/cooldown | Prevent signal whipsaw by requiring indicator confirmation to persist for N days before allowing state transition | LOW | Simple counter. Addresses the known whipsaw problem in fast-switching periods |
-| Adaptive indicator weights by regime | In trending markets, weight EMA crossovers more. In choppy markets, weight MACD more. Market regime detected by MA200 slope or volatility | HIGH | Research shows regime-adaptive models outperform static ones. But adds significant complexity. Defer if time-constrained |
+| Multi-condition SELL gate (not just DD count) | Combines DD clustering + price momentum + MA breakdown into a composite sell trigger. Reduces false sells in choppy markets while catching real breakdowns faster | HIGH | Current V2 SELL path: BUY->CASH (DD count or MA10) then CASH->SELL (MA50 or time). Composite gate would require 2+ conditions met simultaneously, matching Dr. K's "acceleration" language |
+| FTD quality scoring with tiered acceptance | Score each FTD by: gain magnitude, volume ratio, rally attempt depth, MA alignment. Only accept FTDs scoring above threshold. Addresses the 50%+ FTD failure rate documented in IBD research | MEDIUM | Research shows: DD on days 1-2 after FTD = 95% failure rate. DD on day 3 = 70% failure. Quality scoring can pre-filter weak FTDs before they generate whipsaw trades |
+| Liquidity regime as position sizing input | Beyond binary suppress/allow, use liquidity trend strength to scale position size. Full size in strong QE, reduced size in neutral, no shorts in QE expansion | MEDIUM | Extends QE floor from binary gate to continuous signal. Requires Kelly Criterion integration (existing `vn30_vsa/kelly.py` pattern) |
+| Adaptive sell acceleration threshold by volatility | In high-volatility periods, require stronger acceleration to trigger SELL (noise is higher). In low-volatility periods, smaller acceleration is meaningful | HIGH | Uses ATR or realized volatility to normalize the acceleration threshold. Prevents false sells during normal volatility expansion |
+| Post-FTD confirmation window | After FTD triggers BUY, monitor for distribution in first 3-5 days. Early DD = exit immediately (95% failure rate from IBD data). Reduces average losing trade size | LOW | Simple counter: track DD count in first N days after BUY entry. If DD appears on day 1-2, exit to CASH immediately. Low implementation cost, high expected value |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| ML-driven rule discovery replacing state machine | "Let the model find optimal rules" | With only 962 signals (~150 post-2019), ML will overfit catastrophically. The state machine encodes domain knowledge that prevents overfitting | Keep state machine as structural backbone. Use ML-discovered rules (from Phase 9 decision trees) only as indicator filter conditions |
-| Continuous indicator values as direct inputs | "Use raw MACD value, not just above/below signal" | Continuous thresholds are fragile and overfit to specific price ranges. MACD=50 means different things in different market periods | Convert to boolean features (MACD above signal line, EMA9 > EMA21) as already done in `core/feature_snapshot.py`. Boolean features generalize better across eras |
-| Full ensemble model (random forest, XGBoost) | "Ensemble of many models" | 150 post-2019 samples is nowhere near enough. Ensemble would memorize training data | Single decision tree (max_depth=4) or rule-based filter with explicit conditions. Interpretability matters for a model you need to trust with money |
-| Real-time indicator recomputation | "Recompute indicators intraday" | MDM operates on daily bars. Intraday noise contradicts the model's design philosophy | Daily close-based computation only. No streaming |
-| Sentiment/macro indicators | "Add VIX, put/call ratio, Global Liquidity" | Moves away from Dr. K's known indicator set. Adds unconstrained parameters. Can't validate against his signals if using indicators he doesn't use | Stick to Dr. K's known TradingView indicators: EMA 9/21/55, MA 200, MACD 12-26-9, HA Smoothed 55 |
-| Per-stock signal generation | "Apply MDM to individual stocks" | MDM is a market-level model (NASDAQ Composite). Individual stock signals are a different problem entirely | Keep MDM as market direction only. Use MDM signal as context for stock-level decisions separately |
+| Real-time liquidity data feed | "Use live Fed balance sheet data" | This is a backtesting research project. Live data adds API dependencies, error handling, and no validation benefit. Weekly liquidity data has inherent lag anyway | Use static CSV updated periodically. `data/global_liquidity.csv` already has 987 weeks through March 2026 |
+| Complex ML model for sell prediction | "Train a model to predict market tops" | 962 total signals, maybe 100 sell signals. Way too few samples for ML. Will overfit to noise | Rule-based acceleration conditions with parameterized thresholds. Sweep parameters, don't train models |
+| Sentiment indicators (VIX, put/call ratio) | "Add fear/greed as sell filter" | Moves away from Dr. K's known indicator set. Cannot validate against his signals if using indicators he does not use | Stick to Dr. K's confirmed inputs: price, volume, MAs, MACD, and now confirmed Global Liquidity Index |
+| Per-stock leading stock analysis | Dr. K mentions "confirming action in leading stocks" for FTD validation | Requires defining "leading stocks," tracking individual stock breakouts, massive data expansion. Different problem domain entirely | Use index-level proxies: breadth of rally (price location relative to 52-week range), volume confirmation. These approximate leading stock health at index level |
+| Intraday acceleration detection | "Check for intraday sell-off pattern" | MDM is a daily-close model. Intraday noise contradicts design philosophy. Dr. K's model operates on daily bars | Use daily close-to-close rate of change. Multi-day clustering patterns. No intraday data needed |
+| Dynamic QE floor threshold via optimization | "Optimize the liquidity threshold" | Only ~3 QE cycles in the data (2009-2014, 2020-2021, partial 2023). Optimizing on 3 samples = pure overfitting | Use simple, robust threshold: liquidity_roc_20w > 0 means expanding. Binary regime, not optimized cutoff |
 
 ## Feature Dependencies
 
 ```
-[core/indicators.py] (existing)
+[data/global_liquidity.csv] (existing)
     |
-    +---provides-indicators-to--->  [Indicator Filter Layer] (new)
-    |                                    |
-    |                                    +---confirms/overrides--->  [Signal Confirmation Logic] (new)
-    |                                    |                                |
-[strategies/mdm_v2/] (existing)          |                                |
-    |                                    |                                |
-    +---proposes-signals-to--------->  [Hybrid Engine] (new) <-----------+
-    |                                    |
-    |                                    +---produces--->  [Hybrid Signal Output]
+    +---loaded-by--->  [Liquidity Data Loader] (new)
+    |                       |
+    |                       +---interpolates-to-daily--->  [QE Floor Filter] (new)
     |                                                          |
-    |                                                          v
-[analysis/validate_discovery.py]  <----scores----  [Validation Pipeline] (reuse)
-    (existing patterns)
+    |                                                          +---gates--->  [CASH->SELL transition]
+    |                                                          |
+    |                                                          +---optional-input--->  [Position Sizing]
+    |
+[strategies/mdm_v2/position_manager.py] (existing)
+    |
+    +---currently-handles--->  [CASH->SELL: MA50 or deterioration_days]
+    |                               |
+    |                               +---enhanced-by--->  [SELL Acceleration Condition] (new)
+    |                                                        |
+    |                                                        +---requires--->  [Momentum Indicators] (new)
+    |                                                        |                    (ROC, DD clustering, price velocity)
+    |                                                        |
+    |                                                        +---blocked-by--->  [QE Floor Filter]
+    |
+    +---currently-handles--->  [CASH/SELL->BUY: FTD or MA50 breakout]
+                                    |
+                                    +---gated-by--->  [BUY Quality Score] (new)
+                                                          |
+                                                          +---requires--->  [MA Alignment Check]
+                                                          +---requires--->  [FTD Strength Metrics]
+                                                          +---optional--->  [Post-FTD Confirmation Window]
 
-[Cash State Insertion] ----requires----> [Signal Override Logic]
-                        ----requires----> [Indicator Filter Layer]
-
-[Contextual Transitions] ----requires----> [Hybrid Engine]
-                          ----enhances----> [Cash State Insertion]
-
-[Indicator Confidence Scoring] ----enhances----> [Signal Confirmation Logic]
-
-[Three-way Comparison] ----requires----> [Validation Pipeline]
-                        ----requires----> [Hybrid Signal Output]
+[Dashboard] (existing)
+    +---extended-by--->  [Liquidity Overlay Panel] (new)
+    +---extended-by--->  [Sell Acceleration Indicator] (new)
+    +---extended-by--->  [Buy Quality Annotations] (new)
 ```
 
 ### Dependency Notes
 
-- **Indicator Filter Layer requires core/indicators.py:** Already built. No new indicator computation needed, just consumption of existing boolean features
-- **Signal Confirmation Logic requires both State Machine and Indicator layers:** This is the central integration point. Cannot be built until both input layers are wired
-- **Cash State Insertion requires Signal Override Logic:** Cash insertion IS an override -- indicators forcing a transition the state machine didn't propose
-- **Validation Pipeline reuses existing patterns:** `score_predictions()`, `cross_era_validation()`, confusion matrix generation are all reusable from `analysis/validate_discovery.py`
-- **Contextual Transitions enhance Cash State Insertion:** Context (e.g., "how long since last Buy?") makes Cash insertion smarter but is not required for basic Cash logic
+- **QE Floor Filter requires Liquidity Data Loader:** Weekly CSV must be interpolated to daily frequency and joined with OHLCV data before the engine can use it. Forward-fill interpolation (each week's value applies until next week's data).
+- **SELL Acceleration requires Momentum Indicators:** Need price ROC (rate of change), DD clustering metric, or similar momentum measure computed before position_manager can check acceleration condition.
+- **BUY Quality Score requires MA Alignment Check:** The quality score depends on indicator values (MA10 vs MA50 relationship, price vs MA50, momentum direction) that must be computed in the indicator layer.
+- **QE Floor blocks SELL Acceleration:** Even if acceleration conditions are met, QE floor can suppress the SELL. QE floor is the higher-priority gate.
+- **Post-FTD Confirmation enhances BUY Quality Score:** Confirmation window is a post-entry quality check, while quality score is a pre-entry gate. Both reduce whipsaw but at different points.
+- **Dashboard extensions require all new features:** Each visualization panel needs the corresponding feature's computed data. Build features first, then dashboard.
 
 ## MVP Definition
 
-### Launch With (v1 -- Hybrid Proof of Concept)
+### Launch With (v1 -- Core Signal Quality Improvements)
 
-Build the minimum to prove the hybrid approach beats 56.7%.
+Minimum to validate the QE floor + acceleration + selectivity hypothesis against V2 baseline.
 
-- [ ] **Hybrid Engine class** -- Wraps `MDMV2Engine` state machine output with indicator filter layer. Processes daily bars, outputs BUY/CASH/SELL signals
-- [ ] **Confirmation rules** -- State machine BUY signal requires at least 2 of 4 indicator conditions: (1) EMA9 > EMA21, (2) MACD histogram positive, (3) close > MA200, (4) HA smooth bullish
-- [ ] **Override rules** -- Force BUY->CASH when EMA9 < EMA21 AND MACD histogram negative (indicator-driven exit regardless of DD count). Force CASH->SELL when close < MA200 AND EMA21 < EMA55
-- [ ] **Cash state insertion** -- Insert CASH between BUY and SELL based on indicator conditions (not just DD count). EMA crossover bearish = CASH trigger
-- [ ] **Parameterized config** -- `HybridConfig` dataclass extending `MDMV2Config` with confirmation/override thresholds
-- [ ] **Validation scoring** -- Score against 962 published signals. Report: overall accuracy, per-type accuracy, confusion matrix, comparison vs pure state machine and pure decision tree
+- [ ] **Liquidity Data Loader** -- Load `global_liquidity.csv`, interpolate weekly to daily, join with OHLCV DataFrame. Output: `qe_expanding` boolean column
+- [ ] **QE Floor Filter in position_manager** -- When `qe_expanding=True`, block CASH->SELL transition (stay in CASH). Simple binary gate
+- [ ] **SELL Acceleration Condition** -- Require at least one acceleration indicator before CASH->SELL: (a) price ROC over 5 days < -3%, OR (b) 3+ DD in last 10 trading days, OR (c) close breaks below MA50 with increasing volume. Currently CASH->SELL triggers on MA50 breakdown alone or time -- add acceleration requirement
+- [ ] **BUY Quality Gate** -- Reject FTD/MA50 breakout signals when MA10 < MA50 (trend not aligned). Simple boolean filter on existing computed values
+- [ ] **A/B Backtest Comparison** -- Run V2 baseline vs V2+filters on both VN30 and NASDAQ. Report delta in: total return, CAGR, max drawdown, Sharpe, win rate, trade count
 
 ### Add After Validation (v1.x)
 
-Features to add once the hybrid approach is validated as better than 56.7%.
+Features to add once core filters demonstrate improvement over V2 baseline.
 
-- [ ] **Indicator confidence scoring** -- Replace binary confirm/deny with weighted confidence. Trigger: MVP accuracy > 60% but specific signal types are weak
-- [ ] **Contextual state transitions** -- Track state history for context-dependent rules. Trigger: Cash insertion accuracy is poor
-- [ ] **Transition cooldown** -- Add N-day confirmation persistence. Trigger: high whipsaw rate in output signals
-- [ ] **Parameter sweep for hybrid** -- Grid search over confirmation/override thresholds. Trigger: MVP shows promise but exact thresholds are uncertain
-- [ ] **Three-way comparison dashboard** -- Visual comparison chart. Trigger: need to present results or debug divergences
+- [ ] **FTD Quality Scoring** -- Score FTDs by gain magnitude + volume ratio + rally depth. Threshold sweep. Trigger: if BUY quality gate helps but some bad FTDs still slip through
+- [ ] **Post-FTD Confirmation Window** -- Track DD in first 3 days after BUY entry. Early DD = immediate exit. Trigger: if average losing trade is still too large
+- [ ] **DD Clustering metric** -- Formalize "3+ DD in 10 days" into a reusable clustering score. Trigger: if sell acceleration needs tuning
+- [ ] **Dashboard: Liquidity overlay** -- Plot global liquidity and QE regime on price chart. Trigger: need to visually debug QE floor behavior
+- [ ] **Dashboard: Signal quality annotations** -- Mark rejected signals (blocked BUYs, suppressed SELLs) on chart. Trigger: need to understand filter impact
 
 ### Future Consideration (v2+)
 
-- [ ] **Adaptive indicator weights by regime** -- Defer: requires regime detection infrastructure + significantly more parameters. Only viable with out-of-sample validation
-- [ ] **Heikin Ashi Smoothed as primary filter** -- Defer: less well-understood than EMA/MACD. Add only after base hybrid is validated
-- [ ] **VN30 adaptation of hybrid model** -- Defer: must first prove hybrid works on NASDAQ before adapting
+- [ ] **Liquidity-adjusted position sizing** -- Scale position size by liquidity regime strength. Defer: requires Kelly Criterion integration and adds complexity
+- [ ] **Adaptive acceleration threshold** -- Normalize sell acceleration by ATR/volatility. Defer: need to prove fixed threshold works first
+- [ ] **Multi-timeframe liquidity analysis** -- Use 4-week, 12-week, 20-week liquidity ROC together. Defer: more parameters to overfit
+- [ ] **VN30-specific liquidity proxy** -- Vietnam does not have Fed/ECB/BOJ. Need SBV (State Bank of Vietnam) liquidity proxy. Defer: data availability uncertain
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| Hybrid Engine class | HIGH | MEDIUM | P1 |
-| Confirmation rules | HIGH | HIGH | P1 |
-| Override rules | HIGH | HIGH | P1 |
-| Cash state insertion (indicator-driven) | HIGH | HIGH | P1 |
-| Parameterized config | HIGH | LOW | P1 |
-| Validation scoring | HIGH | LOW | P1 |
-| Indicator confidence scoring | MEDIUM | MEDIUM | P2 |
-| Contextual state transitions | MEDIUM | HIGH | P2 |
-| Transition cooldown | MEDIUM | LOW | P2 |
-| Parameter sweep | MEDIUM | MEDIUM | P2 |
-| Three-way comparison dashboard | MEDIUM | MEDIUM | P2 |
-| Adaptive indicator weights | LOW | HIGH | P3 |
-| HA Smoothed filter | LOW | MEDIUM | P3 |
+| QE Floor Filter | HIGH | LOW | P1 |
+| SELL Acceleration Condition | HIGH | MEDIUM | P1 |
+| BUY Quality Gate (MA alignment) | HIGH | LOW | P1 |
+| A/B Backtest Comparison | HIGH | LOW | P1 |
+| Liquidity Data Loader | HIGH | LOW | P1 |
+| FTD Quality Scoring | MEDIUM | MEDIUM | P2 |
+| Post-FTD Confirmation Window | MEDIUM | LOW | P2 |
+| DD Clustering Metric | MEDIUM | LOW | P2 |
+| Dashboard: Liquidity Overlay | MEDIUM | MEDIUM | P2 |
+| Dashboard: Signal Quality Annotations | MEDIUM | MEDIUM | P2 |
+| Liquidity-adjusted Position Sizing | LOW | HIGH | P3 |
+| Adaptive Acceleration Threshold | LOW | HIGH | P3 |
 
 **Priority key:**
-- P1: Must have for hybrid MVP
-- P2: Add when MVP validates (>56.7% accuracy)
-- P3: Future consideration after hybrid approach is proven
+- P1: Must have -- directly implements confirmed Dr. K model behavior
+- P2: Should have -- improves quality after core filters are validated
+- P3: Nice to have -- optimization layer, defer until P1+P2 prove value
 
-## Interaction Patterns: State Machine + Indicator Filter
+## Implementation Detail: Key Feature Specifications
 
-### Pattern 1: Confirmation Gate
+### QE Floor Filter
 
-State machine proposes a signal transition. Indicator layer confirms or blocks.
+**What Dr. K said:** "The model refrained from going to a sell because it's factoring in the QE floor" (2013 webinar)
 
+**Mechanism:** Central bank balance sheet expansion (QE) creates a liquidity floor that supports equity markets. During active QE, sell signals are unreliable because the liquidity backdrop overrides normal technical deterioration.
+
+**Data available:** `data/global_liquidity.csv` with columns:
+- `global_liquidity`: Sum of Fed + ECB + BOJ balance sheets (USD)
+- `liquidity_roc_20w`: 20-week rate of change (percentage)
+- `qe_floor`: Pre-computed flag (currently all 0, needs population)
+
+**Implementation approach:**
 ```
-State Machine says: "BUY (FTD detected on day 5 of rally)"
-Indicator Filter checks: EMA9 > EMA21? MACD histogram > 0?
-  - If >= N confirmations: ALLOW transition -> BUY
-  - If < N confirmations: BLOCK transition -> stay in CASH
-```
-
-This is the safest pattern. State machine does the heavy lifting, indicators prevent bad entries.
-
-### Pattern 2: Override Injection
-
-Indicator layer detects conditions that force a state change the state machine hasn't proposed.
-
-```
-State Machine says: "BUY (still holding, DD count = 2)"
-Indicator Filter detects: EMA9 crossed below EMA21 + MACD histogram turned negative
-  -> OVERRIDE: Force BUY -> CASH (early exit before DD count reaches threshold)
+qe_expanding = liquidity_roc_20w > 0  (simple: any positive growth = QE regime)
+-- OR --
+qe_expanding = liquidity_roc_20w > 2.0  (stricter: need meaningful expansion)
 ```
 
-This captures the post-2019 behavior where Dr. K exits faster than classic DD counting allows.
+**Key decision:** Threshold for `liquidity_roc_20w`. Start with > 0 (any expansion), sweep to find optimal. But given only ~3 QE cycles, keep it simple to avoid overfitting.
 
-### Pattern 3: Cash Insertion via Indicator Degradation
+**Weekly-to-daily interpolation:** Forward-fill. Each week's liquidity value applies Monday through Friday until next week's data arrives. This matches how the market processes weekly Fed data.
 
-Indicators degrade while state machine hasn't triggered a full Sell.
+### SELL Acceleration Condition
 
-```
-State Machine says: "BUY (DD count = 3, below sell threshold)"
-Indicator Filter detects: close < EMA21 for 2+ days, MACD turning down
-  -> INSERT CASH (intermediate state, not full SELL)
-  -> If indicators recover within N days: return to BUY
-  -> If indicators worsen: proceed to SELL
-```
+**What Dr. K said:** "As far as sell signals... it really needs to see an acceleration to the downside" (2013 webinar)
 
-This is the key post-2019 innovation: Cash as a "wait and see" state driven by indicators, not DD counting.
+**Current V2 SELL path:**
+1. BUY->CASH: DD count >= 5, OR MA10 below for 2+ days, OR stop loss
+2. CASH->SELL: MA50 breakdown (close < MA50), OR 10+ days in cash
 
-### Pattern 4: Sell Acceleration
+**Problem:** Step 2 has no acceleration requirement. A slow grind below MA50 triggers the same SELL as a sharp breakdown. Dr. K's quote implies the model distinguishes between these.
 
-Indicators can accelerate Cash -> Sell transition.
+**Acceleration candidates (implement at least one):**
+1. **Price ROC check:** 5-day rate of change < -X% (price falling fast, not just below MA50)
+2. **DD clustering:** 3+ distribution days in last 10 trading days (concentrated selling pressure)
+3. **Volume-confirmed MA50 break:** Close < MA50 AND volume > 1.5x average (institutional participation)
+4. **Multi-day decline:** Close < close[N days ago] for N consecutive days (sustained selling, not one-day spike)
 
-```
-State Machine says: "CASH (entered 3 days ago via DD count)"
-Indicator Filter detects: close < MA200, EMA21 < EMA55, MACD deep negative
-  -> ACCELERATE: Cash -> SELL immediately (skip cash_deterioration_days countdown)
-```
+**Recommended approach:** Require MA50 breakdown AND at least one acceleration indicator. This tightens the current SELL trigger without removing it.
 
-## Existing Component Reuse Map
+### BUY Quality Gate
 
-| Existing Component | Location | Reuse Strategy |
-|-------------------|----------|----------------|
-| MDM v2 state machine | `strategies/mdm_v2/mdm_v2_engine.py` | Wrap -- use as signal proposer, do NOT modify internals |
-| Indicator computation | `core/indicators.py` | Call `build_indicator_dataframe()` to get all indicators |
-| Boolean feature derivation | `core/feature_snapshot.py` | Extract the 8 boolean feature computations into reusable functions |
-| Era splitting | `analysis/rule_discovery.py` | Reuse `split_by_era()` and `ERA_SPLIT_DATE` constant |
-| Validation scoring | `analysis/validate_discovery.py` | Reuse `score_predictions()`, confusion matrix formatting, `cross_era_validation()` pattern |
-| Decision tree rules | `analysis/rule_discovery.py` | Use discovered rules as starting point for indicator filter conditions |
-| V2 config pattern | `strategies/mdm_v2/config.py` | Extend `MDMV2Config` dataclass for hybrid config |
-| V2 position manager | `strategies/mdm_v2/position_manager.py` | Reuse state enum and trade recording. May need modified transition logic |
+**What Dr. K said:** "The model often will not take the buy signals unless everything's set up just right" (2013 webinar)
+
+**Current V2 BUY triggers (all accepted unconditionally):**
+1. Classic FTD (day 4+ of rally, price gain, volume up)
+2. MA50 breakout (close crosses above MA50 from below)
+3. 52-week breakout (close exceeds 52-week high)
+
+**Quality filters to apply:**
+1. **MA alignment:** Reject BUY when MA10 < MA50 (short-term trend below long-term = not set up right). This is the simplest, most robust filter
+2. **Price above MA50:** Reject FTD when close is still below MA50 (FTD happened during a deep correction, trend not recovered)
+3. **Momentum direction:** Reject BUY when 10-day ROC is still negative (price still falling despite the one-day rally)
+
+**Recommended MVP approach:** Start with MA alignment only (MA10 > MA50 required for BUY). This is one boolean check on already-computed values. Sweep: require MA10 > MA50, OR require close > MA50, OR require both.
+
+## Competitor Feature Analysis
+
+| Feature | IBD Market Pulse | Morpheus Trading | Dr. K MDM | Our V2 Approach |
+|---------|-----------------|------------------|-----------|-----------------|
+| Liquidity regime filter | Not used (pure technical) | Not used | Confirmed: QE floor suppresses sells | Binary gate on global liquidity ROC |
+| Sell acceleration | DD count only | DD clustering + leading stock breakdown | "Needs acceleration to the downside" | MA50 break + momentum/ROC requirement |
+| Buy signal quality | FTD on day 4+ with 1.7%+ gain | Proprietary scoring | "Won't buy unless everything set up right" | MA alignment + optional FTD scoring |
+| Whipsaw reduction | Accept all FTDs, exit on DD clustering | Tighten stops after sell signal | Cash state as buffer | Quality gate pre-entry + post-FTD confirmation |
+| Position sizing by regime | Not used | Not mentioned | Not confirmed | Deferred (P3) |
 
 ## Sources
 
-- Dr. K's known TradingView indicator setup (EMA 9/21/55, MA 200, MACD 12-26-9, HA Smoothed 55) -- from PROJECT.md context
-- Existing codebase: `core/indicators.py`, `core/feature_snapshot.py`, `strategies/mdm_v2/`, `analysis/rule_discovery.py`, `analysis/validate_discovery.py`
-- [Hybrid AI-Driven Trading System (ComSIA 2026)](https://arxiv.org/html/2601.19504v1) -- regime-adaptive hybrid combining technical indicators with ML
-- [TTFM Pro Fractal Indicator -- State Machine Trading Logic](https://www.scribd.com/document/986560248/Technical-Specification-Report-TTFM)
-- [Market Regime Detection using Hidden Markov Models](https://medium.com/@pta.forwork/market-regime-detection-using-hidden-markov-models-in-quantitative-trading-part-1-214e6c77bc2e)
-- [IBD Distribution Days Study](https://usethinkscript.com/threads/ibd-distribution-days-study-for-thinkorswim.748/page-2)
-- [IBD Market School TradingView Indicator](https://www.tradingview.com/script/sbzEKCNa-IBD-Market-School-tradeviZion/)
-- [How to Analyze Distribution Days in Market Timing](https://ibdstock.com/analyze-distribution-days-market-timing/)
-- Phase 9 rule discovery output (56.7% cross-era validation baseline)
-- Phase 10 discovery validation (confusion matrices, degradation deltas confirming structural change at Feb 2019)
+- Dr. K 2013 webinar transcripts (QE floor quote, sell acceleration quote, buy selectivity quote) -- from PROJECT.md context
+- [Global Liquidity Index TradingView Indicator by QuantitativeAlpha](https://www.tradingview.com/script/lG8KoR4f-Global-Liquidity-Index/) -- central bank balance sheet composition
+- [Follow Through Day Trading Strategy Backtest](https://www.quantifiedstrategies.com/follow-through-day/) -- FTD failure rate statistics, whipsaw patterns
+- [Morpheus Trading: Timing Model Sell Signal](https://www.morpheustrading.com/blog/timing-model-sell-mode) -- DD clustering as sell acceleration, distribution day proximity to FTD
+- [IBD Market School TradingView Indicator](https://www.tradingview.com/script/sbzEKCNa-IBD-Market-School-tradeviZion/) -- IBD distribution day counting methodology
+- [Rate of Change (ROC) Indicator](https://chartschool.stockcharts.com/table-of-contents/technical-indicators-and-overlays/technical-indicators/rate-of-change-roc) -- momentum acceleration measurement
+- [Reducing Whipsaws When Using Moving Averages](https://alvarezquanttrading.com/blog/reducing-whipsaws-when-using-200-day-moving-average-for-market-timing/) -- delay/confirmation techniques for MA-based timing
+- [Market Regime Detection using HMM](https://www.quantstart.com/articles/market-regime-detection-using-hidden-markov-models-in-qstrader/) -- regime filter implementation patterns
+- Existing codebase: `strategies/mdm_v2/` engine, `data/global_liquidity.csv`, `strategies/mdm_v2/vn30_filters.py` pattern
+- IBD research (from search): DD on days 1-2 after FTD = 95% failure rate; DD on day 3 = 70% failure
 
 ---
-*Feature research for: Hybrid MDM Engine v3.0*
-*Researched: 2026-03-29*
+*Feature research for: Signal Quality & Macro Filter v5.0*
+*Researched: 2026-03-30*

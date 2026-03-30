@@ -1,167 +1,162 @@
 # Project Research Summary
 
-**Project:** MDM Hybrid Engine (v3.0) — State Machine + Indicator Filter
-**Domain:** Hybrid trading model reverse-engineering (rule-based FSM + ML-discovered indicator filters)
-**Researched:** 2026-03-29
-**Confidence:** HIGH
+**Project:** MDM V2 Signal Quality & Macro Filter (v5.0)
+**Domain:** Global Liquidity macro filter + SELL acceleration + BUY selectivity for market timing engine
+**Researched:** 2026-03-30
+**Confidence:** MEDIUM-HIGH
 
 ## Executive Summary
 
-The Hybrid MDM Engine (v3.0) is a layered trading model that combines the existing v2 state machine (DD counting, FTD detection, rally attempts) with an indicator filter layer (EMA 9/21/55, MA 200, MACD 12-26-9) to improve signal accuracy beyond the Phase 9/10 baseline of 56.7%. The project has substantial existing infrastructure that must be reused rather than rebuilt: all indicator computation is in `core/indicators.py`, the v2 state machine is stable in `strategies/mdm_v2/`, the validation pipeline against 962 published signals exists in `analysis/validate_discovery.py`, and the 8 boolean features from Phase 9/10 rule discovery are in `core/feature_snapshot.py`. No new library dependencies are needed — the entire hybrid engine builds on what is already installed (Python 3.10+, pandas, numpy, scikit-learn, matplotlib, pytest).
+This milestone enhances the existing MDM V2 engine with three features directly confirmed by Dr. K's 2013 webinar statements: a QE floor filter that suppresses SELL signals during central bank liquidity expansion, a SELL acceleration condition requiring momentum deterioration before transitioning to SELL, and a BUY quality gate that rejects low-setup entries. The technical implementation is straightforward — no new dependencies are needed, and the existing pandas/numpy stack handles all required calculations. The key engineering challenge is correctness, not complexity: look-ahead bias in weekly-to-daily liquidity alignment and the previously-documented state[i] vs state[i-1] index error are the two highest-risk issues that must be addressed in Phase 1 before any results are trusted.
 
-The recommended approach is a strict Propose-Filter-Decide pipeline: the classic state machine proposes a signal transition, the indicator filter layer confirms or vetoes (but never originates signals independently), and the position manager commits the state change only when confirmed. This architecture preserves the interpretability and debuggability of the v2 system while adding the indicator-gated behavior that Phase 9/10 confirmed characterizes Dr. K's post-2019 model. The hybrid engine is built as a new `strategies/mdm_hybrid/` package that imports v2 components without modifying them — clean separation with no code duplication. Four new components are required: `HybridConfig`, `IndicatorFilter`, `HybridPositionManager`, and `HybridEngine`.
+The recommended approach builds three gating components (`LiquidityLoader`, `SellAccelerator`, `BuyQualityScorer`) as peers in the existing `strategies/mdm_v2/` module structure, using a filter-gate pattern where each component suppresses or modifies state transitions proposed by the existing logic. All new config parameters default to disabled (backward-compatible), enabling rigorous A/B comparison against the V2 baseline (190.8% total return reference). The architecture is additive: the existing FTD detector, distribution day counter, rally tracker, and position manager are unchanged — the new components insert as a processing layer immediately before `process_day()`.
 
-The single most dangerous risk is overfitting indicator filter thresholds to the 95 post-2019 signals (roughly 30 per class with 8 boolean features). A match rate jump from 58.9% to more than 80% after adding filters is a red flag, not a success. The project must hold out at least 19 post-2019 signals before any filter tuning begins, limit total filter rules to 2-3, and require each rule to cover at least 10 historical signals. The second critical risk is state machine corruption: the v2 DD counter resets eagerly inside the FTD detection call chain — if the FTD transition is then vetoed by the indicator filter, the counter is already wiped and the model is stuck in CASH with no exit path. A two-phase commit pattern (propose without mutating state, confirm, then commit mutation) must be implemented before any filter code is written.
+The primary risk is over-engineering. The hybrid engine experiment already demonstrated that multi-condition BUY indicator ensembles (47% rejection rate, 43% correct — near random) do not work. The QE floor filter is the highest-value feature because it directly implements confirmed Dr. K behavior and uses simple, non-overfit logic (`liquidity_roc_20w > 0`). SELL acceleration and BUY selectivity carry overfitting risk if parameterized too aggressively — they must be validated on bear-market sub-periods (2008, 2022), not just the 2009-2021 bull run.
 
 ## Key Findings
 
 ### Recommended Stack
 
-No new dependencies required. The existing stack covers all needs for the hybrid engine. The critical insight from stack research is that external FSM libraries (`transitions`, `python-statemachine`) and ML frameworks (PyBroker, LSTM, XGBoost) are explicitly not recommended — all add integration complexity without value for a 3-state deterministic model with 962 training samples. The decision tree from Phase 9 (`analysis/rule_discovery.py`) is the right ML approach; its discovered rules are the starting point for indicator filter conditions, translated into explicit conditional methods rather than loaded as a pickle at runtime.
+No new dependencies required. The existing pandas >= 2.0.0, numpy >= 1.24.0, Python >= 3.10 stack handles all three features. The critical implementation choices are `pd.merge_asof(direction='backward')` for weekly-to-daily liquidity alignment (not `resample().ffill()`, which creates non-trading day rows), and pure pandas `pct_change(n)` + `.diff()` for momentum/acceleration calculations. Three new custom modules are added to `strategies/mdm_v2/` — they are code, not library dependencies.
 
 **Core technologies:**
-- Python 3.10+ / pandas / numpy: Already in use — no change needed
-- scikit-learn >= 1.5.0: Already in use in `rule_discovery.py` and `validate_discovery.py` — reuse for validation scoring
-- pytest >= 9.0.2: Already installed — essential for unit testing the two-phase commit refactor and filter layer
-- matplotlib >= 3.7.0: Already installed — needed for three-way comparison chart (classic vs v2 vs hybrid)
+- pandas >= 2.0.0: All data manipulation, merge_asof for time-series alignment — already installed, no upgrade needed
+- numpy >= 1.24.0: Numerical calculations for acceleration and quality scoring — already installed
+- Python >= 3.10: Runtime — already installed
 
-**What not to use:** `transitions`, `python-statemachine`, PyBroker, TensorFlow/LSTM, XGBoost, networkx.
+**New custom modules (not libraries):**
+- `strategies/mdm_v2/liquidity.py`: LiquidityLoader + LiquidityRegime enum
+- `strategies/mdm_v2/sell_accelerator.py`: SellAccelerator momentum checks
+- `strategies/mdm_v2/buy_quality.py`: BuyQualityScorer FTD quality scoring
+
+**What to avoid:** pandas-ta and ta-lib (unnecessary dependencies for trivial calculations), scikit-learn classifiers (overfitting risk on ~100 sell signals), FRED API (data already in CSV through March 2026), `statsmodels` for regime detection (simple threshold beats HMM given only 3 QE cycles).
 
 ### Expected Features
 
-**Must have (table stakes — hybrid MVP):**
-- State machine layer (DD/FTD/Rally): Reuse v2 components unchanged, import cross-package
-- Indicator filter layer (EMA/MACD confirmation): Core new code — `IndicatorFilter` class with boolean condition methods
-- Signal confirmation logic (Propose-Filter-Decide): The central integration pattern; three explicit steps per day
-- Signal override/veto logic: Force early exit when EMA bearish before DD count reaches threshold
-- Indicator-driven cash state insertion: EMA crossover bearish = CASH trigger beyond DD counting
-- Parameterized `HybridConfig` dataclass: All filter rules must be configuration, not hardcoded in engine
-- Validation scoring against 962 signals: Reuse `validate_discovery.py`; target > 56.7% post-2019 accuracy
+**Must have (table stakes — directly implements confirmed Dr. K behavior):**
+- Liquidity Data Loader: Load `global_liquidity.csv`, forward-fill weekly to daily with publication lag, expose `liquidity_regime` column
+- QE Floor Filter: When `liquidity_roc_20w > 0`, block CASH->SELL transition — Dr. K confirmed this is a real model feature
+- SELL Acceleration Condition: Require at least one of: price ROC 5-day < -3%, OR 3+ DD in last 10 days, OR MA50 break with volume confirmation
+- BUY Quality Gate (MVP): Reject BUY when MA10 < MA50 — simplest, most robust filter consistent with Dr. K's selectivity language
+- A/B Backtest Comparison: V2 baseline vs V2+filters on VN30 and NASDAQ; report delta in return, CAGR, drawdown, Sharpe, trade count
 
-**Should have (add when MVP validates above 56.7%):**
-- Indicator confidence scoring: Weighted confirmation (3/4 indicators agree = HIGH confidence)
-- Contextual state transitions: Track state duration for context-dependent filter rules
-- Transition cooldown (N-day persistence): Prevent whipsaw in fast-switching periods
-- Parameter sweep for filter thresholds: Grid search over boolean filter combinations
-- Three-way comparison dashboard: Classic vs v2 vs hybrid side-by-side accuracy chart
+**Should have (differentiators — add after P1 features validated):**
+- FTD Quality Scoring: Score by gain magnitude + volume ratio + rally depth; threshold sweep
+- Post-FTD Confirmation Window: Track DD in first 3 days after BUY entry; early DD = immediate exit (IBD research: 95% failure rate when DD appears on days 1-2 after FTD)
+- DD Clustering Metric: Formalize "3+ DD in 10 days" into reusable component
+- Dashboard: Liquidity overlay on price chart, sell acceleration indicator panel, buy signal quality annotations
 
-**Defer to v2+:**
-- Adaptive indicator weights by market regime: Requires regime detection infrastructure and out-of-sample validation
-- Heikin Ashi Smoothed as primary filter: Less well-understood than EMA/MACD; add only after base hybrid is validated
-- VN30 adaptation of hybrid model: Must first prove hybrid works on NASDAQ
+**Defer (v2+):**
+- Liquidity-adjusted position sizing (requires Kelly Criterion integration, adds complexity before core filters are validated)
+- Adaptive acceleration threshold by volatility (needs fixed threshold proven first)
+- VN30-specific liquidity proxy (SBV data availability uncertain; global liquidity applicability to Vietnam is unproven)
+- Multi-timeframe liquidity analysis (more parameters to overfit on only 3 QE cycles in 18 years of data)
 
 ### Architecture Approach
 
-The hybrid engine lives in a new `strategies/mdm_hybrid/` package, structured identically to the existing `mdm_classic`, `mdm_v2`, and `vsa` packages. Four new components are required; everything else is imported from existing modules unchanged. The core data flow is: DataLoader loads OHLCV → `build_indicator_dataframe()` adds EMA/MACD/HA columns → v2 `Indicators.add_*()` adds classic columns (MA50/MA10/p_loc) → `HybridEngine.run()` iterates daily bars via the Propose-Filter-Decide pipeline → `extract_model_signals()` and `compare_signals()` score against 962 published signals. The validation interface already works because it maps BUY/CASH/SELL state strings — the hybrid engine outputs the same format as v2.
+The target architecture inserts three new components as a processing layer between the existing indicator calculations and V2PositionManager. The filter-gate pattern is used throughout: each new component acts as a gate that can suppress a state transition proposed by the existing logic, running after the existing logic determines a transition but before it executes. This is simpler than the Hybrid engine's two-phase approach because V2 is being modified directly rather than wrapped. The engine (`mdm_v2_engine.py`) remains the sole orchestrator; all new components are instantiated in `__init__` and called in `run()`, consistent with the existing pattern. Config additions are additive with all new parameters defaulting to disabled.
 
 **Major components:**
-1. `HybridConfig` (`strategies/mdm_hybrid/config.py`) — Composes `MDMV2Config` by containment plus indicator filter boolean flags; all filter rules are config, never hardcoded in engine logic
-2. `IndicatorFilter` (`strategies/mdm_hybrid/indicator_filter.py`) — Stateless evaluator per row: individual condition methods (`is_bullish_ema_stack`, `is_macd_bullish`, `is_above_ma200`) plus `evaluate(row, proposal, state) -> Verdict`; no internal state
-3. `HybridPositionManager` (`strategies/mdm_hybrid/position_manager.py`) — 3-state machine (BUY/CASH/SELL) with two-phase commit; `process_day()` accepts filter verdict and only commits state mutation after CONFIRM; separates proposal from commitment
-4. `HybridEngine` (`strategies/mdm_hybrid/hybrid_engine.py`) — Orchestrator: data preparation, daily loop via `_compute_classic_proposal` → `indicator_filter.evaluate` → `_resolve_action` → `position_manager.process_day`, results DataFrame output matching v2 format
-
-**Build order by dependency:** HybridConfig (no deps) → IndicatorFilter (config only) → HybridPositionManager (config only) → HybridEngine (all above + v2 imports + core) → validation entry script.
+1. `LiquidityLoader` (NEW) — Load weekly CSV, forward-fill to daily with publication lag offset, expose `LiquidityRegime` enum; pre-loop merge before daily iteration
+2. `SellAccelerator` (NEW) — Check momentum conditions (price ROC, DD clustering, volume-confirmed MA50 break) before allowing SELL transition; stateless checker
+3. `BuyQualityScorer` (NEW) — Score FTD/breakout quality; suppress entries below threshold; stateless checker
+4. `MDMV2Config` (MODIFIED) — Additive dataclass fields with defaults preserving current behavior; grouped by feature with clear comments
+5. `V2PositionManager` (MODIFIED) — Accept `liquidity_regime`, `sell_accelerated`, `buy_quality` in `process_day()`; priority hierarchy: liquidity filter > sell acceleration > buy quality
+6. `MDMV2Engine` (MODIFIED) — Orchestrate liquidity merge pre-loop, wire three gate signals into daily processing loop at step 5a-5c
 
 ### Critical Pitfalls
 
-1. **Signal authority ambiguity (design time)** — Without a strict hierarchy, indicator-originated signals and state machine signals create untestable spaghetti logic. Prevention: indicators can only CONFIRM or VETO; they never propose new signals. Encode this as an assertion in `_resolve_action()`. Define the authority chain before writing any code — this is a design decision, not an implementation detail.
+1. **Look-ahead bias in weekly-to-daily liquidity merge** — Apply publication lag offset (minimum 7 days, conservative 14 days) before `merge_asof`; verify with unit test that no daily row uses a liquidity value published after that row's date. This must be correct before any backtesting begins or all downstream results are invalid.
 
-2. **State machine corruption from indicator vetos (implementation time)** — The v2 DD counter resets eagerly inside the FTD detection call chain. If the FTD transition is then vetoed, the counter is already wiped and the model is stuck in CASH with no exit path. Prevention: refactor to two-phase commit before adding any filter logic. This is the hardest integration task and cannot be deferred.
+2. **State[i] vs state[i-1] contamination** — The project already experienced this exact bug (707% vs 93% equity difference). When the liquidity filter overrides a SELL signal, the override must take effect on the next day's equity calculation, not the current day. Enforce with regression test: V2 baseline equity must equal 190.8% +/- 0.1% with new code in place and all filters disabled.
 
-3. **Overfitting indicator filter thresholds to 95 post-2019 signals (filter tuning time)** — 95 signals with 8 boolean features is near the statistical floor for rule discovery. Prevention: hold out 19+ signals before tuning begins; use LOOCV; require each rule to cover 10+ historical signals; pre-register rules before examining data. A match rate jump to >80% is a red flag.
+3. **Overfitting SELL acceleration to the 2009-2021 bull run** — Any condition that makes it harder to exit mechanically increases holding time and total return in bull markets without providing real alpha. Must validate on 2008 and 2022 bear markets specifically: if acceleration conditions delay the first correct SELL by > 5 trading days vs V2 baseline, reject them.
 
-4. **Era-dependent filter fragility** — Phase 9/10 confirmed a structural feature shift at Feb 2019 (EMA9-dominant pre-2019 vs EMA55-dominant post-2019 with zero overlap in top-2 features). Prevention: scope the hybrid model explicitly to post-2019; make filter rules configurable for future swapping; track quarterly match rate as a leading indicator of model drift.
+4. **BUY selectivity becoming a curve-fit ensemble** — The hybrid engine already proved multi-condition indicator scoring does not work. Limit to 2-3 independent conditions (pairwise correlation < 0.5); use `check_degradation()` to verify < 10% out-of-sample degradation.
 
-5. **Indicator calculation divergence from TradingView** — Dr. K uses TradingView; subtle EMA initialization differences or MACD formula variations mean the model's boolean decisions may disagree with what Dr. K actually sees. Prevention: spot-check 5+ dates against TradingView screenshots before building any filters; use boolean features (MACD > 0, not MACD > 0.37) to absorb small numerical differences.
+5. **Conflicting filter signals trapping capital in CASH** — All three gates can interact to simultaneously suppress exits and block re-entries. Establish and enforce priority hierarchy; track average CASH days vs baseline; require dedicated integration testing in Phase 4.
 
 ## Implications for Roadmap
 
-Based on the combined research, the hybrid engine requires five phases following strict dependency order. No phase can be safely started before its predecessor is validated against the regression baseline.
+Based on research, a 4-phase structure is recommended, matching the pitfall-to-phase mapping identified in PITFALLS.md.
 
-### Phase 1: Architecture Foundation and Two-Phase Commit Refactor
-**Rationale:** The state machine corruption pitfall requires refactoring `process_day()` to separate proposal from commitment before any filter code is added. This is a precondition, not an optional improvement. Without two-phase commit, adding any indicator veto will corrupt the DD counter and create stuck states. Also establishes the `HybridConfig` dataclass and package structure.
-**Delivers:** `strategies/mdm_hybrid/` package skeleton; `HybridConfig` dataclass with v2 composition; `HybridPositionManager` with two-phase commit; unit tests proving vetoed FTD does not reset DD counter.
-**Addresses:** Parameterized config (table stakes), state machine foundation
-**Avoids:** P1 (signal authority ambiguity — defined in design doc), P4 (state machine corruption — fixed before filter code exists), P5 (Cash semantics — defined explicitly as DD-accumulation and stop-loss paths only)
+### Phase 1: Global Liquidity Integration
+**Rationale:** The QE floor filter is the highest-confidence feature (directly confirmed by Dr. K) and the foundational data pipeline for all subsequent features. Look-ahead bias and state[i] correctness must be locked in first — getting this wrong invalidates all downstream results.
+**Delivers:** `LiquidityLoader` with publication lag offset, weekly-to-daily merge, `LiquidityRegime` enum, QE floor filter in `V2PositionManager`, backward-compatible config additions, unit test for publication lag, regression test verifying V2 baseline equity unchanged.
+**Addresses:** Liquidity Data Loader + QE Floor Filter (P1 must-have features), NaN handling for pre-2007 dates.
+**Avoids:** Look-ahead bias (Pitfall 1), state[i] contamination (Pitfall 2), data gap NaN crashes (Pitfall 6).
 
-### Phase 2: Indicator Filter Layer
-**Rationale:** `IndicatorFilter` depends only on `HybridConfig` and has no state machine dependency. Building and unit-testing it in isolation before wiring into the engine catches filter logic bugs with synthetic data rather than in a live engine loop. The TradingView spot-check belongs here — before any thresholds are calibrated.
-**Delivers:** `IndicatorFilter` class with all boolean condition methods; `evaluate()` returning CONFIRM/VETO/OVERRIDE verdicts; unit tests covering each condition with synthetic row data; TradingView spot-check validation of EMA/MACD boolean values at 5+ dates.
-**Uses:** `core/indicators.py` (existing, no changes)
-**Avoids:** P2 (look-ahead bias — verify causal computation in each method), P7 (indicator divergence — TradingView spot-check before any filter tuning)
+### Phase 2: SELL Acceleration Conditions
+**Rationale:** Second confirmed Dr. K feature; depends on momentum indicators that can be built on top of the liquidity infrastructure from Phase 1. Bear-market validation must be a hard acceptance criterion, not an afterthought.
+**Delivers:** `SellAccelerator` component, price ROC calculation, DD clustering metric, volume-confirmed MA50 break check, bear-market sub-period validation (2008 and 2022 max drawdown not worse than V2 baseline), A/B results for SELL acceleration in isolation.
+**Uses:** Pure pandas `pct_change()` and `.diff()` — no new dependencies.
+**Implements:** SellAccelerator gate in the filter-gate architecture pattern.
+**Avoids:** Asymmetric overfit to bull markets (Pitfall 4).
 
-### Phase 3: HybridEngine Integration
-**Rationale:** Wire the three components (classic state machine, indicator filter, hybrid position manager) into the Propose-Filter-Decide pipeline. Must verify that when the filter is set to "always confirm," the hybrid engine produces identical output to the v2 engine — this is the regression baseline. Without this baseline, it is impossible to isolate whether accuracy changes come from filter rules or integration bugs.
-**Delivers:** `HybridEngine` with full daily processing loop; output DataFrame matching v2 format; regression test confirming identity with v2 when filter is disabled; `scripts/run_hybrid_backtest.py` entry point outputting three-way comparison.
-**Implements:** Full Propose-Filter-Decide pipeline; full data flow from DataLoader through validation scoring
-**Avoids:** P1 (authority chain enforced as assertion in `_resolve_action()`), P4 (two-phase commit already in place)
+### Phase 3: BUY Selectivity Improvement
+**Rationale:** Most experimental feature; positioned after Phases 1-2 so the macro regime dimension is already handled by the liquidity filter. Must start from the simplest possible implementation (MA10 > MA50 boolean) and escalate complexity only if the simple version proves insufficient. The hybrid engine failure is the primary anti-pattern to avoid.
+**Delivers:** `BuyQualityScorer` with MA alignment gate (MVP), optional FTD quality scoring, post-FTD confirmation window, correlation analysis between score components, walk-forward validation confirming < 10% out-of-sample degradation.
+**Avoids:** Curve-fit ensemble problem (Pitfall 5); hybrid engine failure as documented baseline.
 
-### Phase 4: Filter Tuning and Validation
-**Rationale:** Only after a working integration exists can filter rules be tested against published signals. Must hold out 19+ post-2019 signals before tuning begins — this partition must be selected and locked before any filter analysis runs. Target: hybrid accuracy > 56.7% on the post-2019 held-out set.
-**Delivers:** 2-3 indicator filter rules (maximum) validated with LOOCV; confusion matrix and per-type accuracy vs pure state machine and pure decision tree; cross-era regression check (pre-2019 accuracy must not catastrophically degrade); signal log recording "proposed X, filter said Y, final Z" for every day.
-**Addresses:** Validation scoring (table stakes), era-aware evaluation
-**Avoids:** P3 (overfitting — LOOCV required; 10+ signal rule threshold enforced), P6 (era fragility — post-2019 explicit scope; held-out 2024-2026 accuracy reported separately)
-
-### Phase 5: Enhancements (Post-Validation, Conditional)
-**Rationale:** Only warranted if Phase 4 validates the hybrid approach by exceeding 56.7% on the held-out set. Enhancements add accuracy and usability but do not change the core architecture.
-**Delivers:** Indicator confidence scoring (weighted majority confirmation); transition cooldown (N-day persistence); grid search over filter boolean combinations; three-way visual comparison dashboard.
-**Addresses:** Differentiator features — confidence scoring, contextual transitions, cooldown, parameter sweep
-**Condition:** Phase 4 must demonstrate > 56.7% post-2019 accuracy before this phase is authorized.
+### Phase 4: Combined Integration and Validation
+**Rationale:** Filter interactions only emerge when all three gates operate simultaneously. VN30-specific validation requires treating global liquidity as unproven for Vietnam and testing independently. Dashboard extensions should wait until all features are stable.
+**Delivers:** Integration tests covering all 8 filter combinations (liquidity x sell_accel x buy_quality on/off), CASH duration metrics vs V2 baseline (must stay < 130%), walk-forward validation (train 2007-2018, test 2019-2026, degradation < 10%), VN30 vs NASDAQ comparison with liquidity filter, dashboard extensions (liquidity overlay, signal quality annotations), final A/B report.
+**Avoids:** Whipsaw amplification from conflicting filters (Pitfall 7), overfitting to post-2008 QE regime on VN30 (Pitfall 3).
 
 ### Phase Ordering Rationale
 
-- **Phase 1 before all others:** Two-phase commit is a structural precondition. Adding filter logic to eagerly-mutating state machine code creates the DD counter corruption bug. Retrofitting two-phase commit after filter code exists would require rewriting all integration points simultaneously — high risk.
-- **Phase 2 before Phase 3:** `IndicatorFilter` is stateless and independently testable. Building it in isolation with synthetic unit tests (known indicator values, expected verdicts) is far safer than debugging filter logic inside a live engine loop where the source of errors is ambiguous.
-- **Phase 3 establishes regression baseline before Phase 4 begins:** The baseline (hybrid-with-filter-disabled = v2 output) must be locked in git before filter rules are added. Without it, there is no way to isolate accuracy changes.
-- **Phase 4 test set must be selected at end of Phase 3:** The 19+ held-out post-2019 signals must be selected and locked immediately after Phase 3 completes — before any filter analysis begins. Selecting them after seeing partial results would introduce data leakage.
-- **Phase 5 is conditional on Phase 4 success:** If hybrid accuracy does not exceed 56.7%, Phase 5 enhancements are premature. The correct response to Phase 4 failure is to revisit Phase 4 with a different filter hypothesis, not to add more features.
+- Phase 1 must be first because the liquidity data pipeline is a prerequisite for all other features, and correctness invariants (publication lag, state[i] regression) must be established before any performance comparisons mean anything.
+- Phase 2 before Phase 3 because SELL quality is more directly confirmed by Dr. K's statements and easier to validate objectively (bear-market drawdown test is a clear pass/fail). BUY selectivity is more experimental and benefits from a stable SELL foundation.
+- Phase 4 is a dedicated integration phase rather than simply "enable all features together" because PITFALLS.md identifies filter interaction effects that only appear in combined testing and require their own acceptance criteria (CASH duration, 8-combination coverage).
+- Dashboard extensions are deferred to Phase 4 because they depend on all features being stable — building visualization on unstable feature implementations wastes iteration time.
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 1 (Two-phase commit refactor):** The exact mutation points in `DistributionDayCounter`, `RallyAttemptTracker`, and `FTDSignalDetector` need a code-level audit before the design is finalized. Specifically: where does `dd_counter.reset()` get called in the FTD detection call chain? This must be mapped before writing `HybridPositionManager`.
-- **Phase 4 (Pre-registration of filter rules):** The specific 2-3 filter rules to pre-register before examining the data require a hypothesis-first design session informed by Phase 9 feature importances (close_above_ema55 dominant post-2019, importance=0.687). Consider a brief research-phase to select and document candidate rules before Phase 4 execution begins.
+- **Phase 4 (VN30 Adaptation):** Global liquidity filter applicability to Vietnam is unproven. SBV (State Bank of Vietnam) liquidity proxy data availability is unknown. If global liquidity hurts VN30 performance, a market-specific proxy or disabling the filter entirely for VN30 may be needed.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 2 (IndicatorFilter):** Straightforward class with boolean condition methods. Pattern already established in `core/feature_snapshot.py`. No research needed.
-- **Phase 3 (Engine integration):** The `strategies/mdm_v2/mdm_v2_engine.py` wiring pattern is the exact template. Propose-Filter-Decide is a standard pipeline. No research needed.
-- **Phase 5 (Enhancements):** All enhancements extend established project patterns. Confidence scoring and parameter sweeps follow existing conventions in `analysis/`.
+- **Phase 1 (Liquidity Integration):** `pd.merge_asof` pattern is fully documented; data file is available; implementation approach is completely specified in ARCHITECTURE.md with working code samples.
+- **Phase 2 (SELL Acceleration):** Momentum calculations (`pct_change`, `diff`) are standard pandas; no ambiguity in implementation approach.
+- **Phase 3 (BUY Quality):** Start with MA alignment boolean; if that fails, the hybrid engine failure analysis already documents why multi-condition approaches do not work — the path forward is known.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | No new dependencies needed; all alternatives evaluated and rejected with clear rationale grounded in project specifics (962 samples, 3-state machine, existing infrastructure) |
-| Features | HIGH | Grounded in existing codebase analysis, Dr. K's known TradingView setup, and Phase 9/10 validated findings; differentiator features are clearly flagged as post-validation |
-| Architecture | HIGH | Fully specified with existing module interfaces documented; proposed structure follows established project conventions; build order follows strict dependency chain |
-| Pitfalls | HIGH | Pitfalls derived from project-specific Phase 9/10 findings — P3 (95-signal overfitting) and P4 (DD counter reset) are precisely located in existing code, not generic advice |
+| Stack | HIGH | No new dependencies; all calculations fit existing patterns; verified against codebase |
+| Features | MEDIUM | QE floor, SELL acceleration, BUY selectivity confirmed by direct Dr. K quotes; specific thresholds (ROC cutoff, acceleration magnitude) require backtesting to determine |
+| Architecture | HIGH | Filter-gate pattern is clear; component boundaries specified; code samples provided in ARCHITECTURE.md; matches existing project structure exactly |
+| Pitfalls | HIGH | Two of seven pitfalls are based on known project bugs (state[i] error documented, hybrid engine failure documented with numbers); remainder based on solid quantitative finance principles |
 
-**Overall confidence:** HIGH
+**Overall confidence:** MEDIUM-HIGH
 
 ### Gaps to Address
 
-- **Exact mutation points in v2 components:** Phase 1 requires auditing where `dd_counter.reset()`, `rally_tracker` state updates, and `ftd_detector` internal state mutations occur in the call chain. This is a code-reading task (run `grep -n "reset\|self\." strategies/mdm_v2/*.py`) that must complete before Phase 1 design is finalized.
-- **TradingView indicator parity:** `core/indicators.py` uses `adjust=False` for EMA alignment with TradingView. MACD and HA Smoothed parity have not been formally verified. Must spot-check in Phase 2 before any filter thresholds are established.
-- **Held-out test set selection:** The specific 19+ post-2019 signals to hold out for Phase 4 final evaluation must be selected before Phase 3 completes — selecting them after seeing engine output would introduce data leakage. Select at start of Phase 4, lock in config, never touch until final evaluation.
-- **Pre-registered filter rule candidates:** The 2-3 filter rules to test in Phase 4 must be decided based on domain logic and Phase 9 feature importances, not by scanning data. This design decision belongs at the start of Phase 4 planning.
+- **QE floor threshold parameterization:** Research recommends `liquidity_roc_20w > 0` as starting point to avoid overfitting on 3 QE cycles. Correct threshold is a swept parameter in Phase 1, not a pre-determined constant.
+- **VN30 liquidity applicability:** Global liquidity (Fed + ECB + BOJ) correlates with VN30 through capital flows, but the relationship is indirect. Do not enable the liquidity filter for VN30 until Phase 4 provides independent evidence. May require a Vietnam-specific proxy.
+- **Sell acceleration magnitude:** Dr. K confirmed the concept but not specific thresholds. "-3% 5-day ROC" is a reasonable starting point, not a confirmed parameter. All acceleration thresholds are swept parameters in Phase 2.
+- **Publication lag in global_liquidity.csv:** The pre-computed `global_liquidity` figure combines Fed, ECB, and BOJ data. ECB and BOJ have longer publication delays than the Fed's WALCL (Thursday release for prior Wednesday). Verify the lag assumptions embedded in the CSV before finalizing the offset in Phase 1.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Existing codebase (`core/indicators.py`, `core/feature_snapshot.py`, `strategies/mdm_v2/`, `analysis/rule_discovery.py`, `analysis/validate_discovery.py`) — interfaces, integration patterns, confirmed working
-- Phase 9 findings: 962 signals, pre-2019 CV=53.9%, post-2019 CV=58.9%, feature importances, structural shift confirmed at Feb 2019 (EMA9 dominant pre vs EMA55 dominant post, zero overlap in top-2 features)
-- Phase 10 findings: 21.3% cross-era degradation, era-specific trees required, confusion matrices per signal type
+- Dr. K 2013 webinar transcripts — QE floor quote, sell acceleration quote, buy selectivity quote (confirmed model features)
+- Project codebase: `strategies/mdm_v2/mdm_v2_engine.py`, `strategies/mdm_v2/performance.py`, `strategies/mdm_hybrid/indicator_filter.py` — known bugs and failure rates documented with numbers
+- `data/global_liquidity.csv` — 987 weekly rows verified, 2007-2026, pre-computed columns confirmed
+- pandas `merge_asof` documentation — standard weekly-to-daily alignment pattern
 
 ### Secondary (MEDIUM confidence)
-- [Hybrid AI-Driven Trading System (ComSIA 2026)](https://arxiv.org/html/2601.19504v1) — regime-adaptive hybrid combining technical indicators with ML
-- [Heuristic Based Trading System on Forex Data](https://www.sciencedirect.com/science/article/abs/pii/S1568494616300369) — signal conflict resolution via weighted majority voting
-- [Understanding Look-Ahead Bias in Trading Strategies](https://www.marketcalls.in/machine-learning/understanding-look-ahead-bias-and-how-to-avoid-it-in-trading-strategies.html)
-- Dr. K's known TradingView indicator setup (EMA 9/21/55, MA 200, MACD 12-26-9, HA Smoothed 55) — from PROJECT.md context
+- IBD research (FTD failure rates): DD on days 1-2 after FTD = 95% failure; DD on day 3 = 70% failure — informs post-FTD confirmation window priority
+- Morpheus Trading timing model — DD clustering as sell acceleration proxy, distribution day proximity to FTD
+- [Global Liquidity Index TradingView by QuantitativeAlpha](https://www.tradingview.com/script/lG8KoR4f-Global-Liquidity-Index/) — central bank balance sheet composition methodology
+- [Quantified Strategies: FTD backtest](https://www.quantifiedstrategies.com/follow-through-day/) — FTD failure rate statistics and whipsaw patterns
+- [Alvarez Quant: Reducing whipsaws with MA timing](https://alvarezquanttrading.com/blog/reducing-whipsaws-when-using-200-day-moving-average-for-market-timing/) — delay/confirmation techniques
 
 ### Tertiary (LOW confidence)
-- `transitions` library (v0.9.2) and `python-statemachine` (v3.0.0) — evaluated and rejected; documentation reviewed to confirm rationale for rejection
-- IBD distribution day analysis resources — corroborating signal definitions, not primary sources for hybrid design
+- VantMacro global liquidity and market regimes — general regime filter implementation patterns, not MDM-specific
+- Market regime detection via HMM literature — evaluated and rejected in favor of simple threshold approach given data constraints
 
 ---
-*Research completed: 2026-03-29*
+*Research completed: 2026-03-30*
 *Ready for roadmap: yes*

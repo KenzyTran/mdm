@@ -1,189 +1,191 @@
-# Pitfalls Research: Hybrid MDM Engine (v3.0)
+# Pitfalls Research
 
-**Domain:** Hybrid state machine + indicator filter trading model
-**Researched:** 2026-03-29
-**Confidence:** HIGH (grounded in project-specific findings from Phases 9-10 and established quantitative finance pitfalls)
+**Domain:** Adding macro liquidity filter, SELL acceleration, and BUY selectivity to MDM V2 market timing engine
+**Researched:** 2026-03-30
+**Confidence:** HIGH (based on project history, code analysis, and domain research)
 
 ## Critical Pitfalls
 
-### Pitfall 1: Signal Authority Ambiguity — Who Has Final Say?
+### Pitfall 1: Look-Ahead Bias in Weekly-to-Daily Liquidity Merge
 
 **What goes wrong:**
-The hybrid model has two decision layers: the state machine (DD/FTD/Rally) proposes signals, and the indicator filters (EMA/MACD) confirm or override. Without a strict authority hierarchy, the system degenerates into ad-hoc logic where sometimes the state machine wins, sometimes the indicator wins, and no one can reason about why a particular signal fired. This creates untestable, un-debuggable spaghetti logic.
+Global liquidity data (`data/global_liquidity.csv`) is **weekly** (every Wednesday, ~987 rows from 2007-2026). The V2 engine processes **daily** bars. When merging weekly liquidity into the daily loop, using `merge_asof` or forward-fill without a publication lag creates look-ahead bias: the Wednesday liquidity value gets applied to Monday and Tuesday of the same week, even though that data was not yet published.
+
+Additionally, FRED data has a **publication delay** of 1-2 weeks. The Fed balance sheet (WALCL) released on Thursday covers the prior Wednesday. ECB and BOJ data have even longer delays. Using the `date` column directly means the backtest "knows" the liquidity value before it was publicly available.
 
 **Why it happens:**
-Developers add indicator overrides case-by-case when they find signals that "should have been different." Each override is locally reasonable but globally they create contradictions. The state machine says BUY (FTD fired), the EMA filter says no (price below EMA 55), but MACD histogram is positive — what wins? Without a designed resolution protocol, every edge case gets its own if-else branch.
+The existing V2 engine is purely price-based with no external data merges. Adding weekly macro data is the first time the engine faces a multi-frequency alignment problem. The natural instinct is to forward-fill the weekly value across all daily rows for that week, which is wrong.
 
 **How to avoid:**
-Define a strict signal authority chain before writing any code:
-1. State machine proposes a signal transition (e.g., BUY via FTD)
-2. Indicator filter layer has exactly two powers: CONFIRM or VETO (not propose new signals)
-3. If vetoed, the state machine stays in its current state — it does not jump to a different state
-4. Document every override path with a named rule (e.g., "EMA55_VETO: FTD buy vetoed when close < EMA55")
-
-Never let indicators propose signals that the state machine didn't originate. Indicators are filters, not signal generators.
+1. Apply a **publication lag offset** before merging: shift the weekly liquidity date forward by at least 7 days (conservative: 14 days) to simulate real-world availability
+2. Use `pd.merge_asof(direction='backward')` so each daily row gets the most recent weekly value that was **already published** (not the current or future week)
+3. The existing `qe_floor` column in `global_liquidity.csv` is pre-computed -- verify it also respects publication lag
+4. Create a unit test: for any daily date D, the merged liquidity value must come from a weekly date <= D minus the lag offset
 
 **Warning signs:**
-- Code has `if indicator_says_X and not state_machine_says_Y` patterns
-- More than 3-4 override rules accumulating
-- Signal log shows transitions that neither the state machine nor indicators alone would produce
-- Unit tests for individual components pass but integration tests fail
+- Liquidity filter appears to "perfectly" predict market turns
+- QE floor suppression timing exactly matches market bottoms (too good)
+- Performance improvement concentrates around Fed announcement dates
+- Filter decisions change when you add 7-14 day lag (if they do, the non-lagged version was using future data)
 
 **Phase to address:**
-Architecture design phase — must be resolved before any code is written. This is a design decision, not an implementation detail.
+Phase 1 (Global Liquidity Integration) -- this must be correct BEFORE any backtesting of the filter, or all downstream results are invalid.
 
 ---
 
-### Pitfall 2: Look-Ahead Bias in Indicator Computations
+### Pitfall 2: State[i] vs State[i-1] Contamination in New Filter Logic
 
 **What goes wrong:**
-EMA/MACD calculations use the full price series (including future data) when computed via pandas vectorized operations like `ewm()`. The indicator values at time T are mathematically correct, but the model "knows" the EMA at the exact close price — in reality, the EMA value shifts during the trading day. More subtly, the feature snapshot from Phase 9 already computed indicators on the full OHLCV history and joined them to signal dates. If the hybrid engine reuses these pre-computed snapshots rather than computing indicators incrementally, any indicator that depends on future normalization (e.g., min-max scaling) introduces look-ahead.
+The project already experienced this exact bug: using `state[i]` instead of `state[i-1]` in equity calculations caused a 707% vs 93% difference. When adding the liquidity filter as a new condition in `process_day()`, the same class of bug can recur: the filter reads today's liquidity to decide today's state, but the equity curve must use **yesterday's state** to compute today's return.
+
+More subtly, if the liquidity filter **overrides** a SELL signal on day T, but the equity formula captures the return as if the override was already active on day T (rather than T+1), the backtest leaks information.
 
 **Why it happens:**
-The existing `core/indicators.py` computes EMA/SMA/MACD on entire DataFrames in one pass — this is standard and mathematically equivalent to incremental computation for these specific indicators (EMA, SMA, MACD are causal filters). The danger is when someone adds a non-causal indicator (e.g., Bollinger Band percentile rank, Z-score normalization, or any indicator using `shift(-1)` or future-looking windows).
+The V2 engine loop at line 99 (`for idx in range(len(df))`) processes each day sequentially. The state is updated at step 5 (`process_day` at line 203) and written to the DataFrame at line 232. The performance analyzer correctly uses `prev_state = states[i-1]` (line 94 of performance.py). But when adding a new filter step between steps 4 and 5, the filter might read the **current** row's liquidity to suppress a transition, and if not careful, the suppression takes effect on the same day the data becomes available.
 
 **How to avoid:**
-- The existing EMA/SMA/MACD computations in `core/indicators.py` are safe (causal, no future leakage). Keep using vectorized computation for these.
-- Add a mandatory code review checklist item: "Does this indicator use only past and current data?"
-- Never use `shift(-1)`, `rolling().apply()` with center=True, or any look-ahead normalization
-- Test: for any indicator, compare its value at row N computed on df[:N+1] vs df[:]. They must be identical.
-- The feature snapshot approach (Phase 9) is fine for statistical analysis but the hybrid engine must compute indicators on the live DataFrame, not from pre-joined snapshots.
+1. The liquidity filter decision for day T should be based on data available BEFORE day T's open (which means the liquidity value must be from at least the prior week)
+2. Add an assertion test: run the V2 engine with and without the filter, extract the equity curve, verify that `equity[i]` is computed from `state[i-1]` in BOTH cases
+3. The filter should modify the **proposal** going into `process_day()`, not retroactively change the state after it is set
+4. Document the rule: "Filter inputs must use `row[i-1]` or earlier data. Filter output modifies the proposal for `state[i]`, which affects returns starting from `i+1`."
 
 **Warning signs:**
-- Indicator values change when you truncate the DataFrame at different endpoints
-- Model accuracy drops sharply when run on streaming data vs. full-history backtest
-- Bollinger Band or Z-score indicators appear in the filter layer
+- Adding the liquidity filter produces > 50% improvement in total return (suspiciously large)
+- Removing the filter causes a proportionally larger performance drop than the number of signals affected
+- Performance difference between filter-on and filter-off is asymmetric (huge improvement on one side, tiny degradation on the other)
 
 **Phase to address:**
-Engine implementation phase — enforce during indicator integration into the hybrid engine.
+Phase 1 (Global Liquidity Integration) -- enforce from the first line of code. Add regression test from the known 707% vs 93% bug as a guard.
 
 ---
 
-### Pitfall 3: Overfitting Indicator Filter Thresholds to 95 Post-2019 Signals
+### Pitfall 3: Overfitting Liquidity Filter to Post-2008 QE Regime
 
 **What goes wrong:**
-The post-2019 era has only 95 signals (Phase 9 confirmed: Pre-2019=867, Post-2019=95). The decision tree achieved 58.9% accuracy on this small sample with class_weight='balanced'. Tuning indicator filter thresholds (e.g., "veto FTD when close < EMA55 AND MACD histogram < -0.5") against 95 signals almost guarantees overfitting. With 8 boolean features and 3 signal classes, the combinatorial space is large relative to the sample size.
+Global liquidity data starts in 2007. QE began in 2008. The entire dataset of 987 weekly points covers ONE macro regime (post-GFC central bank expansion). A "QE floor" filter tuned to suppress SELL signals during Fed balance sheet expansion will look brilliant on 2009-2021 data but has **zero out-of-sample validation** for non-QE environments (2022 QT, pre-2008, or a future regime where central banks are constrained).
+
+The VN30 market adds another layer: Vietnam's State Bank policy does not follow Fed/ECB/BOJ cycles. Global liquidity may correlate with VN30 through capital flows, but the relationship is indirect and regime-dependent.
 
 **Why it happens:**
-The temptation is strong: each indicator threshold tuned to match one more signal feels like progress. But 95 signals is roughly 30 per class — with 8 binary features, you can construct 256 possible feature combinations. Many combinations appear only once or twice in the data, making any rule based on them statistically meaningless.
+Only 18 years of weekly data. Only one full QE cycle (2008-2014), one expansion (2020-2021), and one QT episode (2022-2023). With so few regime samples, any filter threshold is essentially "fit to n=3 events."
 
 **How to avoid:**
-- Limit the hybrid model to at most 2-3 indicator filter rules total (not per-signal-type)
-- Each filter rule must match at least 10 signals to be considered statistically meaningful
-- Use Leave-One-Out Cross-Validation (LOOCV) or k-fold CV (k=5) on the 95-signal set — never train and evaluate on the same data
-- Pre-register the filter rules before testing them: decide what EMA/MACD conditions to test based on trading logic, not by scanning the data
-- The 867 pre-2019 signals are useful for checking that filters don't catastrophically break on historical data, even though the rules differ
+1. Use the liquidity filter as a **soft suppression** (reduce position size or delay SELL by N days) rather than a hard veto
+2. Test with inverted logic: if suppressing SELL during QE expansion helps, does suppressing BUY during QT contraction also help? If only one direction works, the filter may be capturing noise
+3. Walk-forward test: train threshold on 2007-2018, test on 2019-2026. If out-of-sample degrades > 10% (use existing `check_degradation()` function), the filter is overfit
+4. For VN30: do NOT assume global liquidity applies. Test separately, and require independent evidence (Vietnam credit growth, SBV repo rates) before enabling
+5. Keep the filter simple: use only `liquidity_roc_20w > 0` (expansion vs contraction), not a fine-tuned threshold
 
 **Warning signs:**
-- Post-2019 match rate jumps from 58.9% to >80% with added filters (suspicious given the sample size)
-- Any filter rule that triggers on fewer than 5 historical signals
-- Filter thresholds that are oddly specific (e.g., "MACD > 0.37" instead of "MACD > 0")
-- Cross-validation accuracy is much lower than training accuracy
+- Optimal threshold changes significantly between sub-periods
+- Filter helps on NASDAQ but hurts on VN30 (or vice versa)
+- Parameter sensitivity: small changes in ROC threshold (e.g., 0% vs 2%) cause large performance swings
+- The filter's benefit comes primarily from 2020-2021 (pandemic QE), which is a single event
 
 **Phase to address:**
-Filter tuning phase — must use disciplined validation methodology. Consider this the single most likely failure mode of the v3.0 milestone.
+Phase 1 (Global Liquidity Integration) for the filter design, Phase 4 (VN30 Adaptation Backtest) for cross-market validation.
 
 ---
 
-### Pitfall 4: State Machine Corruption from Indicator Overrides
+### Pitfall 4: SELL Acceleration Conditions Creating Asymmetric Overfit
 
 **What goes wrong:**
-The existing v2 state machine has carefully designed state transitions: CASH->BUY (via FTD or MA50 breakout), BUY->CASH (via DD threshold or stop loss), CASH->SELL (via MA50 breakdown or deterioration timer). Adding indicator filters that can veto transitions creates "stuck states" — the state machine wants to transition but the filter keeps vetoing, leaving the model in a state that has no natural exit path.
+Adding momentum/acceleration conditions to SELL transitions (e.g., "require MACD divergence AND price below EMA55 before transitioning BUY->CASH->SELL") sounds prudent but creates an asymmetric bias: you are making it **harder** to exit, which mechanically increases holding time and total return in bull markets. This improvement is not alpha -- it is just "hold longer in backtested bull markets."
 
-Example: State machine fires FTD (CASH->BUY transition), but EMA filter vetoes. Model stays in CASH. DD counter was reset when FTD fired (as it does in current code). Now the model is in CASH with a reset DD counter and no pending rally attempt — it has no mechanism to re-trigger a buy signal until a new correction-and-rally cycle begins. This could leave the model stuck in CASH for weeks.
+In bear markets (2000-2002, 2008, 2022), delayed SELL transitions can be catastrophic. The existing V2 already has `cash_deterioration_days: 10` as an auto-SELL timer. Adding acceleration conditions on top risks making the path BUY->CASH->SELL even slower.
 
 **Why it happens:**
-The state machine components (DD counter, Rally tracker, FTD detector) have internal state that mutates on transitions. If a transition is vetoed after internal state has already been updated, the components are in an inconsistent state. The existing code in `DistributionDayCounter.reset()` clears dd_history on FTD signal — if the FTD is subsequently vetoed, the DD history is already gone.
+The natural research process is: "V2 has too many false SELL signals, let's add conditions to filter them." But every condition you add to suppress false SELLs also delays true SELLs. In a 52-year backtest dominated by bull markets (~70% of the time), delaying SELLs mechanically improves aggregate returns.
 
 **How to avoid:**
-- Implement a two-phase commit for state transitions:
-  1. Phase 1: State machine proposes transition, returns the proposed action WITHOUT mutating internal state
-  2. Phase 2: Indicator filter confirms/vetoes
-  3. Phase 3: Only if confirmed, commit the state mutation
-- The current code mutates state eagerly (DD counter resets in `check_ftd()` call chain). This must be refactored to separate proposal from commitment.
-- Add invariant checks: after every day's processing, verify the state machine is in a valid state (e.g., if in CASH, verify there's a path to exit CASH)
+1. Measure SELL quality separately for bull and bear periods. A good acceleration condition should improve both
+2. Track **time to first correct SELL** in each bear market (2000, 2008, 2018, 2020, 2022). If acceleration conditions delay the first correct SELL by > 5 trading days vs V2 baseline, reject them
+3. Use a **maximum delay cap**: if acceleration conditions delay SELL by more than N days, force the SELL anyway (similar to existing `cash_deterioration_days`)
+4. Test on the 2022 bear market specifically -- this is the most recent regime change, and delayed SELLs here would have caused 20-30% drawdowns
 
 **Warning signs:**
-- Model stays in CASH or SELL for unusually long periods (>30 trading days without any transition attempt)
-- Signal log shows "proposed BUY, vetoed by filter" followed by silence
-- DD counter is 0 but model is in CASH without a recent buy signal
+- SELL condition changes produce big total return improvements but max drawdown stays the same or worsens
+- Number of SELL signals drops by > 30% (too much suppression)
+- Average holding period increases by > 20% vs baseline (you are just holding longer, not timing better)
+- Performance improvement comes primarily from 2009-2021 (the longest bull run)
 
 **Phase to address:**
-Engine architecture phase — must refactor state mutation logic before adding filters. This is the hardest integration pitfall because it requires changing existing v2 engine internals.
+Phase 2 (SELL Acceleration Conditions) -- must include bear-market-specific validation as acceptance criteria.
 
 ---
 
-### Pitfall 5: Conflating "Cash" State Semantics Between State Machine and Indicators
+### Pitfall 5: BUY Selectivity Score Becoming a Curve-Fit Ensemble
 
 **What goes wrong:**
-The v2 state machine's CASH state means "the market is deteriorating but not fully bearish — reduce exposure." The indicator layer's concept of "neutral" (e.g., EMA 9 near EMA 21, MACD near zero) is a different thing entirely. If the indicator layer can trigger CASH independently of the state machine, the CASH state loses its specific meaning and becomes a grab-bag for "anything that's not clearly bullish or bearish."
-
-Phase 10 found that the decision tree uses different features for Cash classification pre-2019 vs post-2019 (close_above_ema9 dominant pre-2019, close_above_ema55 dominant post-2019). This means "Cash" is not a stable indicator concept — it shifted structurally. Building indicator filters for Cash based on one era's patterns will fail on the other.
+Building a "BUY quality score" by combining multiple conditions (EMA alignment, MACD histogram, volume confirmation, price location, momentum) quickly becomes an overfitted ensemble. The hybrid engine experiment already demonstrated this: the indicator filter rejected 47% of BUY signals but only 43% were correct rejections -- essentially random. Adding MORE conditions does not fix the problem; it just shifts the random boundary.
 
 **Why it happens:**
-Cash is the hardest state to define because it's the absence of a strong signal. Both the state machine and indicators struggle with it. The temptation is to let either system trigger Cash, which doubles the confusion.
+Each indicator condition has marginal predictive power (~55-60% accuracy individually). Combining them via majority vote or weighted scoring does not improve accuracy unless the conditions are **uncorrelated**. In practice, EMA9>EMA21, close>EMA55, and MACD>0 are all highly correlated (they all measure "is the trend up?"). Adding correlated conditions inflates apparent robustness in-sample without improving out-of-sample.
 
 **How to avoid:**
-- Only the state machine should propose BUY->CASH transitions (via DD accumulation or stop loss)
-- Indicators should only be allowed to veto BUY proposals (keeping model in current state), not to propose new CASH entries
-- Accept that Cash will be the lowest-accuracy signal type — the Phase 9 decision tree already showed this
-- Do not add Cash-specific indicator filters; focus filter effort on Buy and Sell accuracy
+1. Learn from the hybrid engine failure: do NOT build a multi-condition BUY filter the same way
+2. Instead of scoring BUY signals, focus on **regime-based gating**: only suppress BUY during QT (liquidity filter) or extreme overbought conditions, not based on indicator ensembles
+3. If building a score, require each component to be **independently validated** with correlation < 0.5 between components
+4. Set a hard limit: maximum 2-3 conditions (the FilterConfig already warns at > 3, per D-04)
+5. Use the existing `check_degradation()` function: if BUY selectivity degrades > 10% out-of-sample, reject it
 
 **Warning signs:**
-- Cash signals in the hybrid model that don't correspond to any DD accumulation or stop loss event
-- Cash accuracy improving but Buy/Sell accuracy degrading
-- More than 2 distinct code paths leading to CASH state
+- BUY selectivity score rejects > 30% of signals but win rate on accepted signals improves < 5%
+- Score components have pairwise correlation > 0.7
+- Optimal score threshold differs between VN30 and NASDAQ datasets
+- Adding a 4th or 5th condition improves in-sample but not out-of-sample
 
 **Phase to address:**
-State machine design phase — define Cash semantics clearly before implementation.
+Phase 3 (BUY Selectivity Improvement) -- use hybrid engine results as the anti-pattern baseline.
 
 ---
 
-### Pitfall 6: Era-Dependent Filter Rules Creating a Fragile Model
+### Pitfall 6: Liquidity Data Gap for VN30 Pre-2007
 
 **What goes wrong:**
-Phase 9 revealed a structural shift: close_above_ema9 was the dominant feature pre-2019 (importance=0.702) while close_above_ema55 became dominant post-2019 (importance=0.687), with no overlap in top-2 features between eras. If the hybrid model uses post-2019 era features exclusively (e.g., EMA 55 filter), it will fail when market conditions shift again. If it tries to use both eras' features, the rules conflict.
+Global liquidity data starts May 2007. VN30 data may extend earlier (VN30 index launched 2012, but VN-Index data goes back further). Running the combined engine on pre-2007 data will have `NaN` liquidity values. If the code does not handle this gracefully, the filter either crashes, or worse, silently defaults to "no suppression" -- which means the filter is only active for part of the backtest, making performance comparisons misleading.
 
 **Why it happens:**
-The 2019 structural change was a deliberate model update by Dr. K, not a market regime change. The hybrid model is trying to reverse-engineer a system that was intentionally redesigned. Using statistical patterns from the post-2019 era assumes those patterns are stable going forward — but Dr. K could update the model again.
+The V2 engine currently has no external data dependencies. Adding the liquidity merge creates the first data availability boundary. The engine loop does not check for NaN in external columns.
 
 **How to avoid:**
-- Design the hybrid model to be explicitly post-2019 only. Do not try to create a single model that works across both eras.
-- Accept the 21.3% cross-era degradation as evidence that era-specific models are necessary.
-- Make the filter layer configurable so that when the model breaks (which it will, eventually), swapping filter rules is a configuration change, not a code rewrite.
-- Track filter rule performance over time with a simple monitoring mechanism (match rate per quarter).
+1. Add explicit NaN handling: if liquidity data is missing for a date, the filter should return a **neutral** verdict (neither suppress nor amplify)
+2. Document the effective date range of the liquidity filter in config: `liquidity_start_date: "2007-05-02"`
+3. When reporting performance, separate metrics into "pre-filter" and "with-filter" periods
+4. For VN30 specifically: the liquidity filter is only meaningful from 2012+ (VN30 launch). Test separately
 
 **Warning signs:**
-- Temptation to "unify" pre-2019 and post-2019 into one set of filter rules
-- Filter rules that work well on 2019-2023 but poorly on 2024-2026
-- Model performance degrading on most recent signals
+- Backtest results change when you extend the date range beyond 2007
+- NaN-related warnings or silent data drops in the merge
+- Performance metrics mix filtered and unfiltered periods
 
 **Phase to address:**
-Filter design phase — make era-awareness explicit in the architecture. Validation phase — test on most recent signals as held-out set.
+Phase 1 (Global Liquidity Integration) -- handle during data loader implementation.
 
 ---
 
-### Pitfall 7: Indicator Calculation Divergence from Dr. K's Platform
+### Pitfall 7: Whipsaw Amplification from Conflicting Filter Signals
 
 **What goes wrong:**
-Dr. K uses TradingView for charting. The project's `core/indicators.py` uses `adjust=False` for EMA to match TradingView behavior. But subtle differences remain: TradingView's MACD implementation, Heikin Ashi Smoothed algorithm, and EMA initialization (first value) can differ from pandas implementations. If the hybrid model's indicator values diverge by even 0.1% from what Dr. K sees, filter thresholds calibrated to match his signals will misfire.
+Three new features (liquidity filter, SELL acceleration, BUY selectivity) can create conflicting signals. Example: liquidity filter says "suppress SELL" (QE expanding), SELL acceleration says "allow SELL" (momentum deteriorating), BUY selectivity says "reject next BUY" (low quality). The engine enters a state where it is simultaneously suppressing exits AND blocking re-entries, trapping capital in CASH during both rallies and corrections.
 
 **Why it happens:**
-EMA with `adjust=False` initializes with the first data point. TradingView may use a different initialization (e.g., SMA of first N points). Over long histories this difference washes out, but near the initialization point or after data gaps, values can diverge. MACD is particularly sensitive because it's a difference of two EMAs — small divergences compound.
+Each feature is developed and tested independently. They interact through the state machine but their combined effect is not tested as a system. The existing V2 engine has clean state transitions; adding three parallel filters creates a combinatorial explosion of edge cases.
 
 **How to avoid:**
-- Validate indicator values against TradingView by spot-checking 5-10 dates manually
-- For MACD, check the sign of the histogram (above/below zero) rather than exact values — the sign is what matters for boolean features
-- Use boolean features (e.g., "MACD > 0", "close > EMA55") rather than continuous thresholds — this is more robust to small calculation differences
-- The existing 8 boolean features from Phase 9 are the right approach; do not regress to continuous thresholds
+1. Define a **priority hierarchy**: liquidity filter > SELL acceleration > BUY selectivity. Higher priority overrides lower
+2. Add a **conflict resolution rule**: if liquidity filter and SELL acceleration disagree, the more conservative action wins (exit to CASH)
+3. Test the COMBINED system, not just each feature in isolation. Create integration tests that cover all 8 combinations of (liquidity: suppress/allow) x (sell_accel: trigger/delay) x (buy_select: accept/reject)
+4. Track **days in CASH** as a key metric. If the combined filters increase average CASH days by > 30% vs V2 baseline, the system is over-filtering
 
 **Warning signs:**
-- Filter using "MACD > 0.5" instead of "MACD > 0" — continuous thresholds are fragile
-- Indicator values at signal dates that don't match TradingView screenshots
-- EMA values diverging more at recent dates than historical dates (initialization issue)
+- Combined system underperforms individual features applied separately
+- Average CASH duration increases significantly
+- State oscillation: rapid BUY->CASH->BUY->CASH sequences (whipsaw)
+- Performance improves in calm markets but degrades in volatile markets (filters fight each other)
 
 **Phase to address:**
-Indicator validation phase — spot-check before building filters on top.
+Phase 4 (Combined Integration) -- must be a dedicated integration testing phase, not just stacking features.
 
 ---
 
@@ -193,46 +195,47 @@ Shortcuts that seem reasonable but create long-term problems.
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Hardcoding filter rules in engine `process_day()` | Fast to implement, easy to test one rule | Adding/removing filters requires engine code changes; rules become entangled with state logic | Never — filter rules should be in config or a separate filter layer |
-| Reusing v2 engine directly with if-else patches | No refactoring needed | State machine internals become impossible to reason about; DD counter reset bug (Pitfall 4) | Only for quick proof-of-concept, must refactor before validation |
-| Training filter rules on all 95 post-2019 signals | Maximum data for fitting | No held-out test set; impossible to detect overfitting | Never — always hold out at least 20% (19 signals minimum) |
-| Copying `strategies/mdm_v2/` wholesale to `strategies/mdm_v3/` | Clean separation | Code duplication; bug fixes must be applied in two places; DD counter, Rally tracker, FTD detector are identical | Acceptable if v2 is frozen and archived |
-| Using continuous indicator values as filter thresholds | More expressive filtering | Fragile to calculation differences (Pitfall 7); overfitting risk (Pitfall 3) | Never for this project — stick to boolean features |
+| Hardcoding publication lag as 0 days | Faster development, simpler merge | All liquidity filter results are invalid (look-ahead bias) | **Never** |
+| Forward-filling weekly data without lag | Clean daily DataFrame, no NaN gaps | Subtle look-ahead bias on Mon-Tue of each week | Never for filter decisions; acceptable for visualization only |
+| Testing features independently only | Each feature shows improvement | Combined system has untested interactions, possible degradation | Only in Phase 1-3 dev; Phase 4 must test combined |
+| Using same data for threshold tuning and validation | Faster iteration, more data | Overfitting guaranteed with only 18 years of weekly liquidity data | Never for liquidity thresholds; use walk-forward |
+| Adding SELL conditions without bear-market testing | Total return improves in aggregate backtest | Catastrophic drawdown in next bear market | Never -- always require bear-specific validation |
 
 ## Integration Gotchas
 
-Common mistakes when connecting the hybrid engine to existing components.
+Common mistakes when integrating new features into the V2 engine.
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| v2 state machine + indicator filter | Mutating DD counter/Rally tracker state before filter confirmation | Two-phase commit: propose transition, filter confirms, then commit state changes |
-| `core/indicators.py` + v2 engine `Indicators` | Using two different indicator modules with different MA calculations | Hybrid engine should use `core/indicators.py` (EMA/MACD) for filter layer and v2's `Indicators` (MA10/MA50/price_location) for state machine — but verify no naming conflicts |
-| Feature snapshot (Phase 9) + live engine | Reusing pre-computed snapshots instead of computing indicators on-the-fly | Snapshots are for analysis; the engine must compute indicators from the DataFrame each run |
-| `V2MarketState` enum + new filter states | Adding filter-specific states (e.g., PENDING_BUY, VETOED) to the enum | Keep `V2MarketState` as-is (BUY/CASH/SELL). Filter decisions are internal to the filter layer, not visible states |
-| Signal validation against 962 signals | Comparing hybrid signals using exact date match | Allow +/- 1 day tolerance for signal dates (weekend snapping, same-day signals) |
+| Integration Point | Common Mistake | Correct Approach |
+|-------------------|----------------|------------------|
+| Weekly liquidity -> daily engine loop | Merging on exact date match (misses most daily rows) | Use `merge_asof` with backward direction and publication lag offset |
+| Liquidity filter -> `process_day()` | Adding filter inside `process_day()`, coupling state machine to external data | Filter modifies the **proposal** before `process_day()`, keeping state machine pure |
+| SELL acceleration -> DD counter | Resetting DD count when acceleration condition is not met | DD count should keep accumulating; acceleration only gates the transition |
+| BUY selectivity -> FTD detector | Rejecting FTD at detection time (losing the signal permanently) | Detect FTD normally; apply selectivity score to the **transition decision**, so the signal can be reconsidered |
+| Performance comparison -> equity curve | Computing equity with new filter on full period including pre-2007 | Split equity calculation at liquidity data boundary; report both periods |
+| Config expansion -> MDMV2Config | Adding 10+ new parameters for all three features | Create separate `LiquidityFilterConfig`, `SellAccelConfig`, `BuySelectConfig` composed into MDMV2Config |
 
 ## Performance Traps
 
-Patterns that work at small scale but fail as data grows.
+Patterns that work at small scale but fail as data grows or regime changes.
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Recomputing all indicators on every `process_day()` call | Slow backtest (seconds per day instead of milliseconds) | Compute indicators once on full DataFrame before main loop (current v2 approach is correct) | Never for this project — 962 signals is tiny |
-| Storing full DataFrame copies at each state transition for debugging | Memory growth, slow backtest | Store only the state diff (date, proposed signal, filter decision, final signal) in a lightweight log | >10,000 backtest iterations during parameter sweeps |
-| Grid search over filter thresholds | Combinatorial explosion: 3 filters x 10 threshold values = 1000 backtests | Use boolean features only (no thresholds to sweep); limit to 2-3 filters max | Not applicable if boolean-only approach is followed |
+| Liquidity ROC threshold tuned to 2020-2021 | Perfect SELL suppression during pandemic QE | Walk-forward validation; require threshold to work on 2008-2014 QE too | Next QT cycle or non-US market (VN30) |
+| SELL acceleration tuned on 2009-2021 bull run | Fewer false SELLs, higher total return | Validate on 2000-2002, 2008, 2022 bear markets separately | Next bear market lasting > 6 months |
+| BUY selectivity using correlated indicators | High in-sample accuracy | Require pairwise correlation < 0.5 between score components | Any regime where trend indicators diverge (choppy markets) |
+| Fixed publication lag assumption | Works for Fed data | Research actual publication schedule for ECB, BOJ | When data source changes update frequency |
 
 ## "Looks Done But Isn't" Checklist
 
 Things that appear complete but are missing critical pieces.
 
-- [ ] **Filter layer:** Often missing veto-without-stuck-state logic — verify that every vetoed transition has a recovery path
-- [ ] **State machine refactor:** Often missing the two-phase commit — verify that `dd_counter.reset()` is NOT called before filter confirmation
-- [ ] **Validation:** Often missing held-out test set — verify that at least 19 post-2019 signals were not used during filter tuning
-- [ ] **Signal log:** Often missing filter decision details — verify log records "proposed X, filter said Y, final Z" not just "final Z"
-- [ ] **Cross-era check:** Often missing pre-2019 regression test — verify filters don't catastrophically break pre-2019 accuracy even though model targets post-2019
-- [ ] **Indicator parity:** Often missing TradingView spot-check — verify EMA/MACD boolean values match TradingView at 5+ dates
-- [ ] **Cash state semantics:** Often conflated between "state machine Cash" and "indicator neutral" — verify only state machine proposes CASH transitions
-- [ ] **Config separation:** Often hardcoded in engine — verify filter rules are in configuration, not in `process_day()` logic
+- [ ] **Liquidity merge:** Often missing publication lag -- verify by checking that no daily row uses a liquidity value published AFTER that row's date
+- [ ] **SELL acceleration:** Often missing bear-market validation -- verify by running 2008 and 2022 sub-periods and checking max drawdown separately
+- [ ] **BUY selectivity:** Often missing correlation analysis between score components -- verify pairwise correlation matrix is computed and logged
+- [ ] **Equity calculation:** Often breaks when new filter changes state timing -- verify `state[i-1]` rule still holds by comparing a known date's state with the return captured
+- [ ] **VN30 adaptation:** Often assumes global liquidity applies directly -- verify with VN30-specific backtest that filter helps (not just "doesn't hurt")
+- [ ] **Combined integration:** Often only tested on full period -- verify with walk-forward: train on 2007-2018, test on 2019-2026, check degradation < 10%
+- [ ] **NaN handling:** Often crashes or silently drops rows at data boundaries -- verify by running engine on date range starting before 2007-05-02
 
 ## Recovery Strategies
 
@@ -240,13 +243,13 @@ When pitfalls occur despite prevention, how to recover.
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Signal authority ambiguity (P1) | MEDIUM | Audit all signal paths, document each as "state machine" or "filter"; remove any indicator-originated signals |
-| Look-ahead bias (P2) | HIGH | Must re-validate all results from the point of introduction; compare truncated vs full DataFrame indicator values |
-| Overfitting filters (P3) | MEDIUM | Remove all filter rules, re-introduce one at a time with LOOCV validation; accept lower match rate |
-| State machine corruption (P4) | HIGH | Refactor to two-phase commit; audit every `reset()` call; add invariant checks; re-run full backtest |
-| Cash semantics confusion (P5) | LOW | Remove indicator-originated Cash transitions; re-restrict Cash to DD accumulation and stop loss paths only |
-| Era-dependent fragility (P6) | LOW | Restrict model to post-2019 explicitly; add quarterly performance monitoring |
-| Indicator divergence (P7) | MEDIUM | Spot-check against TradingView; switch to boolean-only features if continuous thresholds are in use |
+| Look-ahead bias discovered after tuning | HIGH | Discard all tuning results. Add lag offset. Re-run entire parameter sweep from scratch |
+| State[i] vs state[i-1] bug in new filter | MEDIUM | Fix the index reference. Re-run equity calculation. Compare with known baseline (190.8% V2 return) |
+| Overfit liquidity threshold | LOW | Switch to simple binary (expansion/contraction). Remove fine-tuned threshold. Accept lower in-sample performance |
+| SELL acceleration too aggressive | MEDIUM | Add maximum delay cap. Re-validate on bear markets. Fall back to V2 baseline SELL logic |
+| BUY selectivity near-random | LOW | Remove entirely. The hybrid engine already proved this approach does not work. Focus on liquidity filter instead |
+| Combined system conflicts | MEDIUM | Disable all three features. Re-enable one at a time with integration tests. Establish priority hierarchy |
+| VN30 liquidity filter hurts performance | LOW | Disable liquidity filter for VN30. Use VN30-specific signals (SBV rates, foreign flow) instead |
 
 ## Pitfall-to-Phase Mapping
 
@@ -254,24 +257,27 @@ How roadmap phases should address these pitfalls.
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| P1: Signal authority ambiguity | Architecture/Design phase | Design doc specifies authority chain; code review confirms no indicator-originated signals |
-| P2: Look-ahead bias | Engine implementation phase | Test: indicator at row N identical whether computed on df[:N+1] or df[:] |
-| P3: Overfitting to 95 signals | Filter tuning phase | LOOCV or 5-fold CV accuracy reported; no filter rule triggers on <10 signals |
-| P4: State machine corruption | Engine refactoring phase | Unit test: vetoed FTD does not reset DD counter; invariant check passes after every day |
-| P5: Cash semantics | State machine design phase | Code review: only 2 paths to CASH (DD threshold, stop loss); no indicator-originated CASH |
-| P6: Era-dependent fragility | Filter design + Validation phase | Model explicitly scoped to post-2019; held-out 2024-2026 accuracy reported separately |
-| P7: Indicator divergence | Indicator validation phase | 5+ dates spot-checked against TradingView; boolean feature values match |
+| Weekly-to-daily look-ahead bias | Phase 1: Liquidity Integration | Unit test: merged liquidity date <= daily date - lag_days |
+| State[i] vs state[i-1] contamination | Phase 1: Liquidity Integration | Regression test: V2 baseline equity = 190.8% +/- 0.1% unchanged |
+| Overfitting to QE regime | Phase 1: Liquidity Integration | Walk-forward: train 2007-2018, test 2019-2026, degradation < 10% |
+| SELL acceleration asymmetric overfit | Phase 2: SELL Acceleration | Bear-market sub-test: 2008 and 2022 drawdown not worse than V2 baseline |
+| BUY selectivity curve-fit ensemble | Phase 3: BUY Selectivity | Correlation matrix: all component pairs < 0.5; out-of-sample check_degradation < 10% |
+| Liquidity data gap (pre-2007) | Phase 1: Liquidity Integration | Engine runs on 2000-2026 without crash; NaN liquidity returns neutral verdict |
+| Whipsaw from conflicting filters | Phase 4: Combined Integration | Integration test covering all 8 filter combinations; CASH days < 130% of V2 baseline |
 
 ## Sources
 
-- Project Phase 9 findings: Pre-2019 CV accuracy 53.9%, Post-2019 CV accuracy 58.9%, structural feature shift between eras
-- Project Phase 10 findings: 21.3% cross-era degradation, 962 signals validated, era-specific trees required
-- Existing v2 engine code: `strategies/mdm_v2/position_manager.py`, `config.py`, `distribution_day.py`, `ftd_signal.py`
-- [Understanding Look-Ahead Bias in Trading Strategies](https://www.marketcalls.in/machine-learning/understanding-look-ahead-bias-and-how-to-avoid-it-in-trading-strategies.html)
-- [Backtesting Traps: Common Errors to Avoid](https://www.luxalgo.com/blog/backtesting-traps-common-errors-to-avoid/)
-- [Heuristic Based Trading System on Forex Data Using Technical Indicator Rules](https://www.sciencedirect.com/science/article/abs/pii/S1568494616300369) — signal conflict resolution via weighted majority voting
-- [5 Steps to Build Rule-Based Trading Strategies](https://www.luxalgo.com/blog/5-steps-to-build-rule-based-trading-strategies/)
+- Project codebase analysis: `strategies/mdm_v2/mdm_v2_engine.py`, `strategies/mdm_v2/performance.py`, `strategies/mdm_hybrid/indicator_filter.py`
+- Known bug: equity formula state[i] vs state[i-1] causing 707% vs 93% difference (project history)
+- Known result: hybrid indicator filter 47% rejection rate with 43% correct rejections (near random)
+- Global liquidity data: `data/global_liquidity.csv` (987 weekly rows, 2007-2026)
+- [Look-ahead bias in backtesting](https://www.newsletter.quantreo.com/p/look-ahead-bias-the-invisible-killer)
+- [Backtesting traps and common errors](https://www.luxalgo.com/blog/backtesting-traps-common-errors-to-avoid/)
+- [Overfitting in trading models](https://arongroups.co/forex-articles/overfitting-in-trading/)
+- [Market regime filtering approaches](https://www.emergentmind.com/topics/market-regime-filtering)
+- [Seven sins of quantitative investing](https://bookdown.org/palomar/portfoliooptimizationbook/8.2-seven-sins.html)
+- [VantMacro global liquidity and market regimes](https://vantmacro.com/learn/guides/market-regimes)
 
 ---
-*Pitfalls research for: Hybrid MDM v3.0 Engine (state machine + indicator filters)*
-*Researched: 2026-03-29*
+*Pitfalls research for: MDM V2 Signal Quality & Macro Filter Integration*
+*Researched: 2026-03-30*
