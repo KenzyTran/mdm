@@ -1,7 +1,7 @@
 # Requirements: MDM Reverse-Engineering & VN30 Market Timing
 
-**Defined:** 2026-03-27
-**Core Value:** Kết hợp state machine cổ điển với indicator filters thành hybrid MDM model có accuracy cao hơn
+**Defined:** 2026-03-27 (v1-v3), 2026-03-30 (v4)
+**Core Value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
 
 ## v1 Requirements
 
@@ -94,6 +94,27 @@
 ### Validation
 
 - [x] **VAL-04**: Validate hybrid model trên toàn bộ 962 published signals với confusion matrix và per-type accuracy
+
+## v4.0 Requirements
+
+### Short Signal
+
+- [ ] **SHORT-01**: SELL signal mở vị thế short trên chỉ số (VN30: short trực tiếp, NASDAQ: inverse ETF concept)
+- [ ] **SHORT-02**: P&L tracking cho vị thế short — gain khi market giảm, loss khi market tăng
+- [ ] **SHORT-03**: Short stop loss — cắt lỗ khi giá vượt ngưỡng từ giá short entry (Dr. K: 1% trên DD5 high)
+- [ ] **SHORT-04**: Short cover — đóng vị thế short khi có FTD hoặc MA50 breakout (chuyển về CASH)
+
+### Stop Loss & Risk
+
+- [ ] **RISK-01**: Stop loss mặc định 1.5% cho vị thế long (thay vì 2.5% hiện tại)
+- [ ] **RISK-02**: Volatility-adaptive stop loss — stop loss rộng hơn khi market volatile
+- [ ] **RISK-03**: Short stop loss riêng biệt — 1% trên DD5 high (từ MDM classic rules)
+
+### Transition & Validation
+
+- [ ] **TRANS-01**: Enforce SELL→CASH→BUY — không cho phép chuyển trực tiếp SELL→BUY
+- [ ] **TRANS-02**: Backtest comparison long-only vs long/short trên NASDAQ và VN30
+- [ ] **TRANS-03**: Cập nhật rule docs (rules_mdm_v2.md, rules_mdm_hybrid.md) với quy tắc short mới
 
 ## Future Requirements
 
@@ -195,4 +216,4 @@
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-29 after v3.0 roadmap creation*
+*Last updated: 2026-03-30 after v4.0 requirements definition*
