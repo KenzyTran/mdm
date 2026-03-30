@@ -242,3 +242,116 @@ Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT
 6. **Stop loss chỉ cho Long:** Không có stop loss cho vị thế Short (vì không có Short).
 
 7. **DD day là điều kiện cần:** Chuyển BUY -> CASH do DD chỉ xảy ra khi ngày hiện tại cũng là ngày phân phối (không phải bất cứ ngày nào có dd_count >= threshold).
+
+---
+
+## X. VỊ THẾ SHORT (BÁN KHỐNG)
+
+*Cập nhật v4.0: MDM V2 hỗ trợ vị thế short thật sự khi ở trạng thái SELL (theo Dr. K webinar — SELL = short thật, dùng SQQQ/UVXY trên US market, short trực tiếp chỉ số trên VN30).*
+
+### 1. Mở vị thế Short:
+* Khi engine chuyển sang trạng thái **SELL**, vị thế short được mở tự động.
+* **Giá entry** = Giá đóng cửa phiên chuyển sang SELL.
+* Cấu hình: `short_mode = True` (mặc định) để bật vị thế short khi SELL.
+* Khi `short_mode = False`, SELL chỉ là tín hiệu cảnh báo, không mở vị thế bán khống (hành vi V2 cũ).
+
+### 2. Công thức tính P&L cho Short:
+$$pnl = \frac{gia\_entry - gia\_cover}{gia\_entry}$$
+* **Dương** khi thị trường giảm (gia_cover < gia_entry) — lợi nhuận từ vị thế short.
+* **Âm** khi thị trường tăng (gia_cover > gia_entry) — thua lỗ từ vị thế short.
+
+### 3. Điều kiện Cover Short (Đóng vị thế short):
+
+Có **3 điều kiện** cover short, theo thứ tự ưu tiên:
+
+**Điều kiện 1: Short Stop Loss (Ưu tiên cao nhất)**
+* Xem Mục XII — Stop loss cho vị thế short.
+* Kiểm tra **trước** FTD/MA50 cover signals mỗi phiên.
+
+**Điều kiện 2: FTD được phát hiện**
+* Follow-Through Day xuất hiện -> cover short, chuyển về **CASH**.
+* P&L được ghi nhận qua `cover_short()`.
+
+**Điều kiện 3: Giá vượt lên trên MA50**
+* Phiên trước đóng cửa dưới hoặc bằng MA50 ($C_{prev} \le MA50_{prev}$).
+* Phiên hiện tại đóng cửa vượt lên trên MA50 ($C > MA50$).
+* -> Cover short, chuyển về **CASH** (không mua trực tiếp).
+
+### 4. Equity Curve khi Short:
+* Khi ở trạng thái SELL (có short):
+$$equity[i] = equity[i-1] \times \frac{close[i-1]}{close[i]}$$
+* Đây là **inverse return** — equity tăng khi thị trường giảm, giảm khi thị trường tăng.
+* Khi `short_mode = False` hoặc `long_only_equity = True`: equity giữ nguyên (flat) khi ở SELL.
+
+---
+
+## XI. QUY TẮC CHUYỂN TRẠNG THÁI MỞ RỘNG (v4.0)
+
+*Cập nhật v4.0: Enforce đúng chuỗi chuyển trạng thái SELL -> CASH -> BUY theo Dr. K model.*
+
+### 1. Quy tắc bắt buộc: SELL -> CASH -> BUY
+
+* **KHÔNG cho phép** chuyển trực tiếp từ SELL sang BUY.
+* `enter_buy()` sẽ raise `ValueError` nếu trạng thái hiện tại là SELL.
+* Tất cả chuyển từ SELL về CASH **phải** qua `cover_short()` để tính P&L cho vị thế short.
+* Sau khi cover short về CASH, engine mới có thể chuyển sang BUY qua FTD/MA50 breakout bình thường.
+
+### 2. MA50 Breakout từ SELL:
+* Khi ở trạng thái SELL và giá vượt MA50: chỉ **cover short về CASH**.
+* **Không mua trực tiếp** — phải chờ tín hiệu mua riêng khi đã ở CASH.
+
+### 3. Sơ đồ chuyển trạng thái cập nhật (v4.0):
+
+```
+BUY -> SELL    : DD count >= threshold (trên ngày DD)
+BUY -> CASH    : Stop loss, MA10 breakdown
+SELL -> CASH   : FTD, MA50 breakout, Short stop loss (DD5 high)
+CASH -> BUY    : FTD, MA50 breakout, 52-week breakout
+SELL -> BUY    : KHÔNG CHO PHÉP (phải qua CASH trước)
+```
+
+### 4. So sánh với V2 cũ:
+
+| Chuyển trạng thái | V2 cũ | V2 v4.0 |
+| :--- | :--- | :--- |
+| SELL -> BUY | Cho phép (FTD/MA50) | **Cấm** — phải qua CASH |
+| SELL -> CASH | Không tồn tại | cover_short() + P&L |
+| BUY -> SELL | DD threshold | DD threshold (giữ nguyên) |
+| BUY -> CASH | Stop loss, MA10 | Stop loss, MA10 (giữ nguyên) |
+
+---
+
+## XII. CẬP NHẬT STOP LOSS (v4.0)
+
+*Cập nhật v4.0: Stop loss linh hoạt theo volatility, giảm mặc định xuống 1.5%, thêm short stop loss dựa trên DD5 high.*
+
+### 1. Long Stop Loss — Giảm xuống 1.5%:
+* Mặc định: $C < P_{buy} \times (1 - 0.015)$ (giảm **1.5%** từ giá mua).
+* Thay đổi từ 2.5% (v2 cũ) xuống 1.5% theo quy tắc Dr. K.
+* Config: `stop_loss_pct = 0.015`.
+
+### 2. Volatility-Adaptive Stop Loss (ATR):
+* Sử dụng **ATR (Average True Range)** / baseline ratio để điều chỉnh stop loss theo mức biến động thị trường.
+* Công thức: $effective\_pct = stop\_loss\_pct \times \frac{ATR_{current}}{ATR_{baseline}}$
+* Ratio được **clamp** trong khoảng **[0.5x, 2.5x]**:
+  * Khi ATR cao (thị trường volatile): stop loss rộng hơn (ví dụ $1.5\% \times 2.0 = 3.0\%$)
+  * Khi ATR thấp (thị trường ổn định): stop loss chặt hơn (ví dụ $1.5\% \times 0.7 = 1.05\%$)
+* Config: `atr_period = 14`, `atr_adaptive_enabled = True` (mặc định: `volatility_adaptive = True`)
+
+### 3. Short Stop Loss — DD5 High:
+* **DD5 high** = Giá cao nhất ($H$) của ngày phân phối thứ 5 (ngày DD kích hoạt chuyển sang SELL).
+* DD5 high được **lock** (cố định) vào engine khi chuyển sang trạng thái SELL.
+* Mỗi phiên khi ở SELL, kiểm tra: $C > DD5_{high} \times (1 + short\_stop\_pct)$
+* Mặc định: 1% trên DD5 high → $C > DD5_{high} \times 1.01$
+* Khi kích hoạt: cover short, chuyển về **CASH**.
+* **Thứ tự kiểm tra:** Short stop loss được kiểm tra **trước** FTD/cover signals mỗi phiên.
+* Config: `short_stop_pct_above_dd5 = 0.01`
+
+### 4. Bảng thông số Stop Loss cập nhật:
+
+| Thông số | Giá trị cũ | Giá trị v4.0 | Mô tả |
+| :--- | :---: | :---: | :--- |
+| `stop_loss_pct` | 0.025 (2.5%) | **0.015 (1.5%)** | Phần trăm cắt lỗ long từ giá mua |
+| `volatility_adaptive` | Không có | **True** | Bật/tắt ATR adaptive scaling |
+| `atr_period` | Không có | **14** | Số phiên tính ATR |
+| `short_stop_pct_above_dd5` | Không có | **0.01 (1%)** | Phần trăm trên DD5 high để cover short |

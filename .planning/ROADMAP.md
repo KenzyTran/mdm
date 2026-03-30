@@ -330,7 +330,7 @@ Plans:
 
 Plans:
 - [x] 18-01-PLAN.md -- Short P&L in equity curve, long_only_equity flag, comparison script with charts (SHORT-02, TRANS-02)
-- [ ] 18-02-PLAN.md -- Update rule docs with short signal, stop loss, and transition rules (TRANS-03)
+- [x] 18-02-PLAN.md -- Update rule docs with short signal, stop loss, and transition rules (TRANS-03)
 **UI hint**: yes
 
 ## Progress

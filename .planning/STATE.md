@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: MDM Short Signal & Dr. K Alignment
 status: executing
-stopped_at: Completed 18-01-PLAN.md
+stopped_at: Completed 18-02-PLAN.md
 last_updated: "2026-03-30T08:23:12.581Z"
 last_activity: 2026-03-30
 progress:
@@ -57,6 +57,7 @@ Progress: [█████░░░░░] 50%
 | Phase 17 P01 | 48min | 2 tasks | 7 files |
 | Phase 17 P02 | 29min | 2 tasks | 6 files |
 | Phase 18 P01 | 6min | 2 tasks | 5 files |
+| Phase 18 P02 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,7 @@ Recent decisions affecting current work:
 - [Phase 17]: DD5 high is high of specific 5th DD day, locked into engine on SELL entry
 - [Phase 17]: Short stop loss at 1% above DD5 high, checked before FTD/cover signals
 - [Phase 18]: Inverse return formula: equity * (closes[i-1] / closes[i]) for short P&L
+- [Phase 18]: Rule docs updated with short position, transition enforcement, and ATR-adaptive stop loss (v4.0)
 
 ### Pending Todos
 
@@ -98,5 +100,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-30T08:23:12.578Z
-Stopped at: Completed 18-01-PLAN.md
+Stopped at: Completed 18-02-PLAN.md
 Resume file: None
