@@ -21,7 +21,7 @@ import numpy as np
 from core.data_loader import DataLoader
 from core.indicators import build_indicator_dataframe
 from strategies.mdm_hybrid.mdm_hybrid_engine import HybridEngine
-from strategies.mdm_hybrid.config import HybridConfig, MDMV2Config
+from strategies.mdm_hybrid.config import HybridConfig, MDMV2Config, VN30_PRESET
 from strategies.mdm_hybrid.indicator_filter import FilterConfig
 
 
@@ -33,10 +33,10 @@ END_DATE = '2026-03-27'
 
 MODELS = {
     'mdm_v2': {
-        'name': 'MDM V2 State Machine',
+        'name': 'MDM V2 (VN30 Optimized)',
         'doc_file': 'rules_mdm_v2.md',
         'config': lambda: HybridConfig(
-            v2_config=MDMV2Config(),
+            v2_config=VN30_PRESET,
             two_phase_enabled=True,
             filter_enabled=False,
         ),
@@ -45,7 +45,7 @@ MODELS = {
         'name': 'MDM Hybrid (3 Filters)',
         'doc_file': 'rules_mdm_hybrid.md',
         'config': lambda: HybridConfig(
-            v2_config=MDMV2Config(),
+            v2_config=VN30_PRESET,
             two_phase_enabled=True,
             filter_enabled=True,
             filter_config=FilterConfig(),
@@ -55,7 +55,7 @@ MODELS = {
         'name': 'MDM Phase 15 (HA Smoothed)',
         'doc_file': 'rules_mdm_hybrid.md',
         'config': lambda: HybridConfig(
-            v2_config=MDMV2Config(),
+            v2_config=VN30_PRESET,
             two_phase_enabled=True,
             filter_enabled=True,
             filter_config=FilterConfig(ha_smooth_enabled=True),

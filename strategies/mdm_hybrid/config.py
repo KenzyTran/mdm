@@ -92,3 +92,56 @@ class HybridConfig:
             self.v2_config = MDMV2Config(**self.v2_config)
         if isinstance(self.filter_config, dict):
             self.filter_config = FilterConfig(**self.filter_config)
+
+
+# ── Market-specific presets ──────────────────────────────────────────
+
+VN30_PRESET = MDMV2Config(
+    correction_threshold=-0.06,
+    ftd_min_rally_day=3,
+    ftd_max_rally_day=12,
+    ftd_min_price_gain=0.01,
+    ma50_breakout_correction=-0.06,
+    dd_window_size=20,
+    dd_price_drop_threshold=-0.002,
+    dd_price_stall_threshold=0.001,
+    dd_stall_p_loc_threshold=0.2,
+    dd_cash_threshold=5,
+    ma10_cash_enabled=True,
+    ma10_cash_consecutive=3,
+    ma50_sell_enabled=True,
+    cash_deterioration_days=20,
+    stop_loss_pct=0.015,
+    short_stop_pct_above_dd5=0.01,
+    atr_period=14,
+    atr_baseline_period=50,
+    volatility_adaptive=True,
+    stop_loss_min_multiplier=0.5,
+    stop_loss_max_multiplier=2.5,
+    name="vn30",
+)
+
+NASDAQ_PRESET = MDMV2Config(
+    correction_threshold=-0.10,
+    ftd_min_rally_day=3,
+    ftd_max_rally_day=12,
+    ftd_min_price_gain=0.01,
+    ma50_breakout_correction=-0.06,
+    dd_window_size=20,
+    dd_price_drop_threshold=-0.002,
+    dd_price_stall_threshold=0.001,
+    dd_stall_p_loc_threshold=0.2,
+    dd_cash_threshold=5,
+    ma10_cash_enabled=True,
+    ma10_cash_consecutive=2,
+    ma50_sell_enabled=True,
+    cash_deterioration_days=10,
+    stop_loss_pct=0.015,
+    short_stop_pct_above_dd5=0.01,
+    atr_period=14,
+    atr_baseline_period=50,
+    volatility_adaptive=True,
+    stop_loss_min_multiplier=0.5,
+    stop_loss_max_multiplier=2.5,
+    name="nasdaq",
+)

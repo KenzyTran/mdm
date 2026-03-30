@@ -362,3 +362,38 @@ SELL -> BUY    : KHÔNG CHO PHÉP (phải qua CASH trước)
 | `volatility_adaptive` | Không có | **True** | Bật/tắt ATR adaptive scaling |
 | `atr_period` | Không có | **14** | Số phiên tính ATR |
 | `short_stop_pct_above_dd5` | Không có | **0.01 (1%)** | Phần trăm trên DD5 high để cover short |
+
+---
+
+## XIII. THÔNG SỐ THEO THỊ TRƯỜNG (Market-Specific Presets)
+
+*Cập nhật v4.0: Các thông số mặc định được calibrate cho NASDAQ. VN30 cần preset riêng do đặc điểm thị trường khác biệt (biên độ 7%, T+2.5, thanh khoản thấp hơn).*
+
+### 1. Bảng so sánh NASDAQ vs VN30 preset:
+
+| Thông số | NASDAQ (mặc định) | VN30 (optimized) | Lý do thay đổi |
+| :--- | :---: | :---: | :--- |
+| `correction_threshold` | -0.10 (10%) | **-0.06 (6%)** | VN30 corrections nông hơn, -10% hiếm khi xảy ra |
+| `ma10_cash_consecutive` | 2 | **3** | VN30 biến động mạnh hơn, 2 ngày dưới MA10 tạo quá nhiều whipsaw |
+| `cash_deterioration_days` | 10 | **20** | Giảm thời gian SELL (short), VN30 uptrend dài hạn nên short dễ lỗ |
+| Các thông số khác | Giữ nguyên | Giữ nguyên | Không cần thay đổi |
+
+### 2. Kết quả backtest VN30 (2015-2026):
+
+| Config | Tổng lợi nhuận | CAGR | MaxDD |
+| :--- | :---: | :---: | :---: |
+| NASDAQ preset (mặc định) | +113% | 7.0% | -32.4% |
+| **VN30 preset (optimized)** | **+191%** | **10.0%** | **-31.8%** |
+| Mua & Nắm giữ | +204% | 10.4% | -48.1% |
+
+### 3. Sử dụng trong code:
+
+```python
+from strategies.mdm_hybrid.config import VN30_PRESET, NASDAQ_PRESET, HybridConfig
+
+# VN30
+config = HybridConfig(v2_config=VN30_PRESET, ...)
+
+# NASDAQ
+config = HybridConfig(v2_config=NASDAQ_PRESET, ...)
+```

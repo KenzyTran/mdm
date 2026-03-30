@@ -379,3 +379,17 @@ SELL -> BUY    : KHÔNG CHO PHÉP (phải qua CASH trước)
 | `volatility_adaptive` | Không có | **True** | Bật/tắt ATR adaptive scaling |
 | `atr_period` | Không có | **14** | Số phiên tính ATR |
 | `short_stop_pct_above_dd5` | Không có | **0.01 (1%)** | Phần trăm trên DD5 high để cover short |
+
+---
+
+## XIII. THÔNG SỐ THEO THỊ TRƯỜNG (Market-Specific Presets)
+
+Dashboard VN30 sử dụng **VN30_PRESET** với các thông số đã calibrate:
+
+| Thông số | NASDAQ (mặc định) | VN30 (optimized) | Lý do |
+| :--- | :---: | :---: | :--- |
+| `correction_threshold` | -0.10 | **-0.06** | VN30 corrections nông hơn |
+| `ma10_cash_consecutive` | 2 | **3** | Giảm whipsaw |
+| `cash_deterioration_days` | 10 | **20** | Giảm thời gian short (VN30 uptrend dài hạn) |
+
+Sử dụng: `from strategies.mdm_hybrid.config import VN30_PRESET, NASDAQ_PRESET`
