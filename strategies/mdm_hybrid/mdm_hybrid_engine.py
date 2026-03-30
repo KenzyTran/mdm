@@ -6,7 +6,10 @@ snapshot/restore mechanism. Uses BUY/CASH/SELL states identical to v2,
 but wraps daily processing with snapshot before and decide/restore after.
 
 Phase 11: snapshot/restore infrastructure only (filter_enabled=False).
-Phase 12 will add indicator filter decision logic in the commit block.
+Phase 12: indicator filter decision logic in the commit block.
+Phase 16: Short position support -- SELL state = active short, cover_short()
+           triggers on MA50 breakout and indicator OVERRIDE/VETO, close price
+           passed to enter_sell for short entry tracking.
 """
 
 import copy
@@ -357,6 +360,8 @@ class HybridEngine:
                             self._restore_components(snapshot)
                             if old_state == V2MarketState.BUY:
                                 self.position_manager.exit_to_cash(close, date, "OVERRIDE: indicator disagreement")
+                            elif old_state == V2MarketState.SELL:
+                                self.position_manager.cover_short(close, date, "OVERRIDE: indicator disagreement")
                             else:
                                 self.position_manager.degrade_to_cash(date, "OVERRIDE: indicator disagreement")
                             new_state = V2MarketState.CASH
@@ -371,10 +376,10 @@ class HybridEngine:
                             new_state = V2MarketState.CASH
                             action = "CASH exit: indicator degradation"
                         elif old_state == V2MarketState.SELL:
-                            # SELL degradation: no P&L (D-07 symmetric)
-                            self.position_manager.degrade_to_cash(date, "indicator degradation from SELL")
+                            # SELL degradation: cover short with P&L (Phase 16, Pitfall 1)
+                            self.position_manager.cover_short(close, date, "indicator degradation from SELL")
                             new_state = V2MarketState.CASH
-                            action = "CASH: indicator degradation from SELL"
+                            action = "SHORT_COVER: indicator degradation from SELL"
                         # old_state == CASH: skip -- already in CASH, nothing to degrade (Pitfall 5)
 
                 # Record signal log columns for every trading day (D-09, D-10)

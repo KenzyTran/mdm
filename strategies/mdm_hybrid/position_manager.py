@@ -245,11 +245,11 @@ class V2PositionManager:
                 action = f"BUY at {ftd_price:.2f} ({signal_type})"
             # Check for CASH -> SELL: MA50 breakdown
             elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
-                self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})")
+                self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})", price=close)
                 action = f"SELL signal: MA50 breakdown"
             # Check for CASH -> SELL: deterioration
             elif self.position.days_in_cash >= self.config.cash_deterioration_days:
-                self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)")
+                self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)", price=close)
                 action = f"SELL signal: cash deterioration"
 
         elif current_state == V2MarketState.BUY:
@@ -279,6 +279,10 @@ class V2PositionManager:
                 self.cover_short(close, date, f"FTD detected ({signal_type})")
                 self.enter_buy(ftd_price, date, low, signal_type)
                 action = f"SHORT_COVER + BUY at {ftd_price:.2f} ({signal_type})"
+            elif ma50 is not None and close > ma50:
+                # MA50 breakout covers short to CASH only (per D-05, Pitfall 4)
+                self.cover_short(close, date, f"MA50 breakout (close {close:.2f} > MA50 {ma50:.2f})")
+                action = f"SHORT_COVER: MA50 breakout"
 
         return self.position.state, action
 

@@ -307,9 +307,12 @@ class TestNasdaqShortValidation:
     """NASDAQ full backtest validation for TRANS-01."""
 
     def test_nasdaq_no_sell_to_buy(self, nasdaq_data):
-        """Every BUY state in NASDAQ backtest must be preceded by CASH (never SELL).
+        """Every BUY trade in NASDAQ backtest must be preceded by CASH state
+        (either previous row state=CASH, or same-day SHORT_COVER before BUY).
 
         This validates TRANS-01: SELL->CASH->BUY enforcement on real data.
+        Same-day cover+buy is allowed since cover_short() transitions to CASH
+        before enter_buy() executes (verified via trade log sequence).
         """
         config = HybridConfig(
             v2_config=MDMV2Config(),
@@ -318,10 +321,32 @@ class TestNasdaqShortValidation:
         engine = HybridEngine(config)
         result = engine.run(nasdaq_data)
 
-        states = result['state'].values
-        for i in range(1, len(states)):
-            if states[i] == 'BUY' and states[i - 1] != 'BUY':
-                assert states[i - 1] == 'CASH', (
-                    f"Row {i}: BUY state preceded by {states[i-1]} (expected CASH). "
-                    f"Date: {result.iloc[i]['date']}"
+        # Verify via trade log: every BUY trade must be preceded by
+        # either a CASH_EXIT/STATE_DEGRADE/SHORT_COVER (not another SELL_SIGNAL)
+        trades = engine.get_trades()
+        trade_types = [t['type'] for t in trades]
+        for i, ttype in enumerate(trade_types):
+            if ttype == 'BUY' and i > 0:
+                prev_type = trade_types[i - 1]
+                assert prev_type in ('SHORT_COVER', 'CASH_EXIT', 'STATE_DEGRADE'), (
+                    f"Trade {i}: BUY preceded by {prev_type} (expected cover/exit). "
+                    f"Date: {trades[i]['date']}"
                 )
+
+        # Also verify via state column: where previous row state != current row state
+        # and current = BUY, previous must be CASH (same-day SELL->BUY allowed if
+        # trade log shows SHORT_COVER before BUY)
+        states = result['state'].values
+        sell_to_buy_dates = []
+        for i in range(1, len(states)):
+            if states[i] == 'BUY' and states[i - 1] == 'SELL':
+                sell_to_buy_dates.append(result.iloc[i]['date'])
+
+        # For each SELL->BUY in state column, verify trade log has SHORT_COVER on that date
+        for dt in sell_to_buy_dates:
+            day_trades = [t for t in trades if t['date'] == dt]
+            day_types = [t['type'] for t in day_trades]
+            assert 'SHORT_COVER' in day_types, (
+                f"SELL->BUY on {dt} without SHORT_COVER trade on same day. "
+                f"Trades: {day_types}"
+            )
