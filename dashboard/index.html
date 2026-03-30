@@ -7,6 +7,8 @@
 <script src="https://unpkg.com/lightweight-charts@4/dist/lightweight-charts.standalone.production.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
 <style>
 :root {
   --bg-primary: #0f1923;
@@ -646,10 +648,24 @@ function renderTradesTable(key, data) {
   tbody.innerHTML = rows;
 }
 
+function renderLatex(el) {
+  // Block math: $$...$$
+  el.innerHTML = el.innerHTML.replace(/\$\$([\s\S]*?)\$\$/g, (m, tex) => {
+    try { return katex.renderToString(tex.trim(), {displayMode: true, throwOnError: false}); }
+    catch(e) { return m; }
+  });
+  // Inline math: $...$
+  el.innerHTML = el.innerHTML.replace(/\$([^\$\n]+?)\$/g, (m, tex) => {
+    try { return katex.renderToString(tex.trim(), {displayMode: false, throwOnError: false}); }
+    catch(e) { return m; }
+  });
+}
+
 function renderDocs(key, data) {
   const body = document.getElementById('docs-body-' + key);
   if (data.description_md) {
     body.innerHTML = marked.parse(data.description_md);
+    renderLatex(body);
   } else {
     body.innerHTML = '<p style="color:var(--text-secondary)">Chưa có tài liệu.</p>';
   }
