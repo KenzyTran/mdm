@@ -40,7 +40,7 @@ class TestLongStopLoss:
         checker = StopLossChecker(config)
 
         buy_price = 100.0
-        buy_day_low = 99.0
+        buy_day_low = 95.0  # Low enough to not trigger Rule 2
 
         # Close at 98.4 = 1.6% loss -> should trigger (> 1.5%)
         result = checker.check(98.4, buy_price, buy_day_low)

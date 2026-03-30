@@ -1,7 +1,8 @@
 """
 V2 Stop Loss Module
 
-Check stop loss conditions for long positions only.
+Check stop loss conditions for long positions with volatility-adaptive scaling.
+When enabled, ATR ratio adjusts the effective stop loss percentage.
 No SHORT-related stop loss logic (per D-03).
 """
 
@@ -32,6 +33,30 @@ class StopLossChecker:
         """Initialize."""
         self.config = config if config else MDMV2Config()
 
+    def _get_effective_stop_pct(self, atr: float = None, atr_baseline: float = None) -> float:
+        """Scale stop loss by ATR ratio when volatility_adaptive is enabled.
+
+        Formula: effective_pct = base_pct * (current_atr / baseline_atr)
+        Clamped to [base * min_multiplier, base * max_multiplier].
+
+        Args:
+            atr: Current ATR value.
+            atr_baseline: Baseline ATR (rolling mean).
+
+        Returns:
+            Effective stop loss percentage.
+        """
+        if not self.config.volatility_adaptive:
+            return self.config.stop_loss_pct
+        if atr is None or atr_baseline is None or atr_baseline <= 0:
+            return self.config.stop_loss_pct
+
+        ratio = atr / atr_baseline
+        effective = self.config.stop_loss_pct * ratio
+        min_pct = self.config.stop_loss_pct * self.config.stop_loss_min_multiplier
+        max_pct = self.config.stop_loss_pct * self.config.stop_loss_max_multiplier
+        return max(min_pct, min(max_pct, effective))
+
     def check(
         self,
         current_close: float,
@@ -42,7 +67,9 @@ class StopLossChecker:
         prev_ma50: float = None,
         current_volume: float = None,
         prev_volume: float = None,
-        signal_type: str = "FTD"
+        signal_type: str = "FTD",
+        atr: float = None,
+        atr_baseline: float = None,
     ) -> StopLossResult:
         """
         Check if stop loss should be triggered.
@@ -57,6 +84,8 @@ class StopLossChecker:
             current_volume: Current session volume (optional, for Rule 3)
             prev_volume: Previous session volume (optional, for Rule 3)
             signal_type: Type of buy signal (FTD, MA50, 52WEEK)
+            atr: Current ATR value (optional, for volatility-adaptive scaling)
+            atr_baseline: Baseline ATR (optional, for volatility-adaptive scaling)
 
         Returns:
             StopLossResult with trigger status and reason
@@ -86,11 +115,12 @@ class StopLossChecker:
                 loss_pct=loss_pct
             )
 
-        # Rule 1: Stop loss from buy price
-        if current_close < buy_price * (1 - self.config.stop_loss_pct):
+        # Rule 1: Stop loss from buy price (volatility-adaptive)
+        effective_pct = self._get_effective_stop_pct(atr, atr_baseline)
+        if current_close < buy_price * (1 - effective_pct):
             return StopLossResult(
                 triggered=True,
-                reason=f"Stop loss: {loss_pct*100:.2f}% loss exceeds {self.config.stop_loss_pct*100}%",
+                reason=f"Stop loss: {loss_pct*100:.2f}% loss exceeds {effective_pct*100:.1f}%",
                 loss_pct=loss_pct
             )
 

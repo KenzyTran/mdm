@@ -190,6 +190,29 @@ class Indicators:
         return df
     
     @staticmethod
+    def add_atr_column(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
+        """Add Average True Range column.
+
+        True Range = max(H-L, |H-prev_C|, |L-prev_C|)
+        ATR = rolling mean of True Range over period.
+
+        Args:
+            df: DataFrame with 'high', 'low', 'close' columns.
+            period: ATR lookback period (default 14).
+
+        Returns:
+            DataFrame with 'atr' and 'true_range' columns added.
+        """
+        df = df.copy()
+        prev_close = df['close'].shift(1)
+        tr1 = df['high'] - df['low']
+        tr2 = (df['high'] - prev_close).abs()
+        tr3 = (df['low'] - prev_close).abs()
+        df['true_range'] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        df['atr'] = df['true_range'].rolling(window=period, min_periods=1).mean()
+        return df
+
+    @staticmethod
     def drawdown_from_peak(current_close: float, peak_high: float) -> float:
         """
         Calculate drawdown from peak.

@@ -44,7 +44,14 @@ class MDMV2Config:
     cash_deterioration_days: int = 10   # Days in Cash before auto-Sell
 
     # Stop Loss
-    stop_loss_pct: float = 0.025
+    stop_loss_pct: float = 0.015
+
+    # ATR / Volatility-adaptive stop loss (Phase 17, RISK-02)
+    atr_period: int = 14
+    atr_baseline_period: int = 50
+    volatility_adaptive: bool = True
+    stop_loss_min_multiplier: float = 0.5
+    stop_loss_max_multiplier: float = 2.5
 
     # Hypothesis metadata (per D-08)
     name: str = "default"
