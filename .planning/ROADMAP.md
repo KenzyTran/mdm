@@ -295,7 +295,11 @@ Plans:
   2. Short position is covered (closed) when FTD is detected or price breaks above MA50, transitioning to CASH state
   3. State machine rejects any direct SELL->BUY transition -- a CASH state must always intervene between SELL and BUY
   4. Running the engine on historical NASDAQ data produces a signal log where every BUY signal is preceded by a CASH signal (never directly by SELL)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
+- [ ] 16-02-PLAN.md -- Engine cover triggers, degrade_to_cash replacement, NASDAQ validation (SHORT-04, TRANS-01)
 
 ### Phase 17: Stop Loss & Risk Management
 **Goal**: Stop loss rules align with Dr. K's model -- 1.5% default for long, volatility-adaptive scaling, and separate short stop loss logic
@@ -306,7 +310,11 @@ Plans:
   2. Volatility-adaptive mechanism widens stop loss during high-volatility periods (measured by ATR or similar) and tightens during low-volatility periods
   3. Short stop loss triggers at 1% above DD5 high (the highest high of the last 5 distribution days), matching MDM classic rules
   4. Backtest on NASDAQ shows stop loss triggers at expected points -- spot-checking 5+ known volatile periods confirms adaptive behavior
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
+- [ ] 16-02-PLAN.md -- Engine cover triggers, degrade_to_cash replacement, NASDAQ validation (SHORT-04, TRANS-01)
 
 ### Phase 18: Short P&L & Comparative Validation
 **Goal**: Short position P&L is tracked correctly and backtest proves whether long/short outperforms long-only
@@ -317,7 +325,11 @@ Plans:
   2. Backtest comparison report shows long-only vs long/short performance side-by-side on NASDAQ with equity curve, max drawdown, Sharpe ratio, and total return
   3. Same comparison report generated for VN30, showing long-only vs long/short performance with VN30-specific parameters
   4. Rule documentation files (rules_mdm_v2.md, rules_mdm_hybrid.md) updated with short signal rules, stop loss changes, and SELL->CASH->BUY transition requirement
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
+- [ ] 16-02-PLAN.md -- Engine cover triggers, degrade_to_cash replacement, NASDAQ validation (SHORT-04, TRANS-01)
 **UI hint**: yes
 
 ## Progress
