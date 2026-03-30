@@ -7,13 +7,14 @@ MDM V2 là phiên bản cải tiến của MDM Classic, thay đổi từ máy tr
 | Trạng thái | Mô tả |
 | :--- | :--- |
 | **CASH** | Không giữ vị thế, chờ tín hiệu mua |
-| **BUY** | Đang giữ vị thế Long |
-| **SELL** | Tín hiệu giảm - thị trường xấu đi, chỉ chờ FTD để quay lại BUY |
+| **BUY** | Đang giữ vị thế Long (mua) |
+| **SELL** | Đang giữ vị thế Short (bán khống) — lời khi thị trường giảm, lỗ khi tăng |
 
 **Cải tiến chính so với Classic:**
-- Bỏ trạng thái WAITING_SELL và SHORT (không bán khống nữa)
+- SELL = vị thế short thật sự (theo Dr. K: dùng SQQQ/UVXY trên US, short trực tiếp trên VN30)
 - Thêm cơ chế chuyển CASH -> SELL khi thị trường xấu đi (MA50 breakdown hoặc ở CASH quá lâu)
 - Thêm điều kiện thoát BUY -> CASH qua MA10 (đóng cửa dưới MA10 nhiều phiên liên tiếp)
+- Enforce SELL -> CASH -> BUY (phải cover short trước khi mua)
 - Giữ nguyên các điều kiện mua (FTD, MA50 breakout, 52-week breakout)
 
 ---
