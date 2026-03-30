@@ -132,7 +132,7 @@ Biến `_days_in_current_state` đếm số ngày ở trạng thái hiện tại
 Áp dụng triết lý "ưu tiên giữ tiền mặt" (favor cash) của Dr. K:
 
 **Quy tắc 1: Ở CASH quá lâu -> nghiêm ngặt hơn với BUY**
-* Điều kiện: Đang ở CASH và `_days_in_current_state > cash_deterioration_days` (mặc định: > 10 ngày)
+* Điều kiện: Đang ở CASH và `_days_in_current_state > cash_deterioration_days` (NASDAQ: 10, VN30: 20 ngày)
 * Hành động: Ngưỡng đa số = **1.0** (100% -- tất cả điều kiện phải đồng ý)
 * Ý nghĩa: Thị trường ở CASH lâu -> cẩn thận hơn trước khi mua
 

@@ -93,7 +93,7 @@ Nếu không có tín hiệu mua, kiểm tra 2 điều kiện chuyển sang SELL
   * -> Chuyển sang trạng thái SELL.
 
 * **Cash Deterioration** (Xuống cấp do ở CASH quá lâu):
-  * Số ngày ở trạng thái CASH >= `cash_deterioration_days` (mặc định: 10 ngày).
+  * Số ngày ở trạng thái CASH >= `cash_deterioration_days` (NASDAQ: 10, VN30: 20 ngày).
   * -> Chuyển sang trạng thái SELL.
 
 **Thứ tự ưu tiên:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
@@ -131,7 +131,7 @@ Nếu không có tín hiệu mua, kiểm tra 2 điều kiện chuyển sang SELL
 
 **Điều kiện 3: Đóng cửa dưới MA10 liên tiếp**
 * Khi `ma10_cash_enabled=True` (mặc định: True).
-* Giá đóng cửa dưới MA10 trong `ma10_cash_consecutive` phiên liên tiếp (mặc định: 2 phiên).
+* Giá đóng cửa dưới MA10 trong `ma10_cash_consecutive` phiên liên tiếp (NASDAQ: 2, VN30: 3 phiên).
 * Bộ đếm reset về 0 khi giá đóng cửa trên MA10.
 * -> Chuyển sang CASH, ghi nhận P&L.
 
@@ -209,7 +209,7 @@ Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT
 
 | Thông số | Giá trị mặc định | Mô tả |
 | :--- | :---: | :--- |
-| `correction_threshold` | -0.10 | Ngưỡng giảm từ đỉnh để xác nhận điều chỉnh (-10%) |
+| `correction_threshold` | -0.10 (NASDAQ) / **-0.06 (VN30)** | Ngưỡng giảm từ đỉnh để xác nhận điều chỉnh |
 | `ftd_min_rally_day` | 3 | Ngày tối thiểu trong rally để kiểm tra FTD |
 | `ftd_max_rally_day` | 12 | Ngày tối đa trong rally để kiểm tra FTD |
 | `ftd_min_price_gain` | 0.01 | Mức tăng giá tối thiểu cho FTD (1%) |
@@ -220,9 +220,9 @@ Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT
 | `dd_stall_p_loc_threshold` | 0.20 | Ngưỡng P_loc tối đa cho DD Loại 2 |
 | `dd_cash_threshold` | 5 | Số DD kích hoạt chuyển BUY -> CASH |
 | `ma10_cash_enabled` | True | Bật/tắt điều kiện thoát theo MA10 |
-| `ma10_cash_consecutive` | 2 | Số phiên liên tiếp dưới MA10 để kích hoạt |
+| `ma10_cash_consecutive` | 2 (NASDAQ) / **3 (VN30)** | Số phiên liên tiếp dưới MA10 để kích hoạt |
 | `ma50_sell_enabled` | True | Bật/tắt MA50 breakdown cho CASH -> SELL |
-| `cash_deterioration_days` | 10 | Số ngày ở CASH trước khi tự động chuyển SELL |
+| `cash_deterioration_days` | 10 (NASDAQ) / **20 (VN30)** | Số ngày ở CASH trước khi tự động chuyển SELL |
 | `stop_loss_pct` | 0.025 | Phần trăm cắt lỗ từ giá mua (2.5%) |
 | `name` | "default" | Tên giả thuyết (metadata) |
 
