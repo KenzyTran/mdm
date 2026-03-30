@@ -232,6 +232,16 @@
 | SHORT-02 | Phase 18 | Complete |
 | TRANS-02 | Phase 18 | Complete |
 | TRANS-03 | Phase 18 | Complete |
+| LIQ-01 | Phase 19 | Pending |
+| LIQ-02 | Phase 19 | Pending |
+| LIQ-03 | Phase 19 | Pending |
+| SELL-01 | Phase 20 | Pending |
+| SELL-02 | Phase 20 | Pending |
+| BUY-01 | Phase 21 | Pending |
+| BUY-02 | Phase 21 | Pending |
+| VAL-05 | Phase 22 | Pending |
+| VAL-06 | Phase 22 | Pending |
+| VAL-07 | Phase 22 | Pending |
 
 **v1.0 Coverage:**
 - v1 requirements: 22 total
@@ -255,9 +265,9 @@
 
 **v5.0 Coverage:**
 - v5 requirements: 10 total
-- Mapped to phases: 0 ⚠️
-- Unmapped: 10 ⚠️
+- Mapped to phases: 10
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-30 after v5.0 requirements defined*
+*Last updated: 2026-03-30 after v5.0 roadmap created*

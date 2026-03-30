@@ -5,7 +5,8 @@
 - ✅ **v1.0 MDM Classic & VN30** - Phases 1-6 (shipped 2026-03-28)
 - ✅ **v2.0 MDM Rule Discovery** - Phases 7-10 (shipped 2026-03-29)
 - ✅ **v3.0 Hybrid MDM Engine** - Phases 11-15 (shipped 2026-03-29)
-- 🚧 **v4.0 MDM Short Signal & Dr. K Alignment** - Phases 16-18 (in progress)
+- ✅ **v4.0 MDM Short Signal & Dr. K Alignment** - Phases 16-18 (shipped 2026-03-30)
+- 🚧 **v5.0 Signal Quality & Macro Filter** - Phases 19-22 (in progress)
 
 ## Phases
 
@@ -276,16 +277,12 @@ Plans:
 
 </details>
 
-### v4.0 MDM Short Signal & Dr. K Alignment (In Progress)
+<details>
+<summary>v4.0 MDM Short Signal & Dr. K Alignment (Phases 16-18) - SHIPPED 2026-03-30</summary>
 
-**Milestone Goal:** Align MDM engine with Dr. K's actual model -- add real short positions on SELL signal, adaptive stop loss, enforce SELL->CASH->BUY transition, and validate long/short vs long-only performance.
-
-- [x] **Phase 16: Short Position & State Transitions** - Short entry on SELL, short cover mechanics, and enforced SELL->CASH->BUY transition
- (completed 2026-03-30)
+- [x] **Phase 16: Short Position & State Transitions** - Short entry on SELL, short cover mechanics, and enforced SELL->CASH->BUY transition (completed 2026-03-30)
 - [x] **Phase 17: Stop Loss & Risk Management** - Long stop loss 1.5%, volatility-adaptive adjustment, and short-specific stop loss rules (completed 2026-03-30)
-- [x] **Phase 18: Short P&L & Comparative Validation** - Short P&L tracking, long-only vs long/short backtest comparison, and rule docs update (completed 2026-03-30)
-
-## Phase Details
+- [x] **Phase 18: Short P&L & Comparative Validation** - Short P&L tracking, long-only vs long/short backtest comparison, and rule docs update (completed 2026-03-30)
 
 ### Phase 16: Short Position & State Transitions
 **Goal**: SELL signal opens a real short position and the state machine enforces correct SELL->CASH->BUY transition sequence
@@ -333,10 +330,69 @@ Plans:
 - [x] 18-02-PLAN.md -- Update rule docs with short signal, stop loss, and transition rules (TRANS-03)
 **UI hint**: yes
 
+</details>
+
+### v5.0 Signal Quality & Macro Filter (In Progress)
+
+**Milestone Goal:** Improve V2 signal quality -- integrate Global Liquidity Index as QE floor filter, add SELL acceleration conditions, refine BUY selectivity, and validate all changes with A/B backtesting and walk-forward analysis.
+
+- [ ] **Phase 19: Global Liquidity Integration** - Load liquidity data, implement QE floor filter suppressing SELL during liquidity expansion
+- [ ] **Phase 20: SELL Acceleration** - Require downside momentum/acceleration before SELL transition, validated on bear markets
+- [ ] **Phase 21: BUY Selectivity** - Reject weak FTD entries and add post-FTD confirmation window to reduce whipsaw
+- [ ] **Phase 22: Combined Integration & Validation** - A/B comparison, walk-forward validation, dashboard update with all filters combined
+
+## Phase Details
+
+### Phase 19: Global Liquidity Integration
+**Goal**: V2 engine can suppress SELL signals during central bank liquidity expansion, implementing Dr. K's confirmed QE floor behavior
+**Depends on**: Phase 18
+**Requirements**: LIQ-01, LIQ-02, LIQ-03
+**Success Criteria** (what must be TRUE):
+  1. Global liquidity CSV loads into a daily-aligned DataFrame with forward-filled values and a publication lag offset (minimum 7 days) that prevents look-ahead bias -- verified by unit test confirming no daily row uses liquidity data published after that date
+  2. With qe_floor_enabled=True and liquidity expanding, CASH->SELL transitions are suppressed while all other transitions (BUY->CASH stop loss, SELL->CASH cover, etc.) remain unaffected
+  3. With qe_floor_enabled=False (default), V2 engine produces identical equity curve to the current baseline (190.8% VN30 total return +/- 0.1%) -- regression test locks this invariant
+  4. Pre-2007 dates (before liquidity data exists) handle gracefully with NaN/neutral regime -- no crashes or incorrect signals in the 1974-2007 period
+**Plans**: TBD
+
+### Phase 20: SELL Acceleration
+**Goal**: SELL transitions require confirmed downside momentum, preventing premature exits during normal pullbacks
+**Depends on**: Phase 19
+**Requirements**: SELL-01, SELL-02
+**Success Criteria** (what must be TRUE):
+  1. SELL transition fires only when at least one acceleration condition is met (price ROC below threshold, DD clustering above threshold, or volume-confirmed MA50 breakdown) -- not on MA50 breakdown or cash deterioration alone
+  2. Backtest on 2008 bear market sub-period shows SELL acceleration does not delay the first correct SELL signal by more than 5 trading days vs V2 baseline
+  3. Backtest on 2022 bear market sub-period shows max drawdown is not worse than V2 baseline
+  4. A/B comparison of V2 vs V2+sell_acceleration in isolation shows performance delta on both NASDAQ and VN30
+**Plans**: TBD
+
+### Phase 21: BUY Selectivity
+**Goal**: FTD entries are filtered to reject low-quality setups, reducing whipsaw without missing major rallies
+**Depends on**: Phase 20
+**Requirements**: BUY-01, BUY-02
+**Success Criteria** (what must be TRUE):
+  1. FTD signal is rejected when MA10 < MA50 (trend not confirmed) -- verified by checking that rejected FTDs correspond to entries that would have been stopped out within 5 days in the V2 baseline
+  2. Post-FTD confirmation window requires N days without a distribution day after FTD before committing to BUY -- early DD triggers immediate exit to CASH
+  3. Walk-forward validation (train pre-2020, test 2020-2026) shows BUY selectivity filters degrade less than 10% out-of-sample vs in-sample performance
+  4. Trade count reduction from BUY filtering is between 15-40% -- too few rejections means the filter is not working, too many means it is over-fitted
+**Plans**: TBD
+
+### Phase 22: Combined Integration & Validation
+**Goal**: All three filters operate together without conflicting, validated end-to-end with A/B comparison and dashboard update
+**Depends on**: Phase 21
+**Requirements**: VAL-05, VAL-06, VAL-07
+**Success Criteria** (what must be TRUE):
+  1. A/B backtest report comparing V2 baseline vs V2+all_filters shows side-by-side metrics (total return, CAGR, max drawdown, Sharpe, trade count) on both NASDAQ and VN30
+  2. Walk-forward out-of-sample validation (train pre-2020, test 2020-2026) shows combined filter performance degrades less than 10% from in-sample -- confirming no overfitting
+  3. S3 dashboard is updated with new performance metrics, Global Liquidity overlay chart, and signal quality annotations
+  4. Average CASH duration with all filters enabled stays below 130% of V2 baseline CASH duration -- filters are not trapping capital
+  5. Integration test covers all 8 filter combinations (liquidity x sell_accel x buy_quality on/off) and confirms no combination produces worse max drawdown than V2 baseline on 2008 or 2022 sub-periods
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 16 -> 17 -> 18
+Phases execute in numeric order: 19 -> 20 -> 21 -> 22
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -355,6 +411,10 @@ Phases execute in numeric order: 16 -> 17 -> 18
 | 13. Hybrid Engine Integration | v3.0 | 2/2 | Complete | 2026-03-29 |
 | 14. Hybrid Validation | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
-| 16. Short Position & State Transitions | v4.0 | 2/2 | Complete    | 2026-03-30 |
-| 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete    | 2026-03-30 |
-| 18. Short P&L & Comparative Validation | v4.0 | 1/2 | Complete    | 2026-03-30 |
+| 16. Short Position & State Transitions | v4.0 | 2/2 | Complete | 2026-03-30 |
+| 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete | 2026-03-30 |
+| 18. Short P&L & Comparative Validation | v4.0 | 2/2 | Complete | 2026-03-30 |
+| 19. Global Liquidity Integration | v5.0 | 0/0 | Not started | - |
+| 20. SELL Acceleration | v5.0 | 0/0 | Not started | - |
+| 21. BUY Selectivity | v5.0 | 0/0 | Not started | - |
+| 22. Combined Integration & Validation | v5.0 | 0/0 | Not started | - |
