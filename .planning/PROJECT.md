@@ -8,17 +8,23 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
-## Current Milestone: v3.0 Hybrid MDM Engine
+## Current Milestone: v4.0 MDM Short Signal & Dr. K Alignment
 
-**Goal:** Kết hợp state machine cổ điển (Distribution Days, Follow-Through Days, Rally Attempts) với indicator filters (EMA/MACD) thành hybrid model — state machine đề xuất signal, indicators xác nhận/ghi đè.
+**Goal:** Căn chỉnh MDM engine theo model gốc Dr. K — thêm cơ chế short thật sự khi SELL signal, điều chỉnh stop loss linh hoạt theo volatility, enforce đúng chuỗi chuyển trạng thái SELL→CASH→BUY.
 
 **Target features:**
-- State machine MDM classic (DD counting, FTD detection, Rally Attempts) làm tầng quyết định chính
-- EMA 9/21/55, MACD, MA 200 làm bộ lọc xác nhận/ghi đè signal
-- Cash state logic mới (không có trong classic, thêm vào post-2019)
-- Chuỗi chuyển trạng thái có ngữ cảnh (Buy→Cash→Sell phụ thuộc trạng thái trước)
-- Validation trên 962 signals với hybrid model (target: accuracy cao hơn 56.7%)
-- So sánh hybrid vs pure decision tree vs pure state machine
+- SELL signal = mở vị thế short (trên VN30: short trực tiếp chỉ số, NASDAQ: inverse ETF)
+- Stop loss mặc định 1.5% (thay vì 2.5%), linh hoạt theo volatility
+- Enforce SELL→CASH→BUY (phải qua CASH trước khi BUY từ SELL)
+- P&L tracking cho vị thế short (gain/loss khi market giảm)
+- Backtest so sánh long-only vs long/short trên cả NASDAQ và VN30
+- Cập nhật rule docs với quy tắc short mới
+
+**Key context from Dr. K webinar:**
+- SELL = short thật (dùng SQQQ/UVXY trên US market)
+- Stop loss 1.5% mặc định nhưng thay đổi theo volatility
+- Model phải qua CASH trước khi chuyển từ SELL sang BUY
+- VN30: không có inverse ETF, short trực tiếp trên chỉ số VN30
 
 ## Requirements
 
@@ -145,4 +151,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 14: Hybrid Validation complete*
+*Last updated: 2026-03-30 after Milestone v4.0 started*

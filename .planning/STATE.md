@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.0
-milestone_name: Hybrid MDM Engine
-status: executing
-stopped_at: Completed 15-02-PLAN.md
-last_updated: "2026-03-29T15:18:44.555Z"
-last_activity: 2026-03-29
+milestone: v4.0
+milestone_name: MDM Short Signal & Dr. K Alignment
+status: defining-requirements
+stopped_at: null
+last_updated: "2026-03-30T00:00:00.000Z"
+last_activity: 2026-03-30
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 8
-  completed_plans: 8
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
   percent: 0
 ---
 
@@ -18,16 +18,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-29)
+See: .planning/PROJECT.md (updated 2026-03-30)
 
-**Core value:** Combine v2 state machine with indicator filters into hybrid MDM model that beats 56.7% accuracy
-**Current focus:** Phase 15 — advanced-features
+**Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
+**Current focus:** Defining requirements for v4.0 — MDM Short Signal & Dr. K Alignment
 
 ## Current Position
 
-Phase: 15
-Plan: Not started
-Status: Ready to execute
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-30 — Milestone v4.0 started
 Last activity: 2026-03-30 - Completed quick task 260330-9b5: Organize root directory and create strategy rule docs
 
 Progress: [░░░░░░░░░░] 0%
