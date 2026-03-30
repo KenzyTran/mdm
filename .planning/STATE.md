@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: MDM Short Signal & Dr. K Alignment
-status: planning
-stopped_at: Completed 16-01-PLAN.md
+status: executing
+stopped_at: Completed plan 16-01
 last_updated: "2026-03-30T03:06:14.528Z"
-last_activity: 2026-03-30 -- Roadmap created for v4.0
+last_activity: 2026-03-30 -- Plan 16-01 complete
 progress:
   total_phases: 3
   completed_phases: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 16 -- Short Position & State Transitions
+**Current focus:** Phase 16 — short-position-state-transitions
 
 ## Current Position
 
-Phase: 16 of 18 (Short Position & State Transitions)
-Plan: Ready to plan
-Status: Ready to plan
-Last activity: 2026-03-30 -- Roadmap created for v4.0
+Phase: 16 (short-position-state-transitions) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 16
+Last activity: 2026-03-30 -- Phase 16 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
