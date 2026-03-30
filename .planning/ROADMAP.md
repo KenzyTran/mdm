@@ -355,7 +355,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 19-01-PLAN.md -- LiquidityLoader data pipeline and MDMV2Config QE floor fields (LIQ-01, LIQ-03)
+- [x] 19-01-PLAN.md -- LiquidityLoader data pipeline and MDMV2Config QE floor fields (LIQ-01, LIQ-03)
 - [ ] 19-02-PLAN.md -- Engine wiring, SELL suppression gate, and regression tests (LIQ-02, LIQ-03)
 
 ### Phase 20: SELL Acceleration
@@ -418,7 +418,7 @@ Phases execute in numeric order: 19 -> 20 -> 21 -> 22
 | 16. Short Position & State Transitions | v4.0 | 2/2 | Complete | 2026-03-30 |
 | 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete | 2026-03-30 |
 | 18. Short P&L & Comparative Validation | v4.0 | 2/2 | Complete | 2026-03-30 |
-| 19. Global Liquidity Integration | v5.0 | 0/2 | Planned | - |
+| 19. Global Liquidity Integration | v5.0 | 1/2 | In Progress|  |
 | 20. SELL Acceleration | v5.0 | 0/0 | Not started | - |
 | 21. BUY Selectivity | v5.0 | 0/0 | Not started | - |
 | 22. Combined Integration & Validation | v5.0 | 0/0 | Not started | - |

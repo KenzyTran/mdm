@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
-status: roadmapped
-stopped_at: null
-last_updated: "2026-03-30T14:00:00.000Z"
-last_activity: 2026-03-30
+status: executing
+stopped_at: Completed 19-01-PLAN.md
+last_updated: "2026-03-30T14:47:00.216Z"
+last_activity: 2026-03-30 -- Completed 19-01 (Liquidity Data Pipeline)
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -25,17 +25,18 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Position
 
-Phase: 19 of 22 (Global Liquidity Integration)
-Plan: Not yet planned
-Status: Ready to plan
-Last activity: 2026-03-30 -- Roadmap created for v5.0
+Phase: 19 (global-liquidity-integration) -- EXECUTING
+Plan: 2 of 2
+Status: Executing Phase 19
+Last activity: 2026-03-30 -- Completed 19-01 (Liquidity Data Pipeline)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v5.0)
+
+- Total plans completed: 1 (v5.0)
 - Average duration: -
 - Total execution time: 0 hours
 
@@ -51,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: Variable (complex plans longer, simple plans fast)
 
 *Updated after each plan completion*
+| Phase 19 P01 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -65,6 +67,7 @@ Recent decisions affecting current work:
 - [v5.0 Roadmap]: BUY selectivity starts simple (MA10 < MA50 boolean), not scoring ensemble
 - [v5.0 Roadmap]: All new features default OFF for backward compatibility
 - [v5.0 Roadmap]: Combined integration phase mandatory -- filters interact through state machine
+- [Phase 19]: merge_asof backward for weekly-to-daily alignment, no interpolation
 
 ### Pending Todos
 
@@ -79,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: Roadmap created for v5.0
+Last session: 2026-03-30T14:47:00.212Z
+Stopped at: Completed 19-01-PLAN.md
 Resume file: None
