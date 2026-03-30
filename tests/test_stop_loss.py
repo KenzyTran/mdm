@@ -195,3 +195,123 @@ class TestVolatilityAdaptive:
 
         result = checker.check(98.6, buy_price, buy_day_low, atr=None, atr_baseline=None)
         assert result.triggered is False
+
+
+class TestDD5HighTracking:
+    """Test DD5 high tracking in DistributionDayCounter (RISK-03)."""
+
+    def _make_config(self):
+        return MDMV2Config(dd_window_size=20, dd_price_drop_threshold=-0.002)
+
+    def _make_dates(self, n=25):
+        return [pd.Timestamp(f"2020-01-{i+1:02d}") for i in range(n)]
+
+    def test_dd_history_stores_date_and_high(self):
+        """After check_distribution_day with DD detected, dd_history contains (date, high) tuple."""
+        from strategies.mdm_hybrid.distribution_day import DistributionDayCounter
+        config = self._make_config()
+        counter = DistributionDayCounter(config)
+        date = pd.Timestamp("2020-01-05")
+        high = 15100.0
+
+        is_dd, dd_type = counter.check_distribution_day(date, high, -0.005, True, 0.5)
+        assert is_dd is True
+        assert len(counter.dd_history) == 1
+        assert counter.dd_history[0] == (date, high)
+
+    def test_dd5_high_returns_5th_dd_high(self):
+        """With 5+ DDs in window, get_dd5_high returns the high of the 5th DD day specifically."""
+        from strategies.mdm_hybrid.distribution_day import DistributionDayCounter
+        config = self._make_config()
+        counter = DistributionDayCounter(config)
+        dates = self._make_dates(25)
+        highs = [15000 + i * 100 for i in range(5)]  # 15000, 15100, 15200, 15300, 15400
+
+        for i in range(5):
+            counter.check_distribution_day(dates[i], highs[i], -0.005, True, 0.5)
+
+        dd5_high = counter.get_dd5_high(dates[4], dates)
+        assert dd5_high == 15400.0  # High of the 5th DD (index 4)
+
+    def test_dd5_high_returns_zero_when_fewer_than_5(self):
+        """With only 3 DDs, get_dd5_high returns 0.0."""
+        from strategies.mdm_hybrid.distribution_day import DistributionDayCounter
+        config = self._make_config()
+        counter = DistributionDayCounter(config)
+        dates = self._make_dates(25)
+
+        for i in range(3):
+            counter.check_distribution_day(dates[i], 15000 + i * 100, -0.005, True, 0.5)
+
+        dd5_high = counter.get_dd5_high(dates[2], dates)
+        assert dd5_high == 0.0
+
+    def test_dd_count_in_window_still_works(self):
+        """get_dd_count_in_window returns correct count after dd_history format change."""
+        from strategies.mdm_hybrid.distribution_day import DistributionDayCounter
+        config = self._make_config()
+        counter = DistributionDayCounter(config)
+        dates = self._make_dates(25)
+
+        for i in range(3):
+            counter.check_distribution_day(dates[i], 15000.0, -0.005, True, 0.5)
+
+        count = counter.get_dd_count_in_window(dates[2], dates)
+        assert count == 3
+
+    def test_dd_reset_clears_dd5_high(self):
+        """After reset(), dd5_high == 0.0 and dd_history is empty."""
+        from strategies.mdm_hybrid.distribution_day import DistributionDayCounter
+        config = self._make_config()
+        counter = DistributionDayCounter(config)
+        dates = self._make_dates(25)
+
+        for i in range(5):
+            counter.check_distribution_day(dates[i], 15000 + i * 100, -0.005, True, 0.5)
+        counter.get_dd5_high(dates[4], dates)
+        assert counter.dd5_high > 0
+
+        counter.reset()
+        assert counter.dd5_high == 0.0
+        assert len(counter.dd_history) == 0
+
+
+class TestShortStopLoss:
+    """Test check_short() for short position stop loss (RISK-03, SHORT-03)."""
+
+    def test_short_stop_loss_dd5_high(self):
+        """check_short(close=15200, dd5_high=15000) triggers (15200 > 15000 * 1.01 = 15150)."""
+        config = MDMV2Config()
+        checker = StopLossChecker(config)
+        result = checker.check_short(15200, 15000)
+        assert result.triggered is True
+
+    def test_short_stop_loss_below_threshold(self):
+        """check_short(close=15100, dd5_high=15000) does NOT trigger (15100 < 15150)."""
+        config = MDMV2Config()
+        checker = StopLossChecker(config)
+        result = checker.check_short(15100, 15000)
+        assert result.triggered is False
+
+    def test_short_stop_loss_no_dd5_high(self):
+        """check_short(close=15200, dd5_high=0) returns triggered=False."""
+        config = MDMV2Config()
+        checker = StopLossChecker(config)
+        result = checker.check_short(15200, 0)
+        assert result.triggered is False
+
+    def test_short_stop_triggers_cover(self):
+        """check_short returns StopLossResult with triggered=True and reason containing 'Short stop loss'."""
+        config = MDMV2Config()
+        checker = StopLossChecker(config)
+        result = checker.check_short(15200, 15000)
+        assert result.triggered is True
+        assert "Short stop loss" in result.reason
+
+    def test_short_stop_loss_pct_calculation(self):
+        """check_short(close=15200, dd5_high=15000, short_entry_price=14800) returns correct loss_pct."""
+        config = MDMV2Config()
+        checker = StopLossChecker(config)
+        result = checker.check_short(15200, 15000, short_entry_price=14800)
+        expected_loss = (15200 - 14800) / 14800  # ~0.027
+        assert abs(result.loss_pct - expected_loss) < 0.001
