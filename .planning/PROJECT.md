@@ -13,12 +13,12 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 **Goal:** Căn chỉnh MDM engine theo model gốc Dr. K — thêm cơ chế short thật sự khi SELL signal, điều chỉnh stop loss linh hoạt theo volatility, enforce đúng chuỗi chuyển trạng thái SELL→CASH→BUY.
 
 **Target features:**
-- SELL signal = mở vị thế short (trên VN30: short trực tiếp chỉ số, NASDAQ: inverse ETF)
+- ✓ SELL signal = mở vị thế short (trên VN30: short trực tiếp chỉ số, NASDAQ: inverse ETF) — Phase 16
 - ✓ Stop loss mặc định 1.5% (thay vì 2.5%), linh hoạt theo volatility — Phase 17
-- Enforce SELL→CASH→BUY (phải qua CASH trước khi BUY từ SELL)
-- P&L tracking cho vị thế short (gain/loss khi market giảm)
-- Backtest so sánh long-only vs long/short trên cả NASDAQ và VN30
-- Cập nhật rule docs với quy tắc short mới
+- ✓ Enforce SELL→CASH→BUY (phải qua CASH trước khi BUY từ SELL) — Phase 16
+- ✓ P&L tracking cho vị thế short (gain/loss khi market giảm) — Phase 18
+- ✓ Backtest so sánh long-only vs long/short trên cả NASDAQ và VN30 — Phase 18
+- ✓ Cập nhật rule docs với quy tắc short mới — Phase 18
 
 **Key context from Dr. K webinar:**
 - SELL = short thật (dùng SQQQ/UVXY trên US market)
