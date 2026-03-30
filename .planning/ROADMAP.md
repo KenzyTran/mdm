@@ -298,7 +298,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
+- [x] 16-01-PLAN.md -- V2Position short fields, cover_short(), enter_buy() guard, config short_mode (SHORT-01, SHORT-04, TRANS-01)
 - [ ] 16-02-PLAN.md -- Engine cover triggers, degrade_to_cash replacement, NASDAQ validation (SHORT-04, TRANS-01)
 
 ### Phase 17: Stop Loss & Risk Management
@@ -354,6 +354,6 @@ Phases execute in numeric order: 16 -> 17 -> 18
 | 13. Hybrid Engine Integration | v3.0 | 2/2 | Complete | 2026-03-29 |
 | 14. Hybrid Validation | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
-| 16. Short Position & State Transitions | v4.0 | 0/? | Not started | - |
+| 16. Short Position & State Transitions | v4.0 | 1/2 | In Progress|  |
 | 17. Stop Loss & Risk Management | v4.0 | 0/? | Not started | - |
 | 18. Short P&L & Comparative Validation | v4.0 | 0/? | Not started | - |

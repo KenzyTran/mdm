@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: MDM Short Signal & Dr. K Alignment
 status: planning
-stopped_at: Phase 16 context gathered
-last_updated: "2026-03-30T02:11:34.850Z"
+stopped_at: Completed 16-01-PLAN.md
+last_updated: "2026-03-30T03:06:14.528Z"
 last_activity: 2026-03-30 -- Roadmap created for v4.0
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 0
 ---
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: Variable (simple plans fast, complex plans longer)
 
 *Updated after each plan completion*
+| Phase 16 P01 | 33min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - [v4.0 Roadmap]: SHORT-01 + SHORT-04 + TRANS-01 grouped together (short entry/cover/transition are tightly coupled)
 - [v4.0 Roadmap]: All stop loss requirements (RISK-01/02/03 + SHORT-03) in one phase for unified risk management
 - [v4.0 Roadmap]: P&L tracking (SHORT-02) deferred to Phase 18 since it needs working short positions from Phase 16
+- [Phase 16]: Short P&L formula: (entry - cover) / entry, positive on market drop
+- [Phase 16]: enter_buy() raises ValueError from SELL state to enforce cover_short() first
 
 ### Pending Todos
 
@@ -83,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T02:11:34.841Z
-Stopped at: Phase 16 context gathered
-Resume file: .planning/phases/16-short-position-state-transitions/16-CONTEXT.md
+Last session: 2026-03-30T03:06:14.524Z
+Stopped at: Completed 16-01-PLAN.md
+Resume file: None
