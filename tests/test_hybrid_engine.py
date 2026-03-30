@@ -111,11 +111,11 @@ def test_snapshot_restore_isolation():
     """Snapshot/restore provides full isolation: mutations don't survive restore."""
     engine = HybridEngine(HybridConfig())
 
-    # Add fake dates to dd_counter history
+    # Add fake (date, high) tuples to dd_counter history
     engine.dd_counter.dd_history = [
-        pd.Timestamp('2020-01-01'),
-        pd.Timestamp('2020-01-02'),
-        pd.Timestamp('2020-01-03'),
+        (pd.Timestamp('2020-01-01'), 100.0),
+        (pd.Timestamp('2020-01-02'), 101.0),
+        (pd.Timestamp('2020-01-03'), 102.0),
     ]
 
     # Snapshot
@@ -134,11 +134,11 @@ def test_vetoed_ftd_does_not_reset_dd_counter():
     """A vetoed FTD does not reset the DD counter -- snapshot/restore prevents corruption."""
     engine = HybridEngine(HybridConfig())
 
-    # Simulate DD counter with 3 recorded distribution days
+    # Simulate DD counter with 3 recorded distribution days (date, high) tuples
     engine.dd_counter.dd_history = [
-        pd.Timestamp('2020-03-10'),
-        pd.Timestamp('2020-03-12'),
-        pd.Timestamp('2020-03-15'),
+        (pd.Timestamp('2020-03-10'), 100.0),
+        (pd.Timestamp('2020-03-12'), 101.0),
+        (pd.Timestamp('2020-03-15'), 102.0),
     ]
 
     # Snapshot before FTD processing

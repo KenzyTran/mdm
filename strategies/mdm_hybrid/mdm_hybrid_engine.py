@@ -20,7 +20,7 @@ from .indicators import Indicators
 from .distribution_day import DistributionDayCounter
 from .rally_attempt import RallyAttemptTracker
 from .ftd_signal import FTDSignalDetector
-from .stop_loss import StopLossChecker
+from .stop_loss import StopLossChecker, StopLossResult
 from .position_manager import V2PositionManager, V2MarketState
 from .config import HybridConfig, MDMV2Config
 from .indicator_filter import IndicatorFilter, Verdict
@@ -53,6 +53,9 @@ class HybridEngine:
         self.results: Optional[pd.DataFrame] = None
         self.indicator_filter = IndicatorFilter(self.config.filter_config) if self.config.filter_enabled else None
 
+        # DD5 high locked for short stop loss (Phase 17, RISK-03/SHORT-03)
+        self._dd5_high_locked = 0.0
+
         # State history tracking (Phase 15, Plan 02 -- ADV-01)
         self.state_history = []  # List of dicts: {state, entered_date, duration}
         self._current_state_name = "CASH"
@@ -66,6 +69,7 @@ class HybridEngine:
         self.ftd_detector.reset()
         self.position_manager.reset()
         self.results = None
+        self._dd5_high_locked = 0.0
         self.state_history = []
         self._current_state_name = "CASH"
         self._current_state_start = None
@@ -276,9 +280,15 @@ class HybridEngine:
 
             if current_state == V2MarketState.BUY:
                 is_dd, dd_type = self.dd_counter.check_distribution_day(
-                    date, price_change_pct, volume_up, p_loc
+                    date, high, price_change_pct, volume_up, p_loc
                 )
                 dd_count = self.dd_counter.get_dd_count_in_window(date, all_dates)
+
+                # Cache DD5 high when DD count reaches threshold (for short stop loss)
+                if dd_count >= self.config.v2_config.dd_cash_threshold:
+                    dd5_h = self.dd_counter.get_dd5_high(date, all_dates)
+                    if dd5_h > 0:
+                        self._dd5_high_locked = dd5_h
 
             # 4. Check stop loss (long only, no SHORT stop loss)
             ma50 = row['ma50'] if 'ma50' in row else None
@@ -300,29 +310,46 @@ class HybridEngine:
                 atr_baseline=current_atr_baseline,
             )
 
-            # 5. Update position
-            ma10 = row['ma10'] if 'ma10' in row else None
-            ma50_val = row['ma50'] if 'ma50' in row else None
+            # 5. Short stop loss check (SELL state only, Phase 17 RISK-03/SHORT-03)
+            short_stop_result = StopLossResult(triggered=False, reason="OK", loss_pct=0.0)
+            if current_state == V2MarketState.SELL:
+                short_entry = self.position_manager.position.short_entry_price
+                short_stop_result = self.stop_loss_checker.check_short(
+                    close, self._dd5_high_locked, short_entry
+                )
+                if short_stop_result.triggered:
+                    # Short stop loss has highest priority -- cover immediately
+                    self.position_manager.cover_short(close, date, short_stop_result.reason)
+                    new_state = V2MarketState.CASH
+                    action = f"SHORT_COVER: {short_stop_result.reason}"
+                    # Reset rally tracker since we're no longer in SELL
+                    self.rally_tracker.full_reset()
+                    self._dd5_high_locked = 0.0
 
-            new_state, action = self.position_manager.process_day(
-                date=date,
-                high=high,
-                low=low,
-                close=close,
-                is_ftd=is_ftd,
-                ftd_price=ftd_price,
-                dd_count=dd_count,
-                is_dd=is_dd,
-                stop_loss_triggered=stop_loss_result.triggered,
-                stop_loss_reason=stop_loss_result.reason,
-                signal_type=signal_type,
-                ma10=ma10,
-                ma50=ma50_val,
-            )
+            # 6. Update position (skip if short stop loss already triggered)
+            if not (current_state == V2MarketState.SELL and short_stop_result.triggered):
+                ma10 = row['ma10'] if 'ma10' in row else None
+                ma50_val = row['ma50'] if 'ma50' in row else None
 
-            # If FTD triggered, reset rally tracker
-            if is_ftd:
-                self.rally_tracker.full_reset()
+                new_state, action = self.position_manager.process_day(
+                    date=date,
+                    high=high,
+                    low=low,
+                    close=close,
+                    is_ftd=is_ftd,
+                    ftd_price=ftd_price,
+                    dd_count=dd_count,
+                    is_dd=is_dd,
+                    stop_loss_triggered=stop_loss_result.triggered,
+                    stop_loss_reason=stop_loss_result.reason,
+                    signal_type=signal_type,
+                    ma10=ma10,
+                    ma50=ma50_val,
+                )
+
+                # If FTD triggered, reset rally tracker
+                if is_ftd:
+                    self.rally_tracker.full_reset()
 
             # Two-phase commit: Propose-Filter-Decide pipeline (Phase 13)
             if self.config.two_phase_enabled and self.config.filter_enabled:
