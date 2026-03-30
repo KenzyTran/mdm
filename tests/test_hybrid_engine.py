@@ -76,8 +76,10 @@ def test_hybrid_matches_v2_on_nasdaq(nasdaq_data):
     v2_engine = MDMV2Engine(v2_config)
     v2_result = v2_engine.run(nasdaq_data)
 
-    # Run hybrid with matching config and filter disabled
-    hybrid_config = HybridConfig(v2_config=MDMV2Config(), filter_enabled=False)
+    # Run hybrid with matching config and filter disabled.
+    # Disable volatility-adaptive scaling (Phase 17) since v2 doesn't have ATR.
+    v2_compat_config = MDMV2Config(volatility_adaptive=False)
+    hybrid_config = HybridConfig(v2_config=v2_compat_config, filter_enabled=False)
     hybrid_engine = HybridEngine(hybrid_config)
     hybrid_result = hybrid_engine.run(nasdaq_data)
 
@@ -96,7 +98,9 @@ def test_hybrid_matches_v2_on_nasdaq(nasdaq_data):
         f"Hybrid should be BUY when v2 is BUY at least 95% of the time, got {hybrid_buy_in_v2_buy:.2%}"
     )
 
-    # State differences should only be SELL-related (SELL in v2 vs CASH in hybrid)
+    # State differences come from SELL-related divergence (MA50 cover in hybrid,
+    # short stop loss in hybrid). With ATR scaling disabled, stop loss base is
+    # identical (both 1.5%). Remaining divergence is from short cover mechanics.
     diff_mask = v2_result['state'] != hybrid_result['state']
     if diff_mask.any():
         for idx in diff_mask[diff_mask].index:
