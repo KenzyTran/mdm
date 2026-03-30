@@ -1,187 +1,187 @@
-# BO QUY TAC MO HINH MDM V2 - MAY TRANG THAI 3 BUOC (BUY/CASH/SELL)
+# BỘ QUY TẮC MÔ HÌNH MDM V2 - MÁY TRẠNG THÁI 3 BƯỚC (BUY/CASH/SELL)
 
-## I. TONG QUAN
+## I. TỔNG QUAN
 
-MDM V2 la phien ban cai tien cua MDM Classic, thay doi tu may trang thai 4 buoc (CASH/HOLDING/WAITING_SELL/SHORT) thanh may trang thai 3 buoc don gian hon:
+MDM V2 là phiên bản cải tiến của MDM Classic, thay đổi từ máy trạng thái 4 bước (CASH/HOLDING/WAITING_SELL/SHORT) thành máy trạng thái 3 bước đơn giản hơn:
 
-| Trang thai | Mo ta |
+| Trạng thái | Mô tả |
 | :--- | :--- |
-| **CASH** | Khong giu vi the, cho tin hieu mua |
-| **BUY** | Dang giu vi the Long |
-| **SELL** | Tin hieu giam - thi truong xau di, chi cho FTD de quay lai BUY |
+| **CASH** | Không giữ vị thế, chờ tín hiệu mua |
+| **BUY** | Đang giữ vị thế Long |
+| **SELL** | Tín hiệu giảm - thị trường xấu đi, chỉ chờ FTD để quay lại BUY |
 
-**Cai tien chinh so voi Classic:**
-- Bo trang thai WAITING_SELL va SHORT (khong ban khong nua)
-- Them co che chuyen CASH -> SELL khi thi truong xau di (MA50 breakdown hoac o CASH qua lau)
-- Them dieu kien thoat BUY -> CASH qua MA10 (dong cua duoi MA10 nhieu phien lien tiep)
-- Giu nguyen cac dieu kien mua (FTD, MA50 breakout, 52-week breakout)
-
----
-
-## II. DU LIEU DAU VAO VA CHI BAO KY THUAT
-
-### 1. Du lieu dau vao:
-* Gia Mo cua ($O$), Cao nhat ($H$), Thap nhat ($L$), Dong cua ($C$), Khoi luong ($V$).
-* Du lieu chi so (VNINDEX hoac NASDAQ).
-
-### 2. Cac chi bao duoc tinh:
-* **MA10**: Trung binh dong 10 phien cua gia dong cua.
-* **MA50**: Trung binh dong 50 phien cua gia dong cua.
-* **MA50 Volume**: Trung binh dong 50 phien cua khoi luong.
-* **P_loc** (Vi the khung gia): $P_{loc} = \frac{C - L}{H - L}$
-* **Rolling High**: Dinh cao nhat tich luy.
-* **High 52 tuan**: Dinh cao nhat trong 252 phien giao dich.
-* **Drawdown**: Muc giam tu dinh: $\frac{C - Rolling\_High}{Rolling\_High}$
-* **Price Change %**: Phan tram thay doi gia so voi phien truoc.
-* **Volume Up**: Khoi luong cao hon phien truoc ($V > V_{prev}$).
-
-### 3. Xu ly ngay dao han phai sinh:
-* Neu cot `is_expiry_day` ton tai trong du lieu, cac phien dao han se bi tat co `volume_up = False`.
-* Dieu nay ngan viec dem ngay phan phoi sai do khoi luong tang dot bien vao ngay dao han.
+**Cải tiến chính so với Classic:**
+- Bỏ trạng thái WAITING_SELL và SHORT (không bán khống nữa)
+- Thêm cơ chế chuyển CASH -> SELL khi thị trường xấu đi (MA50 breakdown hoặc ở CASH quá lâu)
+- Thêm điều kiện thoát BUY -> CASH qua MA10 (đóng cửa dưới MA10 nhiều phiên liên tiếp)
+- Giữ nguyên các điều kiện mua (FTD, MA50 breakout, 52-week breakout)
 
 ---
 
-## III. TRANG THAI 1: CASH (TIM KIEM CO HOI)
+## II. DỮ LIỆU ĐẦU VÀO VÀ CHỈ BÁO KỸ THUẬT
 
-*Trang thai hien tai: 100% tien mat, khong giu vi the.*
+### 1. Dữ liệu đầu vào:
+* Giá Mở cửa ($O$), Cao nhất ($H$), Thấp nhất ($L$), Đóng cửa ($C$), Khối lượng ($V$).
+* Dữ liệu chỉ số (VNINDEX hoặc NASDAQ).
 
-### 1. Theo doi Rally Attempt (No luc hoi phuc):
+### 2. Các chỉ báo được tính:
+* **MA10**: Trung bình động 10 phiên của giá đóng cửa.
+* **MA50**: Trung bình động 50 phiên của giá đóng cửa.
+* **MA50 Volume**: Trung bình động 50 phiên của khối lượng.
+* **P_loc** (Vị thế khung giá): $P_{loc} = \frac{C - L}{H - L}$
+* **Rolling High**: Đỉnh cao nhất tích lũy.
+* **High 52 tuần**: Đỉnh cao nhất trong 252 phiên giao dịch.
+* **Drawdown**: Mức giảm từ đỉnh: $\frac{C - Rolling\_High}{Rolling\_High}$
+* **Price Change %**: Phần trăm thay đổi giá so với phiên trước.
+* **Volume Up**: Khối lượng cao hơn phiên trước ($V > V_{prev}$).
 
-**Dieu kien vao "Giai doan dieu chinh":**
-* Chi so giam >= 10% tu dinh cao nhat gan nhat ($drawdown \le -0.10$).
-* Khi dat dinh moi (high moi), giai doan dieu chinh duoc reset.
+### 3. Xử lý ngày đáo hạn phái sinh:
+* Nếu cột `is_expiry_day` tồn tại trong dữ liệu, các phiên đáo hạn sẽ bị tắt cờ `volume_up = False`.
+* Điều này ngăn việc đếm ngày phân phối sai do khối lượng tăng đột biến vào ngày đáo hạn.
 
-**Ngay 1 (Day 1) cua Rally Attempt:**
-* Dieu kien (1 trong 2):
-  * Gia dong cua tang so voi phien truoc ($C > C_{prev}$).
-  * HOAC: Gia dong cua o nua tren khung gia ($P_{loc} > 0.5$), ke ca khi gia giam.
-* **Quy tac huy de:** Neu gia pha thung day thap nhat cua Ngay 1 ($L_{hien\_tai} < L_{Day1}$) -> Huy dem, bat dau lai tu dau.
+---
 
-### 2. Tin hieu Mua (FTD - Follow-Through Day):
+## III. TRẠNG THÁI 1: CASH (TÌM KIẾM CƠ HỘI)
 
-* **Thoi gian:** Xuat hien tu **Ngay thu 4 den Ngay thu 12** cua dot no luc hoi phuc (config: `ftd_min_rally_day=3`, `ftd_max_rally_day=12`, nhung engine kiem tra `rally_day >= 4`).
-* **Dieu kien Gia:** Tang >= 1% so voi phien truoc ($price\_change\_pct \ge 0.01$).
-* **Dieu kien Khoi luong:** Cao hon phien truoc ($volume\_up = True$).
-* **Hanh dong:**
-  * Chuyen trang thai: CASH -> **BUY**.
-  * Reset bo dem ngay phan phoi: $Count_{DD} = 0$.
-  * Ghi nhan **Gia Mua** = Gia dong cua phien FTD.
+*Trạng thái hiện tại: 100% tiền mặt, không giữ vị thế.*
+
+### 1. Theo dõi Rally Attempt (Nỗ lực hồi phục):
+
+**Điều kiện vào "Giai đoạn điều chỉnh":**
+* Chỉ số giảm >= 10% từ đỉnh cao nhất gần nhất ($drawdown \le -0.10$).
+* Khi đạt đỉnh mới (high mới), giai đoạn điều chỉnh được reset.
+
+**Ngày 1 (Day 1) của Rally Attempt:**
+* Điều kiện (1 trong 2):
+  * Giá đóng cửa tăng so với phiên trước ($C > C_{prev}$).
+  * HOẶC: Giá đóng cửa ở nửa trên khung giá ($P_{loc} > 0.5$), kể cả khi giá giảm.
+* **Quy tắc hủy đế:** Nếu giá phá thủng đáy thấp nhất của Ngày 1 ($L_{hiện\_tại} < L_{Day1}$) -> Hủy đếm, bắt đầu lại từ đầu.
+
+### 2. Tín hiệu Mua (FTD - Follow-Through Day):
+
+* **Thời gian:** Xuất hiện từ **Ngày thứ 4 đến Ngày thứ 12** của đợt nỗ lực hồi phục (config: `ftd_min_rally_day=3`, `ftd_max_rally_day=12`, nhưng engine kiểm tra `rally_day >= 4`).
+* **Điều kiện Giá:** Tăng >= 1% so với phiên trước ($price\_change\_pct \ge 0.01$).
+* **Điều kiện Khối lượng:** Cao hơn phiên trước ($volume\_up = True$).
+* **Hành động:**
+  * Chuyển trạng thái: CASH -> **BUY**.
+  * Reset bộ đếm ngày phân phối: $Count_{DD} = 0$.
+  * Ghi nhận **Giá Mua** = Giá đóng cửa phiên FTD.
   * Reset rally tracker.
 
-### 3. Tin hieu Mua (Pha vo len tren MA50):
+### 3. Tín hiệu Mua (Phá vỡ lên trên MA50):
 
-* **Dieu kien (tat ca phai thoa man):**
-  1. Drawdown tu dinh >= 6% ($drawdown\_pct \le -0.06$).
-  2. Phien truoc dong cua **duoi hoac bang** MA50 cua phien truoc ($C_{prev} \le MA50_{prev}$).
-  3. Phien hien tai dong cua **vuot len tren** MA50 ($C > MA50$).
-  4. Khoi luong cao hon phien truoc ($volume\_up = True$).
-* **Hanh dong:** Tuong tu FTD, chuyen sang BUY, reset DD counter.
+* **Điều kiện (tất cả phải thỏa mãn):**
+  1. Drawdown từ đỉnh >= 6% ($drawdown\_pct \le -0.06$).
+  2. Phiên trước đóng cửa **dưới hoặc bằng** MA50 của phiên trước ($C_{prev} \le MA50_{prev}$).
+  3. Phiên hiện tại đóng cửa **vượt lên trên** MA50 ($C > MA50$).
+  4. Khối lượng cao hơn phiên trước ($volume\_up = True$).
+* **Hành động:** Tương tự FTD, chuyển sang BUY, reset DD counter.
 
-### 4. Tin hieu Mua (Vuot dinh 52 tuan):
+### 4. Tín hiệu Mua (Vượt đỉnh 52 tuần):
 
-* **Dieu kien:** Gia dong cua vuot dinh 52 tuan ($C > High_{52w}$).
-* **Hanh dong:** Chuyen sang BUY.
-* **Stop loss dac biet:** Dat stop loss tai $L_{ngay\_mua} \times 0.99$ (1% duoi day ngay mua).
+* **Điều kiện:** Giá đóng cửa vượt đỉnh 52 tuần ($C > High_{52w}$).
+* **Hành động:** Chuyển sang BUY.
+* **Stop loss đặc biệt:** Đặt stop loss tại $L_{ngày\_mua} \times 0.99$ (1% dưới đáy ngày mua).
 
-### 5. Chuyen CASH -> SELL (Thi truong xau di):
+### 5. Chuyển CASH -> SELL (Thị trường xấu đi):
 
-Neu khong co tin hieu mua, kiem tra 2 dieu kien chuyen sang SELL:
+Nếu không có tín hiệu mua, kiểm tra 2 điều kiện chuyển sang SELL:
 
 * **MA50 Breakdown** (khi `ma50_sell_enabled=True`):
-  * Gia dong cua duoi MA50 ($C < MA50$).
-  * -> Chuyen sang trang thai SELL.
+  * Giá đóng cửa dưới MA50 ($C < MA50$).
+  * -> Chuyển sang trạng thái SELL.
 
-* **Cash Deterioration** (Xuong cap do o CASH qua lau):
-  * So ngay o trang thai CASH >= `cash_deterioration_days` (mac dinh: 10 ngay).
-  * -> Chuyen sang trang thai SELL.
+* **Cash Deterioration** (Xuống cấp do ở CASH quá lâu):
+  * Số ngày ở trạng thái CASH >= `cash_deterioration_days` (mặc định: 10 ngày).
+  * -> Chuyển sang trạng thái SELL.
 
-**Thu tu uu tien:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
-
----
-
-## IV. TRANG THAI 2: BUY (NAM GIU VI THE)
-
-*Trang thai hien tai: Dang giu vi the Long.*
-
-### 1. Dem Ngay phan phoi (Distribution Day):
-
-**Loai 1 (Giam manh - Heavy Selling):**
-* Gia giam >= 0.2% ($price\_change\_pct \le -0.002$).
-* Khoi luong tang ($volume\_up = True$).
-
-**Loai 2 (Chung lai - Stalling):**
-* Gia tang nhe, trong khoang $0 \le price\_change\_pct < 0.001$.
-* Khoi luong tang ($volume\_up = True$).
-* Dong cua o phan duoi khung gia ($P_{loc} \le 0.20$).
-
-**Bo dem DD:**
-* Dem so ngay phan phoi trong cua so truot 20 phien gan nhat.
-* Reset ve 0 khi xuat hien tin hieu mua (FTD).
-
-### 2. Dieu kien thoat BUY -> CASH:
-
-**Dieu kien 1: Stop Loss (Uu tien cao nhat)**
-* Xem Muc V (Quy tac cat lo) ben duoi.
-
-**Dieu kien 2: Nguong DD dat**
-* Tong so ngay phan phoi trong 20 phien >= `dd_cash_threshold` (mac dinh: 5).
-* CHI khi ngay hien tai la ngay phan phoi ($is\_dd = True$).
-* -> Chuyen sang CASH, ghi nhan P&L.
-
-**Dieu kien 3: Dong cua duoi MA10 lien tiep**
-* Khi `ma10_cash_enabled=True` (mac dinh: True).
-* Gia dong cua duoi MA10 trong `ma10_cash_consecutive` phien lien tiep (mac dinh: 2 phien).
-* Bo dem reset ve 0 khi gia dong cua tren MA10.
-* -> Chuyen sang CASH, ghi nhan P&L.
-
-**Thu tu uu tien:** Stop Loss > DD Threshold > MA10 Below.
+**Thứ tự ưu tiên:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
 
 ---
 
-## V. QUY TAC CAT LO (STOP LOSS)
+## IV. TRẠNG THÁI 2: BUY (NẮM GIỮ VỊ THẾ)
 
-Chi ap dung khi dang o trang thai BUY. Khong co stop loss cho SHORT (da bo SHORT trong V2).
+*Trạng thái hiện tại: Đang giữ vị thế Long.*
 
-### 1. Cat lo theo phan tram (Rule 1):
-* Gia dong cua giam qua `stop_loss_pct` tu gia mua.
-* Mac dinh: $C < P_{buy} \times (1 - 0.025)$ (giam 2.5%).
+### 1. Đếm Ngày phân phối (Distribution Day):
 
-### 2. Pha thung day ngay mua (Rule 2):
-* Gia dong cua thap hon gia thap nhat cua ngay mua ($C < L_{buy\_day}$).
+**Loại 1 (Giảm mạnh - Heavy Selling):**
+* Giá giảm >= 0.2% ($price\_change\_pct \le -0.002$).
+* Khối lượng tăng ($volume\_up = True$).
 
-### 3. Pha vo xuong duoi MA50 (Rule 3):
-* Phien truoc dong cua **tren hoac bang** MA50 truoc ($C_{prev} \ge MA50_{prev}$).
-* Phien hien tai dong cua **duoi** MA50 ($C < MA50$).
-* Khoi luong phien hien tai cao hon phien truoc ($V > V_{prev}$).
+**Loại 2 (Chững lại - Stalling):**
+* Giá tăng nhẹ, trong khoảng $0 \le price\_change\_pct < 0.001$.
+* Khối lượng tăng ($volume\_up = True$).
+* Đóng cửa ở phần dưới khung giá ($P_{loc} \le 0.20$).
 
-### 4. Quy tac dac biet cho 52-Week Breakout:
-* Neu tin hieu mua la 52-Week Breakout, chi ap dung stop loss:
-  * $C < L_{buy\_day} \times 0.99$ (1% duoi day ngay mua).
-* Khong ap dung Rule 1, 2, 3 thong thuong.
+**Bộ đếm DD:**
+* Đếm số ngày phân phối trong cửa sổ trượt 20 phiên gần nhất.
+* Reset về 0 khi xuất hiện tín hiệu mua (FTD).
 
-**Thu tu kiem tra:** Rule dac biet 52-Week truoc -> Rule 1 -> Rule 2 -> Rule 3.
+### 2. Điều kiện thoát BUY -> CASH:
+
+**Điều kiện 1: Stop Loss (Ưu tiên cao nhất)**
+* Xem Mục V (Quy tắc cắt lỗ) bên dưới.
+
+**Điều kiện 2: Ngưỡng DD đạt**
+* Tổng số ngày phân phối trong 20 phiên >= `dd_cash_threshold` (mặc định: 5).
+* CHỈ khi ngày hiện tại là ngày phân phối ($is\_dd = True$).
+* -> Chuyển sang CASH, ghi nhận P&L.
+
+**Điều kiện 3: Đóng cửa dưới MA10 liên tiếp**
+* Khi `ma10_cash_enabled=True` (mặc định: True).
+* Giá đóng cửa dưới MA10 trong `ma10_cash_consecutive` phiên liên tiếp (mặc định: 2 phiên).
+* Bộ đếm reset về 0 khi giá đóng cửa trên MA10.
+* -> Chuyển sang CASH, ghi nhận P&L.
+
+**Thứ tự ưu tiên:** Stop Loss > DD Threshold > MA10 Below.
 
 ---
 
-## VI. TRANG THAI 3: SELL (THI TRUONG XAU)
+## V. QUY TẮC CẮT LỖ (STOP LOSS)
 
-*Trang thai hien tai: Tin hieu thi truong xau, khong giu vi the.*
+Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT (đã bỏ SHORT trong V2).
 
-### Dac diem:
-* SELL la trang thai **ben vung** (persistent) -- chi co FTD hoac MA50 breakout hoac 52-Week breakout moi chuyen ve BUY.
-* Khong co co che tu dong thoat SELL (khac voi Classic co SHORT va cover).
-* Khi o SELL, rally attempt van duoc theo doi de phat hien FTD.
+### 1. Cắt lỗ theo phần trăm (Rule 1):
+* Giá đóng cửa giảm quá `stop_loss_pct` từ giá mua.
+* Mặc định: $C < P_{buy} \times (1 - 0.025)$ (giảm 2.5%).
 
-### Chuyen SELL -> BUY:
-* Cung dieu kien nhu CASH -> BUY:
-  * FTD signal, hoac
-  * MA50 breakout, hoac
+### 2. Phá thủng đáy ngày mua (Rule 2):
+* Giá đóng cửa thấp hơn giá thấp nhất của ngày mua ($C < L_{buy\_day}$).
+
+### 3. Phá vỡ xuống dưới MA50 (Rule 3):
+* Phiên trước đóng cửa **trên hoặc bằng** MA50 trước ($C_{prev} \ge MA50_{prev}$).
+* Phiên hiện tại đóng cửa **dưới** MA50 ($C < MA50$).
+* Khối lượng phiên hiện tại cao hơn phiên trước ($V > V_{prev}$).
+
+### 4. Quy tắc đặc biệt cho 52-Week Breakout:
+* Nếu tín hiệu mua là 52-Week Breakout, chỉ áp dụng stop loss:
+  * $C < L_{buy\_day} \times 0.99$ (1% dưới đáy ngày mua).
+* Không áp dụng Rule 1, 2, 3 thông thường.
+
+**Thứ tự kiểm tra:** Rule đặc biệt 52-Week trước -> Rule 1 -> Rule 2 -> Rule 3.
+
+---
+
+## VI. TRẠNG THÁI 3: SELL (THỊ TRƯỜNG XẤU)
+
+*Trạng thái hiện tại: Tín hiệu thị trường xấu, không giữ vị thế.*
+
+### Đặc điểm:
+* SELL là trạng thái **bền vững** (persistent) -- chỉ có FTD hoặc MA50 breakout hoặc 52-Week breakout mới chuyển về BUY.
+* Không có cơ chế tự động thoát SELL (khác với Classic có SHORT và cover).
+* Khi ở SELL, rally attempt vẫn được theo dõi để phát hiện FTD.
+
+### Chuyển SELL -> BUY:
+* Cùng điều kiện như CASH -> BUY:
+  * FTD signal, hoặc
+  * MA50 breakout, hoặc
   * 52-Week breakout.
-* -> Chuyen thang sang BUY, bo qua CASH.
+* -> Chuyển thẳng sang BUY, bỏ qua CASH.
 
 ---
 
-## VII. SO DO CHUYEN TRANG THAI
+## VII. SƠ ĐỒ CHUYỂN TRẠNG THÁI
 
 ```
                     FTD / MA50 breakout / 52-Week
@@ -204,41 +204,41 @@ Chi ap dung khi dang o trang thai BUY. Khong co stop loss cho SHORT (da bo SHORT
 
 ---
 
-## VIII. BANG THONG SO CAU HINH (MDMV2Config)
+## VIII. BẢNG THÔNG SỐ CẤU HÌNH (MDMV2Config)
 
-| Thong so | Gia tri mac dinh | Mo ta |
+| Thông số | Giá trị mặc định | Mô tả |
 | :--- | :---: | :--- |
-| `correction_threshold` | -0.10 | Nguong giam tu dinh de xac nhan dieu chinh (-10%) |
-| `ftd_min_rally_day` | 3 | Ngay toi thieu trong rally de kiem tra FTD |
-| `ftd_max_rally_day` | 12 | Ngay toi da trong rally de kiem tra FTD |
-| `ftd_min_price_gain` | 0.01 | Muc tang gia toi thieu cho FTD (1%) |
-| `ma50_breakout_correction` | -0.06 | Nguong drawdown toi thieu cho MA50 breakout (-6%) |
-| `dd_window_size` | 20 | So phien trong cua so truot dem DD |
-| `dd_price_drop_threshold` | -0.002 | Nguong giam gia cho DD Loai 1 (-0.2%) |
-| `dd_price_stall_threshold` | 0.001 | Nguong tang gia toi da cho DD Loai 2 (0.1%) |
-| `dd_stall_p_loc_threshold` | 0.20 | Nguong P_loc toi da cho DD Loai 2 |
-| `dd_cash_threshold` | 5 | So DD kich hoat chuyen BUY -> CASH |
-| `ma10_cash_enabled` | True | Bat/tat dieu kien thoat theo MA10 |
-| `ma10_cash_consecutive` | 2 | So phien lien tiep duoi MA10 de kich hoat |
-| `ma50_sell_enabled` | True | Bat/tat MA50 breakdown cho CASH -> SELL |
-| `cash_deterioration_days` | 10 | So ngay o CASH truoc khi tu dong chuyen SELL |
-| `stop_loss_pct` | 0.025 | Phan tram cat lo tu gia mua (2.5%) |
-| `name` | "default" | Ten gia thuyet (metadata) |
+| `correction_threshold` | -0.10 | Ngưỡng giảm từ đỉnh để xác nhận điều chỉnh (-10%) |
+| `ftd_min_rally_day` | 3 | Ngày tối thiểu trong rally để kiểm tra FTD |
+| `ftd_max_rally_day` | 12 | Ngày tối đa trong rally để kiểm tra FTD |
+| `ftd_min_price_gain` | 0.01 | Mức tăng giá tối thiểu cho FTD (1%) |
+| `ma50_breakout_correction` | -0.06 | Ngưỡng drawdown tối thiểu cho MA50 breakout (-6%) |
+| `dd_window_size` | 20 | Số phiên trong cửa sổ trượt đếm DD |
+| `dd_price_drop_threshold` | -0.002 | Ngưỡng giảm giá cho DD Loại 1 (-0.2%) |
+| `dd_price_stall_threshold` | 0.001 | Ngưỡng tăng giá tối đa cho DD Loại 2 (0.1%) |
+| `dd_stall_p_loc_threshold` | 0.20 | Ngưỡng P_loc tối đa cho DD Loại 2 |
+| `dd_cash_threshold` | 5 | Số DD kích hoạt chuyển BUY -> CASH |
+| `ma10_cash_enabled` | True | Bật/tắt điều kiện thoát theo MA10 |
+| `ma10_cash_consecutive` | 2 | Số phiên liên tiếp dưới MA10 để kích hoạt |
+| `ma50_sell_enabled` | True | Bật/tắt MA50 breakdown cho CASH -> SELL |
+| `cash_deterioration_days` | 10 | Số ngày ở CASH trước khi tự động chuyển SELL |
+| `stop_loss_pct` | 0.025 | Phần trăm cắt lỗ từ giá mua (2.5%) |
+| `name` | "default" | Tên giả thuyết (metadata) |
 
 ---
 
-## IX. GHI CHU QUAN TRONG
+## IX. GHI CHÚ QUAN TRỌNG
 
-1. **Khong co vi the SHORT:** V2 bo hoan toan co che ban khong. SELL chi la tin hieu canh bao, khong mo vi the ban khong.
+1. **Không có vị thế SHORT:** V2 bỏ hoàn toàn cơ chế bán khống. SELL chỉ là tín hiệu cảnh báo, không mở vị thế bán khống.
 
-2. **DD chi dem khi BUY:** Ngay phan phoi chi duoc dem khi dang o trang thai BUY. Khi o CASH hoac SELL, bo dem DD khong hoat dong.
+2. **DD chỉ đếm khi BUY:** Ngày phân phối chỉ được đếm khi đang ở trạng thái BUY. Khi ở CASH hoặc SELL, bộ đếm DD không hoạt động.
 
-3. **FTD reset rally tracker:** Sau khi phat hien FTD, rally tracker duoc reset hoan toan (`full_reset`), bao gom ca trang thai dieu chinh va dinh.
+3. **FTD reset rally tracker:** Sau khi phát hiện FTD, rally tracker được reset hoàn toàn (`full_reset`), bao gồm cả trạng thái điều chỉnh và đỉnh.
 
-4. **Rally tracking o ca CASH va SELL:** Ca hai trang thai CASH va SELL deu theo doi rally attempt de phat hien FTD.
+4. **Rally tracking ở cả CASH và SELL:** Cả hai trạng thái CASH và SELL đều theo dõi rally attempt để phát hiện FTD.
 
-5. **Thu tu uu tien tin hieu mua:** FTD truyen thong -> MA50 breakout -> 52-Week breakout. Chi tin hieu dau tien duoc chap nhan.
+5. **Thứ tự ưu tiên tín hiệu mua:** FTD truyền thống -> MA50 breakout -> 52-Week breakout. Chỉ tín hiệu đầu tiên được chấp nhận.
 
-6. **Stop loss chi cho Long:** Khong co stop loss cho vi the Short (vi khong co Short).
+6. **Stop loss chỉ cho Long:** Không có stop loss cho vị thế Short (vì không có Short).
 
-7. **DD day la dieu kien can:** Chuyen BUY -> CASH do DD chi xay ra khi ngay hien tai cung la ngay phan phoi (khong phai bat cu ngay nao co dd_count >= threshold).
+7. **DD day là điều kiện cần:** Chuyển BUY -> CASH do DD chỉ xảy ra khi ngày hiện tại cũng là ngày phân phối (không phải bất cứ ngày nào có dd_count >= threshold).
