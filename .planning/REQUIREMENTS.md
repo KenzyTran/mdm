@@ -136,7 +136,7 @@
 ### Global Liquidity / QE Floor
 
 - [x] **LIQ-01**: Load global_liquidity.csv, forward-fill to daily trading dates, add qe_floor column to engine DataFrame (with publication lag offset to avoid look-ahead bias)
-- [ ] **LIQ-02**: Suppress CASH→SELL transition when QE floor ON (liquidity expanding), keep all other transitions (BUY→CASH stop loss, etc.) intact
+- [x] **LIQ-02**: Suppress CASH→SELL transition when QE floor ON (liquidity expanding), keep all other transitions (BUY→CASH stop loss, etc.) intact
 - [x] **LIQ-03**: qe_floor_enabled flag in MDMV2Config, defaults OFF for backward compatibility
 
 ### SELL Acceleration
@@ -233,7 +233,7 @@
 | TRANS-02 | Phase 18 | Complete |
 | TRANS-03 | Phase 18 | Complete |
 | LIQ-01 | Phase 19 | Complete |
-| LIQ-02 | Phase 19 | Pending |
+| LIQ-02 | Phase 19 | Complete |
 | LIQ-03 | Phase 19 | Complete |
 | SELL-01 | Phase 20 | Pending |
 | SELL-02 | Phase 20 | Pending |

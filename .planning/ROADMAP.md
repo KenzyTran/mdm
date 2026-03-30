@@ -336,7 +336,7 @@ Plans:
 
 **Milestone Goal:** Improve V2 signal quality -- integrate Global Liquidity Index as QE floor filter, add SELL acceleration conditions, refine BUY selectivity, and validate all changes with A/B backtesting and walk-forward analysis.
 
-- [ ] **Phase 19: Global Liquidity Integration** - Load liquidity data, implement QE floor filter suppressing SELL during liquidity expansion
+- [x] **Phase 19: Global Liquidity Integration** - Load liquidity data, implement QE floor filter suppressing SELL during liquidity expansion (completed 2026-03-30)
 - [ ] **Phase 20: SELL Acceleration** - Require downside momentum/acceleration before SELL transition, validated on bear markets
 - [ ] **Phase 21: BUY Selectivity** - Reject weak FTD entries and add post-FTD confirmation window to reduce whipsaw
 - [ ] **Phase 22: Combined Integration & Validation** - A/B comparison, walk-forward validation, dashboard update with all filters combined
@@ -356,7 +356,7 @@ Plans:
 
 Plans:
 - [x] 19-01-PLAN.md -- LiquidityLoader data pipeline and MDMV2Config QE floor fields (LIQ-01, LIQ-03)
-- [ ] 19-02-PLAN.md -- Engine wiring, SELL suppression gate, and regression tests (LIQ-02, LIQ-03)
+- [x] 19-02-PLAN.md -- Engine wiring, SELL suppression gate, and regression tests (LIQ-02, LIQ-03)
 
 ### Phase 20: SELL Acceleration
 **Goal**: SELL transitions require confirmed downside momentum, preventing premature exits during normal pullbacks
@@ -418,7 +418,7 @@ Phases execute in numeric order: 19 -> 20 -> 21 -> 22
 | 16. Short Position & State Transitions | v4.0 | 2/2 | Complete | 2026-03-30 |
 | 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete | 2026-03-30 |
 | 18. Short P&L & Comparative Validation | v4.0 | 2/2 | Complete | 2026-03-30 |
-| 19. Global Liquidity Integration | v5.0 | 1/2 | In Progress|  |
+| 19. Global Liquidity Integration | v5.0 | 2/2 | Complete   | 2026-03-30 |
 | 20. SELL Acceleration | v5.0 | 0/0 | Not started | - |
 | 21. BUY Selectivity | v5.0 | 0/0 | Not started | - |
 | 22. Combined Integration & Validation | v5.0 | 0/0 | Not started | - |

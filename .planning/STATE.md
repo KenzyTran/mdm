@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
-status: executing
-stopped_at: Completed 19-01-PLAN.md
-last_updated: "2026-03-30T14:47:00.216Z"
-last_activity: 2026-03-30 -- Completed 19-01 (Liquidity Data Pipeline)
+status: verifying
+stopped_at: Completed 19-02-PLAN.md
+last_updated: "2026-03-30T14:59:27.822Z"
+last_activity: 2026-03-30
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 50
 ---
 
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Phase: 19 (global-liquidity-integration) -- EXECUTING
 Plan: 2 of 2
-Status: Executing Phase 19
-Last activity: 2026-03-30 -- Completed 19-01 (Liquidity Data Pipeline)
+Status: Phase complete — ready for verification
+Last activity: 2026-03-30
 
 Progress: [█████░░░░░] 50%
 
@@ -53,6 +53,7 @@ Progress: [█████░░░░░] 50%
 
 *Updated after each plan completion*
 | Phase 19 P01 | 3min | 2 tasks | 3 files |
+| Phase 19 P02 | 8min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,8 @@ Recent decisions affecting current work:
 - [v5.0 Roadmap]: All new features default OFF for backward compatibility
 - [v5.0 Roadmap]: Combined integration phase mandatory -- filters interact through state machine
 - [Phase 19]: merge_asof backward for weekly-to-daily alignment, no interpolation
+- [Phase 19]: suppress_sell defaults False for full backward compatibility
+- [Phase 19]: V2 engine baseline is 22.6% (not 190.8% which is hybrid engine)
 
 ### Pending Todos
 
@@ -82,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T14:47:00.212Z
-Stopped at: Completed 19-01-PLAN.md
+Last session: 2026-03-30T14:59:27.812Z
+Stopped at: Completed 19-02-PLAN.md
 Resume file: None
