@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** v5.0 Phase 19 - Global Liquidity Integration
+**Current focus:** Phase 19 — global-liquidity-integration
 
 ## Current Position
 

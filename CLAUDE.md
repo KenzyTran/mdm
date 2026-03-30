@@ -237,6 +237,16 @@ A research and trading system project to reverse-engineer Dr. K's post-2019 Mark
 - Signal validity checks before recording (return False if conditions not met)
 <!-- GSD:architecture-end -->
 
+## Code-Docs Sync Rule
+
+When modifying strategy logic, parameters, state transitions, or formulas in code, you MUST update the corresponding documentation in `docs/rules_*.md` in the same commit. Stale docs that contradict the code are worse than no docs.
+
+Files to keep in sync:
+- `strategies/mdm_classic/` <-> `docs/rules_mdm_classic.md`
+- `strategies/mdm_v2/` <-> `docs/rules_mdm_v2.md`
+- `strategies/mdm_hybrid/` <-> `docs/rules_mdm_hybrid.md`
+- `strategies/vsa/` <-> `docs/rules_vsa.md`
+
 <!-- GSD:workflow-start source:GSD defaults -->
 ## GSD Workflow Enforcement
 

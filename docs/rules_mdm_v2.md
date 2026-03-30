@@ -230,7 +230,7 @@ Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT
 
 ## IX. GHI CHÚ QUAN TRỌNG
 
-1. **Không có vị thế SHORT:** V2 bỏ hoàn toàn cơ chế bán khống. SELL chỉ là tín hiệu cảnh báo, không mở vị thế bán khống.
+1. **Vị thế SHORT khi SELL (v4.0):** Khi `short_mode = True` (mặc định), trạng thái SELL mở vị thế short thật sự. Khi `short_mode = False`, SELL chỉ là tín hiệu cảnh báo. Xem Mục X để biết chi tiết.
 
 2. **DD chỉ đếm khi BUY:** Ngày phân phối chỉ được đếm khi đang ở trạng thái BUY. Khi ở CASH hoặc SELL, bộ đếm DD không hoạt động.
 
@@ -240,9 +240,11 @@ Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT
 
 5. **Thứ tự ưu tiên tín hiệu mua:** FTD truyền thống -> MA50 breakout -> 52-Week breakout. Chỉ tín hiệu đầu tiên được chấp nhận.
 
-6. **Stop loss chỉ cho Long:** Không có stop loss cho vị thế Short (vì không có Short).
+6. **Stop loss:** Long stop loss dùng ATR-adaptive (mặc định 1.5%). Short stop loss dùng DD5 high + 1%. Xem Mục XII.
 
 7. **DD day là điều kiện cần:** Chuyển BUY -> CASH do DD chỉ xảy ra khi ngày hiện tại cũng là ngày phân phối (không phải bất cứ ngày nào có dd_count >= threshold).
+
+8. **Equity curve — Tránh Look-Ahead Bias:** Phải dùng `state[i-1]` (state hôm qua) để tính return ngày `i`. Dùng `state[i]` sẽ tạo look-ahead bias nghiêm trọng (xem Mục X).
 
 ---
 
