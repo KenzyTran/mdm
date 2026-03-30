@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ thống MDM - VN30</title>
+<script src="https://unpkg.com/lightweight-charts@4/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<style>
+:root {
+  --bg-primary: #0f1923;
+  --bg-secondary: #1a2332;
+  --bg-card: #1e2d3d;
+  --bg-hover: #253647;
+  --text-primary: #e1e8ed;
+  --text-secondary: #8899a6;
+  --accent: #1da1f2;
+  --green: #17bf63;
+  --red: #e0245e;
+  --yellow: #ffad1f;
+  --border: #2f3f4f;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Header */
+header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+}
+header h1 { font-size: 24px; font-weight: 700; }
+header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border);
+  padding: 0 20px;
+}
+.tab {
+  padding: 12px 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  user-select: none;
+}
+.tab:hover { color: var(--text-primary); background: var(--bg-hover); }
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Tab content */
+.tab-content { display: none; padding: 24px 0; }
+.tab-content.active { display: block; }
+
+/* Metrics cards */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.metric-card .label { color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+.metric-card .value.positive { color: var(--green); }
+.metric-card .value.negative { color: var(--red); }
+.benchmark-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  align-items: center;
+}
+.benchmark-row .tag {
+  background: var(--bg-hover);
+  color: var(--yellow);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.benchmark-row .bm-item { margin-left: 16px; }
+
+/* Section nav */
+.section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  padding: 10px 0;
+  margin-bottom: 16px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+}
+.nav-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.nav-btn:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Charts */
+.chart-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.chart-section h3 {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.price-chart { width: 100%; height: 500px; }
+.equity-chart-wrap { position: relative; width: 100%; height: 350px; }
+.equity-chart-canvas { width: 100%; height: 100%; }
+
+/* Trade table */
+.trades-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.trades-section h3 {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+thead th:hover { color: var(--accent); }
+tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:hover { background: var(--bg-hover); }
+.pnl-positive { color: var(--green); font-weight: 600; }
+.pnl-negative { color: var(--red); font-weight: 600; }
+.type-buy { color: var(--green); }
+.type-sell { color: var(--red); }
+.type-cash { color: var(--yellow); }
+
+/* Strategy docs */
+.docs-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+.docs-toggle {
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+.docs-toggle h3 {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.docs-toggle .arrow { color: var(--text-secondary); transition: transform 0.2s; }
+.docs-toggle.open .arrow { transform: rotate(180deg); }
+.docs-body {
+  display: none;
+  padding: 0 16px 16px 16px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+.docs-body.open { display: block; }
+.docs-body h1, .docs-body h2, .docs-body h3 { margin: 16px 0 8px 0; color: var(--accent); }
+.docs-body h1 { font-size: 20px; }
+.docs-body h2 { font-size: 16px; }
+.docs-body h3 { font-size: 14px; }
+.docs-body p { margin-bottom: 8px; color: var(--text-primary); }
+.docs-body table { margin: 12px 0; }
+.docs-body th, .docs-body td { padding: 6px 10px; border: 1px solid var(--border); }
+.docs-body code { background: var(--bg-hover); padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+.docs-body ul, .docs-body ol { margin: 8px 0 8px 24px; }
+.docs-body strong { color: var(--yellow); }
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>Hệ thống MDM Trading</h1>
+    <div class="subtitle">Market Direction Model - Backtest trên chỉ số VN30</div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="container" style="display:flex; gap:0;">
+    <div class="tab active" data-model="mdm_v2">V2 State Machine</div>
+    <div class="tab" data-model="mdm_hybrid">Hybrid (3 Filters)</div>
+    <div class="tab" data-model="mdm_p15">Phase 15 (HA Smoothed)</div>
+  </div>
+</div>
+
+<main class="container">
+  <div id="content-mdm_v2" class="tab-content active"><div class="loading">Loading...</div></div>
+  <div id="content-mdm_hybrid" class="tab-content"><div class="loading">Loading...</div></div>
+  <div id="content-mdm_p15" class="tab-content"><div class="loading">Loading...</div></div>
+</main>
+
+<footer>
+  <div class="container">
+    <span id="footer-info">Hệ thống MDM Trading Dashboard</span>
+  </div>
+</footer>
+
+<script>
+const DATA_PATH = 'data';
+const modelCache = {};
+const chartInstances = {};
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    const model = tab.dataset.model;
+    document.getElementById('content-' + model).classList.add('active');
+    loadModel(model);
+  });
+});
+
+// Load metadata
+fetch(DATA_PATH + '/metadata.json')
+  .then(r => r.json())
+  .then(meta => {
+    document.getElementById('footer-info').textContent =
+      `Hệ thống MDM | Dữ liệu: ${meta.data_range.start} - ${meta.data_range.end} | Cập nhật: ${meta.generated_at}`;
+  });
+
+// Load first tab
+loadModel('mdm_v2');
+
+async function loadModel(key) {
+  if (modelCache[key]) {
+    renderModel(key, modelCache[key]);
+    return;
+  }
+  try {
+    const resp = await fetch(`${DATA_PATH}/${key}.json`);
+    const data = await resp.json();
+    modelCache[key] = data;
+    renderModel(key, data);
+  } catch (e) {
+    document.getElementById('content-' + key).innerHTML =
+      `<div class="loading">Error loading data: ${e.message}</div>`;
+  }
+}
+
+function renderModel(key, data) {
+  const container = document.getElementById('content-' + key);
+  if (container.dataset.rendered) return;
+  container.dataset.rendered = '1';
+
+  const m = data.metrics;
+  const b = data.benchmark;
+
+  container.innerHTML = `
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="label">Tổng lợi nhuận</div>
+        <div class="value positive">+${m.total_return}%</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">CAGR</div>
+        <div class="value positive">${m.cagr}%</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Sụt giảm tối đa</div>
+        <div class="value negative">${m.max_dd}%</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Số lệnh</div>
+        <div class="value" style="color:var(--accent)">${m.trades}</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">% Thời gian đầu tư</div>
+        <div class="value" style="color:var(--accent)">${m.invested_pct}%</div>
+      </div>
+    </div>
+
+    <div class="benchmark-row">
+      <span class="tag">Mua & Nắm giữ</span>
+      <span class="bm-item">Lợi nhuận: <strong style="color:var(--text-primary)">${b.total_return > 0 ? '+' : ''}${b.total_return}%</strong></span>
+      <span class="bm-item">CAGR: <strong style="color:var(--text-primary)">${b.cagr}%</strong></span>
+      <span class="bm-item">Sụt giảm tối đa: <strong style="color:var(--red)">${b.max_dd}%</strong></span>
+    </div>
+
+    <nav class="section-nav" id="section-nav-${key}">
+      <a class="nav-btn" href="#sec-chart-${key}">Biểu đồ giá</a>
+      <a class="nav-btn" href="#sec-equity-${key}">Đường vốn</a>
+      <a class="nav-btn" href="#sec-signals-${key}">Lịch sử tín hiệu</a>
+      <a class="nav-btn" href="#sec-trades-${key}">Chi tiết giao dịch</a>
+      <a class="nav-btn" href="#sec-docs-${key}">Quy tắc chiến lược</a>
+    </nav>
+
+    <div class="chart-section" id="sec-chart-${key}">
+      <h3>Giá VN30 + Tín hiệu giao dịch</h3>
+      <div class="price-chart" id="price-chart-${key}"></div>
+    </div>
+
+    <div class="chart-section" id="sec-equity-${key}">
+      <h3>Đường vốn: Chiến lược vs Mua & Nắm giữ</h3>
+      <div class="equity-chart-wrap"><canvas class="equity-chart-canvas" id="equity-chart-${key}"></canvas></div>
+    </div>
+
+    <div class="trades-section" id="sec-signals-${key}">
+      <h3>Lịch sử tín hiệu - Vốn ban đầu: 100,000,000 VND</h3>
+      <div style="max-height:500px; overflow-y:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ngày</th>
+              <th>Tín hiệu</th>
+              <th>VN30</th>
+              <th>Giá trị danh mục</th>
+              <th>Lãi/Lỗ lệnh</th>
+              <th>Tích lũy</th>
+            </tr>
+          </thead>
+          <tbody id="signal-history-${key}"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="trades-section" id="sec-trades-${key}">
+      <h3>Chi tiết giao dịch (${data.trades.length} bản ghi)</h3>
+      <div style="max-height:400px; overflow-y:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ngày</th>
+              <th>Loại</th>
+              <th>Giá</th>
+              <th>Lãi/Lỗ</th>
+              <th>Tín hiệu</th>
+              <th>Lý do</th>
+            </tr>
+          </thead>
+          <tbody id="trades-tbody-${key}"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="docs-section" id="sec-docs-${key}">
+      <div class="docs-toggle" onclick="toggleDocs('${key}')">
+        <h3>Logic & Quy tắc chiến lược</h3>
+        <span class="arrow">&#9660;</span>
+      </div>
+      <div class="docs-body" id="docs-body-${key}"></div>
+    </div>
+  `;
+
+  renderPriceChart(key, data);
+  renderEquityChart(key, data);
+  renderSignalHistory(key, data);
+  renderTradesTable(key, data);
+  renderDocs(key, data);
+}
+
+function renderPriceChart(key, data) {
+  const el = document.getElementById('price-chart-' + key);
+  const chart = LightweightCharts.createChart(el, {
+    width: el.clientWidth,
+    height: 500,
+    layout: {
+      background: { color: '#1e2d3d' },
+      textColor: '#8899a6',
+    },
+    grid: {
+      vertLines: { color: '#2f3f4f' },
+      horzLines: { color: '#2f3f4f' },
+    },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    timeScale: { borderColor: '#2f3f4f' },
+    rightPriceScale: { borderColor: '#2f3f4f' },
+  });
+
+  // Candlestick series
+  const candleSeries = chart.addCandlestickSeries({
+    upColor: '#17bf63',
+    downColor: '#e0245e',
+    borderUpColor: '#17bf63',
+    borderDownColor: '#e0245e',
+    wickUpColor: '#17bf63',
+    wickDownColor: '#e0245e',
+  });
+
+  const ohlcData = data.price_data.map(p => ({
+    time: p.date,
+    open: p.open,
+    high: p.high,
+    low: p.low,
+    close: p.close,
+  }));
+  candleSeries.setData(ohlcData);
+
+  // Volume histogram on separate price scale
+  const volumeSeries = chart.addHistogramSeries({
+    priceFormat: { type: 'volume' },
+    priceScaleId: 'volume',
+  });
+
+  chart.priceScale('volume').applyOptions({
+    scaleMargins: { top: 0.8, bottom: 0 },
+  });
+
+  const volumeData = data.price_data.map(p => ({
+    time: p.date,
+    value: p.volume,
+    color: p.close >= p.open ? 'rgba(23,191,99,0.3)' : 'rgba(224,36,94,0.3)',
+  }));
+  volumeSeries.setData(volumeData);
+
+  // Signal markers on candlestick
+  const markers = data.signals.map(s => ({
+    time: s.date,
+    position: s.type === 'BUY' ? 'belowBar' : 'aboveBar',
+    color: s.type === 'BUY' ? '#17bf63' : s.type === 'SELL' ? '#e0245e' : '#ffad1f',
+    shape: s.type === 'BUY' ? 'arrowUp' : 'arrowDown',
+    text: s.type,
+    size: 1.5,
+  }));
+  candleSeries.setMarkers(markers);
+
+  chartInstances['price-' + key] = chart;
+
+  new ResizeObserver(() => {
+    chart.applyOptions({ width: el.clientWidth });
+  }).observe(el);
+}
+
+function renderEquityChart(key, data) {
+  const ctx = document.getElementById('equity-chart-' + key).getContext('2d');
+  const eq = data.equity_curve;
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: eq.map(p => p.date),
+      datasets: [
+        {
+          label: data.name,
+          data: eq.map(p => p.strategy),
+          borderColor: '#1da1f2',
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0,
+          tension: 0.1,
+        },
+        {
+          label: 'Mua & Nắm giữ',
+          data: eq.map(p => p.buy_hold),
+          borderColor: '#8899a6',
+          borderWidth: 1.5,
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0,
+          tension: 0.1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: {
+          labels: { color: '#8899a6', font: { size: 12 } },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${((ctx.parsed.y - 1) * 100).toFixed(1)}%`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#8899a6',
+            maxTicksLimit: 12,
+            font: { size: 11 },
+          },
+          grid: { color: '#2f3f4f' },
+        },
+        y: {
+          type: 'logarithmic',
+          min: 0.8,
+          ticks: {
+            color: '#8899a6',
+            font: { size: 11 },
+            callback: v => {
+              const pct = ((v - 1) * 100).toFixed(0);
+              return `${pct >= 0 ? '+' : ''}${pct}%`;
+            },
+          },
+          grid: { color: '#2f3f4f' },
+          afterBuildTicks: (axis) => {
+            const maxVal = Math.max(...axis.chart.data.datasets.flatMap(d => d.data));
+            const ticks = [0.8, 1, 1.5, 2, 3, 4, 5, 6, 8, 10, 15];
+            axis.ticks = ticks.filter(v => v <= maxVal * 1.2).map(v => ({ value: v }));
+          },
+        },
+      },
+    },
+  });
+}
+
+function formatVND(n) {
+  return n.toLocaleString('vi-VN');
+}
+
+function renderSignalHistory(key, data) {
+  const tbody = document.getElementById('signal-history-' + key);
+  if (!data.signal_history || data.signal_history.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Không có dữ liệu tín hiệu</td></tr>';
+    return;
+  }
+  const reversed = [...data.signal_history].reverse();
+  let rows = '';
+  reversed.forEach((s, i) => {
+    const signalClass = s.signal === 'BUY' ? 'type-buy'
+      : s.signal === 'SELL' ? 'type-sell'
+      : 'type-cash';
+    const pnlClass = s.trade_pnl > 0 ? 'pnl-positive' : s.trade_pnl < 0 ? 'pnl-negative' : '';
+    const pnlText = s.trade_pnl != null ? `${s.trade_pnl > 0 ? '+' : ''}${s.trade_pnl}%` : '-';
+    const cumClass = s.cumulative_return >= 0 ? 'pnl-positive' : 'pnl-negative';
+
+    rows += `<tr>
+      <td>${reversed.length - i}</td>
+      <td>${s.date}</td>
+      <td class="${signalClass}" style="font-weight:700">${s.signal}</td>
+      <td>${s.price.toLocaleString()}</td>
+      <td style="font-weight:600">${formatVND(s.portfolio)}</td>
+      <td class="${pnlClass}">${pnlText}</td>
+      <td class="${cumClass}">${s.cumulative_return > 0 ? '+' : ''}${s.cumulative_return}%</td>
+    </tr>`;
+  });
+  tbody.innerHTML = rows;
+}
+
+function renderTradesTable(key, data) {
+  const tbody = document.getElementById('trades-tbody-' + key);
+  let rows = '';
+  data.trades.forEach((t, i) => {
+    const typeClass = t.type === 'BUY' ? 'type-buy'
+      : t.type === 'CASH_EXIT' ? 'type-sell'
+      : 'type-cash';
+    const pnlClass = t.pnl > 0 ? 'pnl-positive' : t.pnl < 0 ? 'pnl-negative' : '';
+    const pnlText = t.pnl != null ? `${t.pnl > 0 ? '+' : ''}${t.pnl}%` : '-';
+    const price = t.price != null ? t.price.toLocaleString() : '-';
+
+    rows += `<tr>
+      <td>${i + 1}</td>
+      <td>${t.date}</td>
+      <td class="${typeClass}">${t.type}</td>
+      <td>${price}</td>
+      <td class="${pnlClass}">${pnlText}</td>
+      <td>${t.signal_type || '-'}</td>
+      <td>${t.reason || '-'}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = rows;
+}
+
+function renderDocs(key, data) {
+  const body = document.getElementById('docs-body-' + key);
+  if (data.description_md) {
+    body.innerHTML = marked.parse(data.description_md);
+  } else {
+    body.innerHTML = '<p style="color:var(--text-secondary)">Chưa có tài liệu.</p>';
+  }
+}
+
+function toggleDocs(key) {
+  const toggle = document.querySelector(`#content-${key} .docs-toggle`);
+  const body = document.getElementById('docs-body-' + key);
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
