@@ -114,7 +114,7 @@
 
 - [x] **TRANS-01**: Enforce SELL→CASH→BUY — không cho phép chuyển trực tiếp SELL→BUY
 - [ ] **TRANS-02**: Backtest comparison long-only vs long/short trên NASDAQ và VN30
-- [ ] **TRANS-03**: Cập nhật rule docs (rules_mdm_v2.md, rules_mdm_hybrid.md) với quy tắc short mới
+- [x] **TRANS-03**: Cập nhật rule docs (rules_mdm_v2.md, rules_mdm_hybrid.md) với quy tắc short mới
 
 ## Future Requirements
 
@@ -207,7 +207,7 @@
 | SHORT-03 | Phase 17 | Complete |
 | SHORT-02 | Phase 18 | Pending |
 | TRANS-02 | Phase 18 | Pending |
-| TRANS-03 | Phase 18 | Pending |
+| TRANS-03 | Phase 18 | Complete |
 
 **v1.0 Coverage:**
 - v1 requirements: 22 total

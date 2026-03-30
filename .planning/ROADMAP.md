@@ -330,7 +330,7 @@ Plans:
 
 Plans:
 - [ ] 18-01-PLAN.md -- Short P&L in equity curve, long_only_equity flag, comparison script with charts (SHORT-02, TRANS-02)
-- [ ] 18-02-PLAN.md -- Update rule docs with short signal, stop loss, and transition rules (TRANS-03)
+- [x] 18-02-PLAN.md -- Update rule docs with short signal, stop loss, and transition rules (TRANS-03)
 **UI hint**: yes
 
 ## Progress
@@ -357,4 +357,4 @@ Phases execute in numeric order: 16 -> 17 -> 18
 | 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
 | 16. Short Position & State Transitions | v4.0 | 2/2 | Complete    | 2026-03-30 |
 | 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete    | 2026-03-30 |
-| 18. Short P&L & Comparative Validation | v4.0 | 0/2 | Not started | - |
+| 18. Short P&L & Comparative Validation | v4.0 | 1/2 | In Progress|  |
