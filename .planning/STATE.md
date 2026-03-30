@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v4.0
-milestone_name: MDM Short Signal & Dr. K Alignment
-status: executing
-stopped_at: Completed 18-02-PLAN.md
-last_updated: "2026-03-30T08:27:40.757Z"
+milestone: v5.0
+milestone_name: Signal Quality & Macro Filter
+status: defining
+stopped_at: null
+last_updated: "2026-03-30T12:00:00.000Z"
 last_activity: 2026-03-30
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 50
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 18 — short-p-l-comparative-validation
+**Current focus:** Defining requirements for v5.0
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-03-30
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-30 — Milestone v5.0 started
 
 Progress: [█████░░░░░] 50%
 

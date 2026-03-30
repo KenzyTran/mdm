@@ -8,23 +8,24 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
-## Current Milestone: v4.0 MDM Short Signal & Dr. K Alignment
+## Current Milestone: v5.0 Signal Quality & Macro Filter
 
-**Goal:** Căn chỉnh MDM engine theo model gốc Dr. K — thêm cơ chế short thật sự khi SELL signal, điều chỉnh stop loss linh hoạt theo volatility, enforce đúng chuỗi chuyển trạng thái SELL→CASH→BUY.
+**Goal:** Cải thiện chất lượng tín hiệu trên MDM V2 — tích hợp Global Liquidity Index làm QE floor filter, cải thiện điều kiện SELL cần acceleration, tinh chỉnh BUY selectivity.
 
 **Target features:**
-- ✓ SELL signal = mở vị thế short (trên VN30: short trực tiếp chỉ số, NASDAQ: inverse ETF) — Phase 16
-- ✓ Stop loss mặc định 1.5% (thay vì 2.5%), linh hoạt theo volatility — Phase 17
-- ✓ Enforce SELL→CASH→BUY (phải qua CASH trước khi BUY từ SELL) — Phase 16
-- ✓ P&L tracking cho vị thế short (gain/loss khi market giảm) — Phase 18
-- ✓ Backtest so sánh long-only vs long/short trên cả NASDAQ và VN30 — Phase 18
-- ✓ Cập nhật rule docs với quy tắc short mới — Phase 18
+- [ ] Tích hợp Global Liquidity Index (Fed+ECB+BOJ) vào V2 engine — suppress SELL khi liquidity tăng
+- [ ] Cải thiện SELL transition — thêm momentum/acceleration condition
+- [ ] Tinh chỉnh BUY selectivity — giảm whipsaw, cải thiện entry quality
+- [ ] Cập nhật dashboard với hiệu suất mới
+- [ ] Backtest so sánh trước/sau trên VN30 và NASDAQ
 
-**Key context from Dr. K webinar:**
-- SELL = short thật (dùng SQQQ/UVXY trên US market)
-- Stop loss 1.5% mặc định nhưng thay đổi theo volatility
-- Model phải qua CASH trước khi chuyển từ SELL sang BUY
-- VN30: không có inverse ETF, short trực tiếp trên chỉ số VN30
+**Baseline (V2 hiện tại):** +190.8% total return, CAGR 10% trên VN30 (VN30 preset)
+
+**Key context:**
+- Webinar 2013: Dr. K xác nhận MDM có "QE floor" — suppress SELL khi QE đang bơm
+- Dr. K dùng Global Liquidity Index trên TradingView — data đã download từ FRED
+- Global Liquidity data: data/global_liquidity.csv (987 tuần, 2007-2026, Fed+ECB+BOJ)
+- V2 là phiên bản tốt nhất hiện tại — tất cả cải tiến trực tiếp trên V2 engine
 
 ## Requirements
 
@@ -151,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after Phase 17 (stop-loss-risk-management) complete*
+*Last updated: 2026-03-30 after milestone v5.0 started*
