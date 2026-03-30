@@ -13,7 +13,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 **Goal:** Cải thiện chất lượng tín hiệu trên MDM V2 — tích hợp Global Liquidity Index làm QE floor filter, cải thiện điều kiện SELL cần acceleration, tinh chỉnh BUY selectivity.
 
 **Target features:**
-- [ ] Tích hợp Global Liquidity Index (Fed+ECB+BOJ) vào V2 engine — suppress SELL khi liquidity tăng
+- [x] Tích hợp Global Liquidity Index (Fed+ECB+BOJ) vào V2 engine — suppress SELL khi liquidity tăng (Phase 19)
 - [ ] Cải thiện SELL transition — thêm momentum/acceleration condition
 - [ ] Tinh chỉnh BUY selectivity — giảm whipsaw, cải thiện entry quality
 - [ ] Cập nhật dashboard với hiệu suất mới
@@ -152,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after milestone v5.0 started*
+*Last updated: 2026-03-30 after Phase 19 complete*
