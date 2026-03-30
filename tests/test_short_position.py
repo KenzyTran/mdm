@@ -5,10 +5,25 @@ Covers requirements:
 - SHORT-01: Short entry price tracking on SELL
 - SHORT-04: Cover short with P&L calculation
 - TRANS-01: enter_buy() guard preventing direct SELL->BUY
+- SHORT-04 (engine): Engine-level cover triggers (MA50 breakout, indicator override)
+- TRANS-01 (engine): NASDAQ validation -- every BUY preceded by CASH
 """
 
+import sys
+from pathlib import Path
 import pytest
 import pandas as pd
+import numpy as np
+
+# Resolve paths for worktree data access
+WORKTREE_ROOT = Path(__file__).resolve().parent.parent
+MAIN_REPO = WORKTREE_ROOT
+if '.claude' in str(WORKTREE_ROOT) and 'worktrees' in str(WORKTREE_ROOT):
+    parts = WORKTREE_ROOT.parts
+    for i, part in enumerate(parts):
+        if part == '.claude' and i + 1 < len(parts) and parts[i + 1] == 'worktrees':
+            MAIN_REPO = Path(*parts[:i])
+            break
 
 from strategies.mdm_hybrid.position_manager import (
     V2PositionManager,
@@ -16,6 +31,8 @@ from strategies.mdm_hybrid.position_manager import (
     V2MarketState,
 )
 from strategies.mdm_hybrid.config import MDMV2Config, HybridConfig
+from strategies.mdm_hybrid.mdm_hybrid_engine import HybridEngine
+from core.data_loader import DataLoader
 
 
 @pytest.fixture
@@ -119,3 +136,192 @@ class TestEnterBuyGuard:
         manager.enter_buy(1010.0, TEST_DATE, 1005.0, "FTD")
         assert manager.position.state == V2MarketState.BUY
         assert manager.position.buy_price == 1010.0
+
+
+# ---------------------------------------------------------------------------
+# Integration tests: Engine-level short cover triggers (Plan 16-02)
+# ---------------------------------------------------------------------------
+
+
+def _make_ohlcv(n=100, start_date="2020-01-01", seed=42):
+    """Create synthetic OHLCV DataFrame for testing."""
+    np.random.seed(seed)
+    dates = pd.bdate_range(start=start_date, periods=n)
+    close = 100 + np.cumsum(np.random.randn(n) * 0.5)
+    high = close + np.abs(np.random.randn(n) * 0.3)
+    low = close - np.abs(np.random.randn(n) * 0.3)
+    open_ = close + np.random.randn(n) * 0.2
+    volume = np.random.randint(1_000_000, 5_000_000, n).astype(float)
+
+    return pd.DataFrame({
+        'date': dates,
+        'open': open_,
+        'high': high,
+        'low': low,
+        'close': close,
+        'volume': volume,
+        'symbol': 'TEST',
+    })
+
+
+def _make_declining_then_rising(n_decline=70, n_rise=30, start=100.0):
+    """Create OHLCV data: declining phase (triggers SELL via MA50) then rising phase.
+
+    The decline is steep enough to push close below MA50 and trigger SELL.
+    The rise pushes close back above MA50 to test cover trigger.
+    """
+    n = n_decline + n_rise
+    dates = pd.bdate_range(start="2020-01-01", periods=n)
+
+    close = np.zeros(n)
+    # Decline phase: drop from start by ~0.5 per day
+    for i in range(n_decline):
+        close[i] = start - i * 0.5
+
+    # Rise phase: sharp rally from bottom
+    bottom = close[n_decline - 1]
+    for i in range(n_rise):
+        close[n_decline + i] = bottom + (i + 1) * 1.5
+
+    high = close + 0.5
+    low = close - 0.5
+    open_ = close + 0.1
+    volume = np.full(n, 3_000_000.0)
+    # Rising volume for FTD and MA50 breakout
+    volume[n_decline:] = 5_000_000.0
+
+    return pd.DataFrame({
+        'date': dates,
+        'open': open_,
+        'high': high,
+        'low': low,
+        'close': close,
+        'volume': volume,
+        'symbol': 'TEST',
+    })
+
+
+class TestEngineShortCoverIntegration:
+    """Integration tests for engine-level short cover triggers (Plan 16-02)."""
+
+    def test_engine_enter_sell_passes_close_price(self):
+        """Engine SELL_SIGNAL trade should have price > 0 (close on that day)."""
+        # Use data that triggers MA50 breakdown: declining prices cross below MA50
+        df = _make_declining_then_rising(n_decline=70, n_rise=5)
+
+        config = HybridConfig(
+            v2_config=MDMV2Config(ma50_sell_enabled=True),
+            filter_enabled=False,
+        )
+        engine = HybridEngine(config)
+        engine.run(df)
+
+        trades = engine.get_trades()
+        sell_trades = [t for t in trades if t['type'] == 'SELL_SIGNAL']
+        assert len(sell_trades) > 0, "Expected at least one SELL_SIGNAL trade"
+        for t in sell_trades:
+            assert t['price'] > 0, f"SELL_SIGNAL trade should have price > 0, got {t['price']}"
+
+    def test_engine_ma50_breakout_covers_short(self):
+        """MA50 breakout from SELL state should produce SHORT_COVER trade to CASH."""
+        df = _make_declining_then_rising(n_decline=70, n_rise=30)
+
+        config = HybridConfig(
+            v2_config=MDMV2Config(ma50_sell_enabled=True),
+            filter_enabled=False,
+        )
+        engine = HybridEngine(config)
+        engine.run(df)
+
+        trades = engine.get_trades()
+        cover_trades = [t for t in trades if t['type'] == 'SHORT_COVER']
+        assert len(cover_trades) > 0, "Expected SHORT_COVER trade after MA50 breakout"
+
+        # Check that the cover trade has MA50 in reason and pnl key
+        ma50_covers = [t for t in cover_trades if 'MA50' in t.get('reason', '')]
+        assert len(ma50_covers) > 0, "Expected SHORT_COVER with MA50 reason"
+        assert 'pnl' in ma50_covers[0], "SHORT_COVER should have pnl key"
+
+    def test_engine_indicator_override_covers_short_with_pnl(self):
+        """Indicator OVERRIDE from SELL state should produce SHORT_COVER (not STATE_DEGRADE)."""
+        df = _make_declining_then_rising(n_decline=70, n_rise=30)
+
+        config = HybridConfig(
+            v2_config=MDMV2Config(ma50_sell_enabled=True),
+            filter_enabled=True,
+        )
+        engine = HybridEngine(config)
+        engine.run(df)
+
+        trades = engine.get_trades()
+        # Look for any STATE_DEGRADE trades that came from SELL state
+        degrade_trades = [t for t in trades if t['type'] == 'STATE_DEGRADE'
+                          and 'SELL' in t.get('reason', '').upper()]
+        assert len(degrade_trades) == 0, (
+            f"Found STATE_DEGRADE from SELL state -- should be SHORT_COVER instead: {degrade_trades}"
+        )
+
+        # If there are any cover trades from indicator override, verify they have pnl
+        indicator_covers = [t for t in trades if t['type'] == 'SHORT_COVER'
+                            and ('indicator' in t.get('reason', '').lower()
+                                 or 'override' in t.get('reason', '').lower())]
+        for t in indicator_covers:
+            assert 'pnl' in t, f"SHORT_COVER should have pnl key: {t}"
+            assert 'entry_price' in t, f"SHORT_COVER should have entry_price key: {t}"
+
+    def test_sell_cash_buy_transition(self):
+        """Engine should produce SELL_SIGNAL -> SHORT_COVER -> BUY sequence (never SELL->BUY direct)."""
+        df = _make_declining_then_rising(n_decline=70, n_rise=30)
+
+        config = HybridConfig(
+            v2_config=MDMV2Config(ma50_sell_enabled=True),
+            filter_enabled=False,
+        )
+        engine = HybridEngine(config)
+        engine.run(df)
+
+        trades = engine.get_trades()
+        types = [t['type'] for t in trades]
+
+        # Check no SELL_SIGNAL immediately followed by BUY (must have SHORT_COVER in between)
+        for i in range(len(types) - 1):
+            if types[i] == 'SELL_SIGNAL':
+                assert types[i + 1] != 'BUY', (
+                    f"Found SELL_SIGNAL directly followed by BUY at index {i}. "
+                    f"Expected SHORT_COVER in between. Trade sequence: {types}"
+                )
+
+
+@pytest.fixture
+def nasdaq_data():
+    """Load full NASDAQ data from main repo."""
+    loader = DataLoader('nasdaq')
+    loader.data_dir = MAIN_REPO
+    df = loader.load()
+    if df is None or df.empty:
+        pytest.skip("NASDAQ data not available")
+    return df
+
+
+class TestNasdaqShortValidation:
+    """NASDAQ full backtest validation for TRANS-01."""
+
+    def test_nasdaq_no_sell_to_buy(self, nasdaq_data):
+        """Every BUY state in NASDAQ backtest must be preceded by CASH (never SELL).
+
+        This validates TRANS-01: SELL->CASH->BUY enforcement on real data.
+        """
+        config = HybridConfig(
+            v2_config=MDMV2Config(),
+            filter_enabled=False,
+        )
+        engine = HybridEngine(config)
+        result = engine.run(nasdaq_data)
+
+        states = result['state'].values
+        for i in range(1, len(states)):
+            if states[i] == 'BUY' and states[i - 1] != 'BUY':
+                assert states[i - 1] == 'CASH', (
+                    f"Row {i}: BUY state preceded by {states[i-1]} (expected CASH). "
+                    f"Date: {result.iloc[i]['date']}"
+                )
