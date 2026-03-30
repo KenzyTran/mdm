@@ -59,7 +59,12 @@ def nasdaq_data():
 
 
 def test_hybrid_matches_v2_on_nasdaq(nasdaq_data):
-    """Bit-for-bit regression: hybrid (no filter) == v2 on full NASDAQ data."""
+    """Regression: hybrid (no filter) matches v2 states on full NASDAQ data.
+
+    Phase 16: Action strings may differ for SELL->BUY transitions because
+    hybrid now does cover_short+enter_buy (SELL->CASH->BUY) while v2 does
+    direct SELL->BUY. State sequences must still match exactly.
+    """
     # Run v2
     v2_config = V2Config()
     v2_engine = MDMV2Engine(v2_config)
@@ -70,17 +75,27 @@ def test_hybrid_matches_v2_on_nasdaq(nasdaq_data):
     hybrid_engine = HybridEngine(hybrid_config)
     hybrid_result = hybrid_engine.run(nasdaq_data)
 
-    # Assert state and action columns match bit-for-bit
+    # Assert state columns match exactly
     pd.testing.assert_series_equal(
         v2_result['state'], hybrid_result['state'],
         check_names=False,
         obj="state column"
     )
-    pd.testing.assert_series_equal(
-        v2_result['action'], hybrid_result['action'],
-        check_names=False,
-        obj="action column"
-    )
+
+    # Phase 16: action strings diverge at SELL->BUY transitions
+    # (hybrid: "SHORT_COVER + BUY" vs v2: "BUY ... from SELL")
+    # Verify non-SELL-transition actions still match
+    v2_actions = v2_result['action']
+    hybrid_actions = hybrid_result['action']
+    diff_mask = v2_actions != hybrid_actions
+    if diff_mask.any():
+        # All differences should be SELL->BUY transitions
+        for idx in diff_mask[diff_mask].index:
+            v2_act = v2_actions[idx]
+            hyb_act = hybrid_actions[idx]
+            assert "from SELL" in v2_act or "SHORT_COVER" in hyb_act, (
+                f"Unexpected action diff at {idx}: v2='{v2_act}' vs hybrid='{hyb_act}'"
+            )
 
 
 def test_snapshot_restore_isolation():

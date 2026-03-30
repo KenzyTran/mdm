@@ -75,6 +75,7 @@ class HybridConfig:
     two_phase_enabled: bool = True   # per D-05: defaults True
     filter_enabled: bool = False     # per D-07: Phase 11 has no filter
     filter_config: FilterConfig = field(default_factory=FilterConfig)
+    short_mode: str = 'direct'  # 'direct' (VN30) or 'inverse_etf' (NASDAQ) per D-10
 
     def __post_init__(self):
         if isinstance(self.v2_config, dict):

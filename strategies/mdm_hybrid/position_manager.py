@@ -2,7 +2,7 @@
 V2 Position Manager Module
 
 3-state machine for MDM v2: BUY, CASH, SELL.
-No SHORT or WAITING_SELL states (per D-03).
+SELL state represents active short position (Phase 16).
 """
 
 import pandas as pd
@@ -30,6 +30,8 @@ class V2Position:
     signal_type: str = "FTD"
     days_in_cash: int = 0
     ma10_below_count: int = 0
+    short_entry_price: float = 0.0
+    short_entry_date: Optional[pd.Timestamp] = None
 
 
 class V2PositionManager:
@@ -75,7 +77,12 @@ class V2PositionManager:
         buy_day_low: float,
         signal_type: str = "FTD"
     ):
-        """Enter BUY state."""
+        """Enter BUY state. Raises if currently in SELL (must cover first)."""
+        if self.position.state == V2MarketState.SELL:
+            raise ValueError(
+                f"Cannot enter BUY directly from SELL state. "
+                f"Must cover_short() first. Date: {buy_date}"
+            )
         self.position = V2Position(
             state=V2MarketState.BUY,
             buy_price=buy_price,
@@ -116,15 +123,52 @@ class V2PositionManager:
             ma10_below_count=0,
         )
 
-    def enter_sell(self, date: pd.Timestamp, reason: str):
-        """Enter SELL state from CASH (no position to close)."""
+    def enter_sell(self, date: pd.Timestamp, reason: str, price: float = 0.0):
+        """Enter SELL state and open short position.
+
+        Args:
+            date: Date of sell signal.
+            reason: Reason for entering sell.
+            price: Entry price for short position (0.0 if not tracking).
+        """
         self.trades.append({
             'type': 'SELL_SIGNAL',
             'date': date,
+            'price': price,
             'reason': reason,
         })
         self.position = V2Position(
             state=V2MarketState.SELL,
+            days_in_cash=0,
+            ma10_below_count=0,
+            short_entry_price=price,
+            short_entry_date=date,
+        )
+
+    def cover_short(self, cover_price: float, cover_date: pd.Timestamp, reason: str):
+        """Cover short position and return to CASH state.
+
+        P&L = (entry - cover) / entry. Positive when market drops (gain).
+
+        Args:
+            cover_price: Price at which short is covered.
+            cover_date: Date of cover.
+            reason: Reason for covering.
+        """
+        entry = self.position.short_entry_price
+        pnl = (entry - cover_price) / entry if entry > 0 else 0
+
+        self.trades.append({
+            'type': 'SHORT_COVER',
+            'date': cover_date,
+            'price': cover_price,
+            'reason': reason,
+            'pnl': pnl,
+            'entry_price': entry,
+        })
+
+        self.position = V2Position(
+            state=V2MarketState.CASH,
             days_in_cash=0,
             ma10_below_count=0,
         )
@@ -230,10 +274,11 @@ class V2PositionManager:
                 action = f"CASH exit: MA10 below count {self.position.ma10_below_count}"
 
         elif current_state == V2MarketState.SELL:
-            # SELL is persistent -- only FTD can transition to BUY
+            # Phase 16: cover short first, then buy (SELL->CASH->BUY per D-09)
             if is_ftd:
+                self.cover_short(close, date, f"FTD detected ({signal_type})")
                 self.enter_buy(ftd_price, date, low, signal_type)
-                action = f"BUY at {ftd_price:.2f} ({signal_type}) from SELL"
+                action = f"SHORT_COVER + BUY at {ftd_price:.2f} ({signal_type})"
 
         return self.position.state, action
 
