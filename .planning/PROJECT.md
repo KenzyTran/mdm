@@ -14,7 +14,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 
 **Target features:**
 - SELL signal = mở vị thế short (trên VN30: short trực tiếp chỉ số, NASDAQ: inverse ETF)
-- Stop loss mặc định 1.5% (thay vì 2.5%), linh hoạt theo volatility
+- ✓ Stop loss mặc định 1.5% (thay vì 2.5%), linh hoạt theo volatility — Phase 17
 - Enforce SELL→CASH→BUY (phải qua CASH trước khi BUY từ SELL)
 - P&L tracking cho vị thế short (gain/loss khi market giảm)
 - Backtest so sánh long-only vs long/short trên cả NASDAQ và VN30
@@ -151,4 +151,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after Phase 16 (short-position-state-transitions) complete*
+*Last updated: 2026-03-30 after Phase 17 (stop-loss-risk-management) complete*
