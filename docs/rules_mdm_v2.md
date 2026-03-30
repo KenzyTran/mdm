@@ -399,3 +399,109 @@ config = HybridConfig(v2_config=VN30_PRESET, ...)
 # NASDAQ
 config = HybridConfig(v2_config=NASDAQ_PRESET, ...)
 ```
+
+---
+
+## XIV. BO LOC QE FLOOR - THANH KHOAN TOAN CAU (v5.0)
+
+### 1. Tong quan
+
+Bo loc QE Floor su dung du lieu thanh khoan toan cau (Fed + ECB + BOJ balance sheet) de suppress tin hieu SELL khi thanh khoan dang mo rong. Dua tren insight tu webinar 2013 cua Dr. K: khi cac ngan hang trung uong dang bom thanh khoan (QE), thi truong co "san" va kho giam manh -- do do tin hieu SELL it tin cay hon.
+
+**Nguyen tac co ban:** Khi thanh khoan toan cau dang tang (qe_floor=1), cac chuyen doi CASH->SELL bi suppress. Tat ca cac chuyen doi khac (BUY->CASH, SELL->BUY, CASH->BUY) KHONG bi anh huong.
+
+### 2. Nguon du lieu
+
+File CSV tuan: `data/global_liquidity.csv`
+
+| Cot | Mo ta |
+| :--- | :--- |
+| `date` | Ngay (Wednesday hang tuan) |
+| `WALCL` | Fed balance sheet (triu USD) |
+| `fed_net` | Fed net liquidity |
+| `ECB_USD` | ECB balance sheet (quy doi USD) |
+| `BOJ_USD` | BOJ balance sheet (quy doi USD) |
+| `global_liquidity` | Tong thanh khoan = WALCL + ECB_USD + BOJ_USD |
+| `liquidity_roc_20w` | Rate of change 20 tuan cua global_liquidity |
+| `qe_floor` | 1 neu liquidity_roc_20w > 0 (dang mo rong), 0 neu khong |
+
+Du lieu: 987 hang, tu 2007-05-02 den hien tai.
+
+### 3. Publication lag (chong look-ahead bias)
+
+Du lieu thanh khoan tuan duoc cong bo voi do tre. De tranh look-ahead bias, ngay thanh khoan duoc dich ve phia truoc `publication_lag_days` ngay (mac dinh 7 ngay = 1 tuan).
+
+**Co che merge:** Su dung `pd.merge_asof(direction='backward')` de gan gia tri thanh khoan gan nhat da co cho moi ngay giao dich. Nhu vay, mot trader vao thu Hai se chi thay du lieu cua tuan truoc (hoac cu hon).
+
+### 4. Hanh vi suppress SELL
+
+Khi `qe_floor_enabled=True` va `qe_floor=1` (thanh khoan dang mo rong):
+
+| Chuyen doi | Hanh vi | Ghi chu |
+| :--- | :--- | :--- |
+| CASH -> SELL (MA50 breakdown) | **SUPPRESS** | Giu trang thai CASH, ghi action "SELL suppressed: QE floor (MA50 breakdown)" |
+| CASH -> SELL (cash deterioration) | **SUPPRESS** | Giu trang thai CASH, ghi action "SELL suppressed: QE floor (cash deterioration)" |
+| BUY -> CASH (stop loss) | Khong anh huong | Tat ca exit rule van hoat dong binh thuong |
+| BUY -> CASH (DD threshold) | Khong anh huong | |
+| BUY -> CASH (MA10 exit) | Khong anh huong | |
+| SELL -> BUY (FTD) | Khong anh huong | |
+| CASH -> BUY (FTD) | Khong anh huong | |
+
+**Implementation trong `position_manager.py`:**
+
+```python
+# Trong nhanh CASH state:
+elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
+    if not suppress_sell:
+        self.enter_sell(date, f"MA50 breakdown ...")
+    else:
+        action = "SELL suppressed: QE floor (MA50 breakdown)"
+```
+
+### 5. Xu ly du lieu truoc 2007 (pre-data period)
+
+Cac ngay truoc khi du lieu thanh khoan bat dau (truoc 2007-05-02) nhan `qe_floor=0` (NaN duoc fill thanh 0). Dieu nay dam bao:
+- Khong co false SELL suppression cho du lieu lich su (NASDAQ tu 1974)
+- He thong chay binh thuong ma khong can dieu kien dac biet
+
+### 6. Thong so cau hinh
+
+| Thong so | Kieu | Mac dinh | Mo ta |
+| :--- | :--- | :---: | :--- |
+| `qe_floor_enabled` | bool | `False` | Cong tac chinh, mac dinh TAT de dam bao backward compatibility |
+| `publication_lag_days` | int | `7` | So ngay dich du lieu thanh khoan ve phia truoc |
+| `liquidity_csv_path` | str | `"data/global_liquidity.csv"` | Duong dan den file CSV thanh khoan tuan |
+
+**Luu y:** Khi `qe_floor_enabled=False` (mac dinh), engine hoat dong hoan toan giong nhu truoc khi them QE floor -- khong co bat ky thay doi nao ve ket qua backtest.
+
+### 7. Ghi chu ve so do chuyen trang thai (Section VII)
+
+So do chuyen trang thai o Section VII can them annotation cho QE floor gate:
+
+```
+CASH -> SELL transitions:
+  - MA50 breakdown     [QE Floor Gate: suppress khi qe_floor=1]
+  - Cash deterioration  [QE Floor Gate: suppress khi qe_floor=1]
+
+Tat ca cac chuyen doi khac: KHONG bi anh huong boi QE floor.
+```
+
+### 8. Su dung trong code
+
+```python
+from strategies.mdm_v2.config import MDMV2Config
+from strategies.mdm_v2.mdm_v2_engine import MDMV2Engine
+
+# Bat QE floor filter
+config = MDMV2Config(
+    qe_floor_enabled=True,
+    publication_lag_days=7,
+    liquidity_csv_path="data/global_liquidity.csv",
+)
+engine = MDMV2Engine(config)
+results = engine.run(df)
+
+# Kiem tra suppress actions
+suppressed = results[results['action'].str.contains('SELL suppressed', na=False)]
+print(f"So SELL bi suppress: {len(suppressed)}")
+```
