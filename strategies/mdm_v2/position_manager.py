@@ -144,6 +144,7 @@ class V2PositionManager:
         signal_type: str = "FTD",
         ma10: float = None,
         ma50: float = None,
+        suppress_sell: bool = False,
     ) -> Tuple[V2MarketState, str]:
         """
         Process a trading day and update state.
@@ -162,6 +163,7 @@ class V2PositionManager:
             signal_type: Type of buy signal
             ma10: Current 10-day MA
             ma50: Current 50-day MA
+            suppress_sell: Whether to suppress CASH->SELL transitions (QE floor)
 
         Returns:
             Tuple of (new_state, action_taken)
@@ -179,12 +181,18 @@ class V2PositionManager:
                 action = f"BUY at {ftd_price:.2f} ({signal_type})"
             # Check for CASH -> SELL: MA50 breakdown
             elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
-                self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})")
-                action = f"SELL signal: MA50 breakdown"
+                if not suppress_sell:
+                    self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})")
+                    action = f"SELL signal: MA50 breakdown"
+                else:
+                    action = "SELL suppressed: QE floor (MA50 breakdown)"
             # Check for CASH -> SELL: deterioration
             elif self.position.days_in_cash >= self.config.cash_deterioration_days:
-                self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)")
-                action = f"SELL signal: cash deterioration"
+                if not suppress_sell:
+                    self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)")
+                    action = f"SELL signal: cash deterioration"
+                else:
+                    action = "SELL suppressed: QE floor (cash deterioration)"
 
         elif current_state == V2MarketState.BUY:
             # Track MA10 below count
