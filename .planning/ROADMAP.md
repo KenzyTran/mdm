@@ -356,5 +356,5 @@ Phases execute in numeric order: 16 -> 17 -> 18
 | 14. Hybrid Validation | v3.0 | 1/1 | Complete | 2026-03-29 |
 | 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
 | 16. Short Position & State Transitions | v4.0 | 2/2 | Complete    | 2026-03-30 |
-| 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete   | 2026-03-30 |
+| 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete    | 2026-03-30 |
 | 18. Short P&L & Comparative Validation | v4.0 | 0/? | Not started | - |
