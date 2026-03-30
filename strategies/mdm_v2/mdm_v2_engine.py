@@ -15,6 +15,7 @@ from .ftd_signal import FTDSignalDetector
 from .stop_loss import StopLossChecker
 from .position_manager import V2PositionManager, V2MarketState
 from .config import MDMV2Config
+from .liquidity import LiquidityLoader
 
 
 class MDMV2Engine:
@@ -37,6 +38,10 @@ class MDMV2Engine:
         self.ftd_detector = FTDSignalDetector(self.config)
         self.stop_loss_checker = StopLossChecker(self.config)
         self.position_manager = V2PositionManager(self.config)
+
+        self.liquidity_loader = None
+        if self.config.qe_floor_enabled:
+            self.liquidity_loader = LiquidityLoader(self.config.liquidity_csv_path)
 
         self.results: Optional[pd.DataFrame] = None
 
@@ -73,6 +78,10 @@ class MDMV2Engine:
         df = Indicators.add_52week_high_column(df)
         df['prev_ma50'] = df['ma50'].shift(1)
         df['prev_ma10'] = df['ma10'].shift(1)
+
+        # Merge global liquidity data if QE floor enabled (LIQ-01, LIQ-02)
+        if self.config.qe_floor_enabled and self.liquidity_loader is not None:
+            df = self.liquidity_loader.load_and_merge(df, self.config.publication_lag_days)
 
         # Suppress DD counting on derivative expiry days (VN30 microstructure, per D-05)
         # Guard: only apply if is_expiry_day column exists (NASDAQ runs without it, per Pitfall 5)
@@ -196,6 +205,12 @@ class MDMV2Engine:
                 signal_type=signal_type_held
             )
 
+            # 4b. Compute QE floor SELL suppression (LIQ-02)
+            suppress_sell = False
+            if self.config.qe_floor_enabled and 'qe_floor' in df.columns:
+                qe_val = df.iloc[idx]['qe_floor']
+                suppress_sell = bool(qe_val == 1) if pd.notna(qe_val) else False
+
             # 5. Update position
             ma10 = row['ma10'] if 'ma10' in row else None
             ma50_val = row['ma50'] if 'ma50' in row else None
@@ -214,6 +229,7 @@ class MDMV2Engine:
                 signal_type=signal_type,
                 ma10=ma10,
                 ma50=ma50_val,
+                suppress_sell=suppress_sell,
             )
 
             # If FTD triggered, reset rally tracker
