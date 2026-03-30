@@ -283,7 +283,7 @@ Plans:
 - [x] **Phase 16: Short Position & State Transitions** - Short entry on SELL, short cover mechanics, and enforced SELL->CASH->BUY transition
  (completed 2026-03-30)
 - [x] **Phase 17: Stop Loss & Risk Management** - Long stop loss 1.5%, volatility-adaptive adjustment, and short-specific stop loss rules (completed 2026-03-30)
-- [ ] **Phase 18: Short P&L & Comparative Validation** - Short P&L tracking, long-only vs long/short backtest comparison, and rule docs update
+- [x] **Phase 18: Short P&L & Comparative Validation** - Short P&L tracking, long-only vs long/short backtest comparison, and rule docs update (completed 2026-03-30)
 
 ## Phase Details
 
@@ -357,4 +357,4 @@ Phases execute in numeric order: 16 -> 17 -> 18
 | 15. Advanced Features | v3.0 | 3/3 | Complete | 2026-03-29 |
 | 16. Short Position & State Transitions | v4.0 | 2/2 | Complete    | 2026-03-30 |
 | 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete    | 2026-03-30 |
-| 18. Short P&L & Comparative Validation | v4.0 | 1/2 | In Progress|  |
+| 18. Short P&L & Comparative Validation | v4.0 | 1/2 | Complete    | 2026-03-30 |
