@@ -648,24 +648,31 @@ function renderTradesTable(key, data) {
   tbody.innerHTML = rows;
 }
 
-function renderLatex(el) {
-  // Block math: $$...$$
-  el.innerHTML = el.innerHTML.replace(/\$\$([\s\S]*?)\$\$/g, (m, tex) => {
-    try { return katex.renderToString(tex.trim(), {displayMode: true, throwOnError: false}); }
-    catch(e) { return m; }
-  });
-  // Inline math: $...$
-  el.innerHTML = el.innerHTML.replace(/\$([^\$\n]+?)\$/g, (m, tex) => {
-    try { return katex.renderToString(tex.trim(), {displayMode: false, throwOnError: false}); }
-    catch(e) { return m; }
-  });
-}
-
 function renderDocs(key, data) {
   const body = document.getElementById('docs-body-' + key);
   if (data.description_md) {
-    body.innerHTML = marked.parse(data.description_md);
-    renderLatex(body);
+    // Extract LaTeX BEFORE marked parses (to avoid &lt; &gt; encoding)
+    let md = data.description_md;
+    const store = [];
+    // Block math $$...$$
+    md = md.replace(/\$\$([\s\S]*?)\$\$/g, (m, tex) => {
+      const i = store.length;
+      try { store.push(katex.renderToString(tex.trim(), {displayMode: true, throwOnError: false})); }
+      catch(e) { store.push(m); }
+      return '%%MATH' + i + '%%';
+    });
+    // Inline math $...$
+    md = md.replace(/\$([^\$\n]+?)\$/g, (m, tex) => {
+      const i = store.length;
+      try { store.push(katex.renderToString(tex.trim(), {displayMode: false, throwOnError: false})); }
+      catch(e) { store.push(m); }
+      return '%%MATH' + i + '%%';
+    });
+    // Parse markdown
+    let html = marked.parse(md);
+    // Restore LaTeX
+    store.forEach((v, i) => { html = html.replace('%%MATH' + i + '%%', v); });
+    body.innerHTML = html;
   } else {
     body.innerHTML = '<p style="color:var(--text-secondary)">Chưa có tài liệu.</p>';
   }
