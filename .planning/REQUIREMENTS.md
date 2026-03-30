@@ -1,6 +1,6 @@
 # Requirements: MDM Reverse-Engineering & VN30 Market Timing
 
-**Defined:** 2026-03-27 (v1-v3), 2026-03-30 (v4)
+**Defined:** 2026-03-27 (v1-v3), 2026-03-30 (v4-v5)
 **Core Value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
 
 ## v1 Requirements
@@ -131,17 +131,41 @@
 - **EXT-03**: Breadth indicator filter for VN30 (advance/decline check)
 - **EXT-04**: Apply discovered NASDAQ rules to VN30 with recalibration
 
+## v5.0 Requirements
+
+### Global Liquidity / QE Floor
+
+- [ ] **LIQ-01**: Load global_liquidity.csv, forward-fill to daily trading dates, add qe_floor column to engine DataFrame (with publication lag offset to avoid look-ahead bias)
+- [ ] **LIQ-02**: Suppress CASH→SELL transition when QE floor ON (liquidity expanding), keep all other transitions (BUY→CASH stop loss, etc.) intact
+- [ ] **LIQ-03**: qe_floor_enabled flag in MDMV2Config, defaults OFF for backward compatibility
+
+### SELL Acceleration
+
+- [ ] **SELL-01**: SELL transition requires downside acceleration condition (price ROC or DD clustering), not just MA50 breakdown or cash deterioration alone
+- [ ] **SELL-02**: Mandatory bear-market sub-period validation (2008, 2022) — SELL changes must not degrade performance during confirmed bear markets
+
+### BUY Selectivity
+
+- [ ] **BUY-01**: Reject FTD signal when MA10 < MA50 (trend not confirmed), reducing whipsaw entries
+- [ ] **BUY-02**: Post-FTD confirmation window — require N days without distribution day after FTD before committing to BUY
+
+### Validation & Dashboard
+
+- [ ] **VAL-05**: A/B backtest comparing V2 baseline vs V2+filters on both VN30 and NASDAQ with identical metrics
+- [ ] **VAL-06**: Update S3 dashboard with new performance metrics and Global Liquidity overlay chart
+- [ ] **VAL-07**: Walk-forward out-of-sample validation (train pre-2020, test 2020-2026) to detect overfitting
+
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
 | ML ensemble (XGBoost, Random Forest) | 95 post-2019 signals quá ít, sẽ overfit |
 | Continuous indicator values | Boolean features tổng quát hóa tốt hơn qua các era |
-| Sentiment/macro indicators | Không nằm trong indicator set đã biết của Dr. K |
+| Sentiment/macro indicators (beyond Global Liquidity) | Global Liquidity confirmed by Dr. K; others not in his known set |
 | Per-stock signals | MDM là market-level model |
 | Neural network / deep learning models | MDM is rule-based; interpretability required |
 | Real-time trading or live signals | Research/backtesting only |
-| Web dashboard or mobile app | CLI/notebook analysis sufficient |
+| ML-based signal prediction | Too few regime samples (n=3 QE cycles), will overfit |
 | Automated data scraping | Explicit project boundary |
 | Options/derivatives strategies | Beyond basic long/short/cash |
 | Intraday tick data analysis | MDM operates on daily bars |
@@ -229,6 +253,11 @@
 - Mapped to phases: 10
 - Unmapped: 0
 
+**v5.0 Coverage:**
+- v5 requirements: 10 total
+- Mapped to phases: 0 ⚠️
+- Unmapped: 10 ⚠️
+
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-30 after v4.0 roadmap creation*
+*Last updated: 2026-03-30 after v5.0 requirements defined*
