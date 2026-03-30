@@ -54,24 +54,32 @@ class V2PerformanceAnalyzer:
 
     TRADING_DAYS_PER_YEAR = 252
 
-    def __init__(self, results_df: pd.DataFrame, trades: list = None):
+    def __init__(self, results_df: pd.DataFrame, trades: list = None,
+                 long_only_equity: bool = False):
         """Initialize analyzer.
 
         Args:
             results_df: Engine results DataFrame with columns: date, close, state.
                 State values: 'BUY', 'CASH', 'SELL'.
             trades: List of trade dicts from engine.get_trades().
-                Each dict has 'type' (BUY, CASH_EXIT, SELL_SIGNAL) and 'pnl' for exits.
+                Each dict has 'type' (BUY, CASH_EXIT, SELL_SIGNAL, SHORT_COVER)
+                and 'pnl' for exits.
+            long_only_equity: If True, SELL state is treated as flat (same as CASH)
+                for long-only comparison baseline. If False, SELL state captures
+                inverse return (short position P&L).
         """
         self.results = results_df
         self.trades = trades or []
+        self.long_only_equity = long_only_equity
         self.equity = self._build_daily_equity()
 
     def _build_daily_equity(self) -> pd.Series:
         """Build daily equity curve from engine results.
 
-        Per D-05: 100% invested on BUY, 0% on CASH/SELL.
+        Per D-05: 100% invested on BUY, 0% on CASH.
         Per Pitfall 1: use PREVIOUS day's state for today's return.
+        Per SHORT-02: SELL state captures inverse return (short position gains
+        when market drops). When long_only_equity=True, SELL is treated as flat.
 
         Returns:
             pd.Series of equity values, starting at 1.0.
@@ -85,10 +93,13 @@ class V2PerformanceAnalyzer:
         for i in range(1, n):
             prev_state = states[i - 1]
             if prev_state == "BUY":
-                # Capture today's return
+                # Long position: capture today's return
                 equity[i] = equity[i - 1] * (closes[i] / closes[i - 1])
+            elif prev_state == "SELL" and not self.long_only_equity:
+                # Short position: gain when market drops (per D-01)
+                equity[i] = equity[i - 1] * (closes[i - 1] / closes[i])
             else:
-                # Not invested, equity unchanged
+                # CASH, or SELL in long-only mode
                 equity[i] = equity[i - 1]
 
         return pd.Series(equity, index=self.results.index)
@@ -153,14 +164,14 @@ class V2PerformanceAnalyzer:
         )
 
     def win_rate(self) -> float:
-        """Compute win rate from CASH_EXIT trades.
+        """Compute win rate from CASH_EXIT and SHORT_COVER trades.
 
-        Counts profitable CASH_EXIT trades vs total CASH_EXIT trades.
+        Counts profitable exit trades (both long and short) vs total exits.
 
         Returns:
             Win rate as a fraction (e.g., 0.667 for 66.7%). Returns 0.0 if no exits.
         """
-        exits = [t for t in self.trades if t.get("type") == "CASH_EXIT"]
+        exits = [t for t in self.trades if t.get("type") in ("CASH_EXIT", "SHORT_COVER")]
         if not exits:
             return 0.0
         wins = sum(1 for t in exits if t.get("pnl", 0) > 0)

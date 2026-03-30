@@ -322,17 +322,29 @@ class TestV2PerformanceAnalyzer:
         assert (dd_series <= 0).all()
 
     def test_equity_with_sell_state(self):
-        """SELL state also means not invested (same as CASH)."""
+        """SELL state captures inverse return (short position).
+
+        With long_only_equity=True, SELL is treated as flat (same as CASH).
+        Default behavior (long_only_equity=False) captures inverse return.
+        """
         closes = [100, 110, 105]
         states = ["BUY", "SELL", "SELL"]
         df = make_results_df(closes, states)
+
+        # Default: SELL captures inverse return
         analyzer = V2PerformanceAnalyzer(df)
         eq = analyzer.equity
         # Day 0: 1.0
         # Day 1: prev=BUY -> capture 110/100 -> 1.1
-        # Day 2: prev=SELL -> no capture -> 1.1
+        # Day 2: prev=SELL -> inverse return 110/105 -> 1.1 * (110/105)
         assert eq.iloc[1] == pytest.approx(1.1)
-        assert eq.iloc[2] == pytest.approx(1.1)
+        assert eq.iloc[2] == pytest.approx(1.1 * (110 / 105), rel=1e-6)
+
+        # long_only_equity=True: SELL treated as flat
+        analyzer_lo = V2PerformanceAnalyzer(df, long_only_equity=True)
+        eq_lo = analyzer_lo.equity
+        assert eq_lo.iloc[1] == pytest.approx(1.1)
+        assert eq_lo.iloc[2] == pytest.approx(1.1)
 
 
 # --- PERF-03: Match Rate Validation tests ---

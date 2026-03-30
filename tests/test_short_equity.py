@@ -80,7 +80,7 @@ class TestShortEquityCurve:
     def test_mixed_sequence_buy_sell_cash(self):
         """Mixed sequence BUY->SELL->CASH captures correct returns.
 
-        States: [BUY, BUY, SELL, SELL, CASH]
+        States: [BUY, BUY, SELL, CASH, CASH]
         Closes: [100, 110, 105, 100, 102]
 
         Day 0: equity = 1.0
@@ -90,7 +90,7 @@ class TestShortEquityCurve:
         Day 4: prev=CASH -> flat: 1.1025
         """
         closes = [100, 110, 105, 100, 102]
-        states = ["BUY", "BUY", "SELL", "SELL", "CASH"]
+        states = ["BUY", "BUY", "SELL", "CASH", "CASH"]
         df = make_results_df(closes, states)
         analyzer = V2PerformanceAnalyzer(df)
         eq = analyzer.equity
@@ -100,6 +100,7 @@ class TestShortEquityCurve:
         assert eq.iloc[2] == pytest.approx(1.05, rel=1e-6)
         # Day 3: prev=SELL, inverse return: closes[2]/closes[3] = 105/100 = 1.05
         assert eq.iloc[3] == pytest.approx(1.05 * (105 / 100), rel=1e-6)
+        # Day 4: prev=CASH -> flat
         assert eq.iloc[4] == pytest.approx(1.05 * (105 / 100), rel=1e-6)
 
     def test_long_only_equity_sell_treated_as_cash(self):
