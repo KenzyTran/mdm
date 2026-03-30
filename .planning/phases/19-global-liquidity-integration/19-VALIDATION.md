@@ -38,13 +38,13 @@ created: 2026-03-30
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 19-01-01 | 01 | 1 | LIQ-01 | unit | `uv run pytest tests/test_liquidity.py -x` | ❌ W0 | ⬜ pending |
-| 19-01-02 | 01 | 1 | LIQ-01 | unit | `uv run pytest tests/test_liquidity.py::test_pre2007_nan_handling -x` | ❌ W0 | ⬜ pending |
-| 19-02-01 | 02 | 2 | LIQ-02 | integration | `uv run pytest tests/test_qe_floor.py::test_sell_suppressed_during_qe -x` | ❌ W0 | ⬜ pending |
-| 19-02-02 | 02 | 2 | LIQ-02 | integration | `uv run pytest tests/test_qe_floor.py::test_other_transitions_unaffected -x` | ❌ W0 | ⬜ pending |
-| 19-03-01 | 03 | 2 | LIQ-03 | regression | `uv run pytest tests/test_qe_floor.py::test_baseline_regression -x` | ❌ W0 | ⬜ pending |
+| 19-01-01 | 01 | 1 | LIQ-01 | unit | `uv run pytest tests/test_liquidity.py -x` | :x: W0 | :white_large_square: pending |
+| 19-01-02 | 01 | 1 | LIQ-01 | unit | `uv run pytest tests/test_liquidity.py::test_pre2007_nan_handling -x` | :x: W0 | :white_large_square: pending |
+| 19-02-01 | 02 | 2 | LIQ-02 | integration | `uv run pytest tests/test_qe_floor.py::test_sell_suppressed_during_qe -x` | :x: W0 | :white_large_square: pending |
+| 19-02-02 | 02 | 2 | LIQ-02 | integration | `uv run pytest tests/test_qe_floor.py::test_other_transitions_unaffected -x` | :x: W0 | :white_large_square: pending |
+| 19-02-03 | 02 | 2 | LIQ-03 | regression | `uv run pytest tests/test_qe_floor.py::test_baseline_regression -x` | :x: W0 | :white_large_square: pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: :white_large_square: pending / :white_check_mark: green / :x: red / :warning: flaky*
 
 ---
 
