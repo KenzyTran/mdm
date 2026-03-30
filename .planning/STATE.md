@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 16 — short-position-state-transitions
+**Current focus:** Phase 17 — stop-loss-risk-management
 
 ## Current Position
 
