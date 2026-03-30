@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: MDM Short Signal & Dr. K Alignment
 status: executing
-stopped_at: Completed 17-01-PLAN.md
-last_updated: "2026-03-30T06:33:23.128Z"
-last_activity: 2026-03-30 -- Completed 17-01-PLAN.md
+stopped_at: Completed 17-02-PLAN.md
+last_updated: "2026-03-30T07:07:00.396Z"
+last_activity: 2026-03-30
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 50
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 ## Current Position
 
 Phase: 17 (stop-loss-risk-management) -- EXECUTING
-Plan: 1 of 2 (COMPLETE)
-Status: Executing Phase 17
-Last activity: 2026-03-30 -- Completed 17-01-PLAN.md
+Plan: 2 of 2 (COMPLETE)
+Status: Ready to execute
+Last activity: 2026-03-30
 
 Progress: [█████░░░░░] 50%
 
@@ -55,6 +55,7 @@ Progress: [█████░░░░░] 50%
 | Phase 16 P01 | 33min | 2 tasks | 4 files |
 | Phase 16 P02 | 68min | 2 tasks | 4 files |
 | Phase 17 P01 | 48min | 2 tasks | 7 files |
+| Phase 17 P02 | 29min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Recent decisions affecting current work:
 - [Phase 16]: All SELL->CASH transitions use cover_short() with P&L (replaces degrade_to_cash)
 - [Phase 17]: Long stop loss reduced from 2.5% to 1.5% per Dr. K documented rules
 - [Phase 17]: Volatility-adaptive stop loss uses ATR/baseline ratio clamped to [0.5x, 2.5x]
+- [Phase 17]: DD5 high is high of specific 5th DD day, locked into engine on SELL entry
+- [Phase 17]: Short stop loss at 1% above DD5 high, checked before FTD/cover signals
 
 ### Pending Todos
 
@@ -92,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T06:33:09.155Z
-Stopped at: Completed 17-01-PLAN.md
+Last session: 2026-03-30T07:07:00.391Z
+Stopped at: Completed 17-02-PLAN.md
 Resume file: None

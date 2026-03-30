@@ -101,14 +101,14 @@
 
 - [x] **SHORT-01**: SELL signal mở vị thế short trên chỉ số (VN30: short trực tiếp, NASDAQ: inverse ETF concept)
 - [ ] **SHORT-02**: P&L tracking cho vị thế short — gain khi market giảm, loss khi market tăng
-- [ ] **SHORT-03**: Short stop loss — cắt lỗ khi giá vượt ngưỡng từ giá short entry (Dr. K: 1% trên DD5 high)
+- [x] **SHORT-03**: Short stop loss — cắt lỗ khi giá vượt ngưỡng từ giá short entry (Dr. K: 1% trên DD5 high)
 - [x] **SHORT-04**: Short cover — đóng vị thế short khi có FTD hoặc MA50 breakout (chuyển về CASH)
 
 ### Stop Loss & Risk
 
 - [x] **RISK-01**: Stop loss mặc định 1.5% cho vị thế long (thay vì 2.5% hiện tại)
 - [x] **RISK-02**: Volatility-adaptive stop loss — stop loss rộng hơn khi market volatile
-- [ ] **RISK-03**: Short stop loss riêng biệt — 1% trên DD5 high (từ MDM classic rules)
+- [x] **RISK-03**: Short stop loss riêng biệt — 1% trên DD5 high (từ MDM classic rules)
 
 ### Transition & Validation
 
@@ -203,8 +203,8 @@
 | TRANS-01 | Phase 16 | Complete |
 | RISK-01 | Phase 17 | Complete |
 | RISK-02 | Phase 17 | Complete |
-| RISK-03 | Phase 17 | Pending |
-| SHORT-03 | Phase 17 | Pending |
+| RISK-03 | Phase 17 | Complete |
+| SHORT-03 | Phase 17 | Complete |
 | SHORT-02 | Phase 18 | Pending |
 | TRANS-02 | Phase 18 | Pending |
 | TRANS-03 | Phase 18 | Pending |
