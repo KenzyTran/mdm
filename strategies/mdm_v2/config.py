@@ -46,6 +46,13 @@ class MDMV2Config:
     publication_lag_days: int = 7                # Days to offset liquidity data
     liquidity_csv_path: str = "data/global_liquidity.csv"
 
+    # SELL Acceleration (v5.0, SELL-01)
+    sell_acceleration_enabled: bool = True     # Master switch (per D-09)
+    roc_threshold: float = -0.04              # ROC must be below -4% (10-day)
+    roc_window: int = 10                      # 10-day lookback for ROC
+    dd_cluster_count: int = 3                 # 3 DDs required for clustering
+    dd_cluster_window: int = 5               # within 5 trading sessions
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -55,6 +62,10 @@ class MDMV2Config:
         assert self.stop_loss_pct > 0, "Stop loss percentage must be positive"
         assert self.dd_cash_threshold > 0, "DD cash threshold must be positive"
         assert self.publication_lag_days >= 0, "Publication lag must be non-negative"
+        assert self.roc_threshold < 0, "ROC threshold must be negative"
+        assert self.roc_window > 0, "ROC window must be positive"
+        assert self.dd_cluster_count > 0, "DD cluster count must be positive"
+        assert self.dd_cluster_window > 0, "DD cluster window must be positive"
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
