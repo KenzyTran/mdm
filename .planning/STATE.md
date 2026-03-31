@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
-status: executing
-stopped_at: Completed 20-01-PLAN.md
-last_updated: "2026-03-31T00:33:59.140Z"
+status: verifying
+stopped_at: Completed 20-02-PLAN.md
+last_updated: "2026-03-31T00:40:42.913Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 50
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Phase: 20 (sell-acceleration) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-03-31
 
 Progress: [█████░░░░░] 50%
@@ -55,6 +55,7 @@ Progress: [█████░░░░░] 50%
 | Phase 19 P01 | 3min | 2 tasks | 3 files |
 | Phase 19 P02 | 8min | 3 tasks | 4 files |
 | Phase 20-sell-acceleration P01 | 2min | 2 tasks | 4 files |
+| Phase 20-sell-acceleration P02 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,7 @@ Recent decisions affecting current work:
 - [Phase 19]: suppress_sell defaults False for full backward compatibility
 - [Phase 19]: V2 engine baseline is 22.6% (not 190.8% which is hybrid engine)
 - [Phase 20-sell-acceleration]: Acceleration gate uses OR logic across 3 conditions, suppress_sell takes priority
+- [Phase 20-sell-acceleration]: A/B validation proves SELL acceleration does not delay bear market signals (0-day in 2008, 1-day in VN30 2022)
 
 ### Pending Todos
 
@@ -87,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T00:33:59.137Z
-Stopped at: Completed 20-01-PLAN.md
+Last session: 2026-03-31T00:40:42.911Z
+Stopped at: Completed 20-02-PLAN.md
 Resume file: None

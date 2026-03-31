@@ -142,7 +142,7 @@
 ### SELL Acceleration
 
 - [x] **SELL-01**: SELL transition requires downside acceleration condition (price ROC or DD clustering), not just MA50 breakdown or cash deterioration alone
-- [ ] **SELL-02**: Mandatory bear-market sub-period validation (2008, 2022) — SELL changes must not degrade performance during confirmed bear markets
+- [x] **SELL-02**: Mandatory bear-market sub-period validation (2008, 2022) — SELL changes must not degrade performance during confirmed bear markets
 
 ### BUY Selectivity
 
@@ -236,7 +236,7 @@
 | LIQ-02 | Phase 19 | Complete |
 | LIQ-03 | Phase 19 | Complete |
 | SELL-01 | Phase 20 | Complete |
-| SELL-02 | Phase 20 | Pending |
+| SELL-02 | Phase 20 | Complete |
 | BUY-01 | Phase 21 | Pending |
 | BUY-02 | Phase 21 | Pending |
 | VAL-05 | Phase 22 | Pending |
