@@ -339,7 +339,7 @@ Plans:
 - [x] **Phase 19: Global Liquidity Integration** - Load liquidity data, implement QE floor filter suppressing SELL during liquidity expansion
  (completed 2026-03-30)
 - [x] **Phase 20: SELL Acceleration** - Require downside momentum/acceleration before SELL transition, validated on bear markets (completed 2026-03-31)
-- [x] **Phase 21: BUY Selectivity** - Reject weak FTD entries and add post-FTD confirmation window to reduce whipsaw (completed 2026-03-31)
+- [x] **Phase 21: BUY Selectivity** - Reject weak FTD entries and add post-FTD confirmation window to reduce whipsaw (completed 2026-03-31)
 - [ ] **Phase 22: Combined Integration & Validation** - A/B comparison, walk-forward validation, dashboard update with all filters combined
 
 ## Phase Details
@@ -402,8 +402,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 20-01-PLAN.md -- SellAccelerationGate module, config fields, engine and position manager wiring (SELL-01)
-- [ ] 20-02-PLAN.md -- Bear market A/B validation script and rule docs update (SELL-01, SELL-02)
+- [ ] 22-01-PLAN.md -- A/B validation script + walk-forward + CASH duration + 8-combo integration test (VAL-05, VAL-07)
+- [ ] 22-02-PLAN.md -- Dashboard export extension with V2 filtered model and liquidity overlay + S3 deploy (VAL-06)
 **UI hint**: yes
 
 ## Progress
@@ -434,4 +434,4 @@ Phases execute in numeric order: 19 -> 20 -> 21 -> 22
 | 19. Global Liquidity Integration | v5.0 | 2/2 | Complete    | 2026-03-30 |
 | 20. SELL Acceleration | v5.0 | 2/2 | Complete    | 2026-03-31 |
 | 21. BUY Selectivity | v5.0 | 2/2 | Complete    | 2026-03-31 |
-| 22. Combined Integration & Validation | v5.0 | 0/0 | Not started | - |
+| 22. Combined Integration & Validation | v5.0 | 0/2 | Not started | - |
