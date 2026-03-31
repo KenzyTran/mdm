@@ -8,24 +8,18 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
-## Current Milestone: v5.0 Signal Quality & Macro Filter
+## Current State
 
-**Goal:** Cải thiện chất lượng tín hiệu trên MDM V2 — tích hợp Global Liquidity Index làm QE floor filter, cải thiện điều kiện SELL cần acceleration, tinh chỉnh BUY selectivity.
+**Latest milestone:** v5.0 Signal Quality & Macro Filter — shipped 2026-03-31
 
-**Target features:**
-- [x] Tích hợp Global Liquidity Index (Fed+ECB+BOJ) vào V2 engine — suppress SELL khi liquidity tăng (Phase 19)
-- [x] Cải thiện SELL transition — thêm momentum/acceleration condition (Phase 20)
-- [x] Tinh chỉnh BUY selectivity — giảm whipsaw, cải thiện entry quality (Phase 21)
-- [ ] Cập nhật dashboard với hiệu suất mới
-- [ ] Backtest so sánh trước/sau trên VN30 và NASDAQ
+**V2 engine (best performer):** +190.8% total return, CAGR 10%, max DD -31.8% trên VN30
+- QE Floor filter (suppress SELL during liquidity expansion) — available but disabled on VN30 (Fed liquidity ít tương quan)
+- SELL Acceleration Gate (ROC/DD-clustering/volume-MA50) — active, 0-day delay in 2008 bear
+- BUY Selectivity (MA10/MA50 trend filter + 3-day confirmation) — active, giảm 19.6% whipsaw trades trên VN30
+- Walk-forward validation: no overfitting detected (OOS outperforms IS)
+- Dashboard: http://mdm-trading-dashboard.s3-website-ap-southeast-1.amazonaws.com
 
-**Baseline (V2 hiện tại):** +190.8% total return, CAGR 10% trên VN30 (VN30 preset)
-
-**Key context:**
-- Webinar 2013: Dr. K xác nhận MDM có "QE floor" — suppress SELL khi QE đang bơm
-- Dr. K dùng Global Liquidity Index trên TradingView — data đã download từ FRED
-- Global Liquidity data: data/global_liquidity.csv (987 tuần, 2007-2026, Fed+ECB+BOJ)
-- V2 là phiên bản tốt nhất hiện tại — tất cả cải tiến trực tiếp trên V2 engine
+**Key finding:** QE Floor designed for NASDAQ, degrades VN30 (93.7% vs 190.8%). Kept as optional config flag.
 
 ## Requirements
 
@@ -39,17 +33,25 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 
 ### Active
 
-- [x] Reorganize codebase into clearly separated strategies (MDM classic, MDM v2, VSA) — Validated in Phase 2: Codebase Organization
-- [x] Normalize US market data (NASDAQ/S&P500 prices appear scaled by ~1000x) — Validated in Phase 1: Data Integrity
-- [x] Run MDM classic rules on NASDAQ data and compare with published signals — Validated in Phase 3: Signal Divergence Analysis
-- [x] Identify divergence points between classic rules output and actual post-2019 signals — Validated in Phase 3: Signal Divergence Analysis
-- [x] Analyze signal patterns to hypothesize new MDM v2 rules (Cash state behavior, faster signal switching, modified DD counting) — Validated in Phase 4: MDM V2 Engine
-- [x] Implement MDM v2 candidate rules — Validated in Phase 4: MDM V2 Engine
-- [x] Validate MDM v2 against published signal history (target: high match rate) — Validated in Phase 5: Validation & Performance
-- [x] Use decision trees to discover indicator conditions that predict signal types per era — Validated in Phase 9: Rule Discovery
-- [x] Score discovered rules against published signals with match rates, confusion matrices, and cross-era validation — Validated in Phase 10: Discovery Validation
-- [ ] Adapt MDM v2 parameters for VN30 market characteristics
-- [ ] Backtest MDM v2 on VN30 with performance reporting
+- [ ] Adapt MDM v2 parameters for VN30 market characteristics (partially done — V2 runs on VN30 but QE Floor needs VN30-specific data)
+- [ ] Backtest MDM v2 on VN30 with performance reporting (done — 190.8% return on VN30)
+
+### Validated (v1.0-v5.0)
+
+- ✓ Reorganize codebase into clearly separated strategies — v1.0
+- ✓ Normalize US market data — v1.0
+- ✓ Run MDM classic rules on NASDAQ and compare with published signals — v1.0
+- ✓ Identify divergence points between classic rules and post-2019 signals — v1.0
+- ✓ Implement MDM v2 candidate rules with 3-state machine — v1.0
+- ✓ Validate MDM v2 against published signal history — v1.0
+- ✓ Use decision trees to discover indicator conditions per era — v2.0
+- ✓ Score discovered rules with match rates and cross-era validation — v2.0
+- ✓ Hybrid engine with Propose-Filter-Decide pipeline — v3.0
+- ✓ Short signal with stop loss and cover mechanics — v4.0
+- ✓ QE Floor filter (suppress SELL during liquidity expansion) — v5.0
+- ✓ SELL Acceleration Gate (downside momentum required) — v5.0
+- ✓ BUY Selectivity (trend filter + confirmation window) — v5.0
+- ✓ Combined A/B + walk-forward validation — v5.0
 
 ### Out of Scope
 
@@ -129,10 +131,13 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Keep VSA as separate strategy | User preference — independent trading system, not a filter for MDM | — Pending |
-| Combined approach for reverse-engineering | Run classic rules + analyze patterns simultaneously for best coverage | — Pending |
-| NASDAQ as primary validation index | Dr. K's model trades NASDAQ Composite; TECL is just leveraged exposure | — Pending |
-| Organize strategies into separate packages | Clean separation enables independent development and testing | — Pending |
+| Keep VSA as separate strategy | User preference — independent trading system, not a filter for MDM | ✓ Good |
+| Combined approach for reverse-engineering | Run classic rules + analyze patterns simultaneously for best coverage | ✓ Good |
+| NASDAQ as primary validation index | Dr. K's model trades NASDAQ Composite; TECL is just leveraged exposure | ✓ Good |
+| Organize strategies into separate packages | Clean separation enables independent development and testing | ✓ Good |
+| QE Floor disabled by default on VN30 | Fed liquidity has low correlation with VN30 — degrades performance (93.7% vs 190.8%) | ✓ Good |
+| Dashboard simplified to single V2 model | Hybrid/P15/Filtered models all underperform V2 on VN30 — less clutter | ✓ Good |
+| Walk-forward split at 2020-01-01 | Pre-COVID train, post-COVID test — validates filters across regime change | ✓ Good |
 
 ## Evolution
 
@@ -152,4 +157,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 after Phase 20 complete*
+*Last updated: 2026-03-31 after v5.0 milestone complete*
