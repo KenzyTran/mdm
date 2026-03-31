@@ -409,7 +409,8 @@ Plans:
 
 **Milestone Goal:** Implement Dr. K's specific signal rules (fail-safe, gap-up neutralization, 6% threshold) and review MA50/volatility filter role to reduce whipsaw on VN30.
 
-- [x] **Phase 23: Fail-Safe Mechanism** - Auto-exit SELL to CASH when VN30 reclaims standby-sell HIGH, with A/B validation (completed 2026-03-31)
+- [x] **Phase 23: Fail-Safe Mechanism** - Auto-exit SELL to CASH when VN30 reclaims standby-sell HIGH, with A/B validation
+ (completed 2026-03-31)
 - [ ] **Phase 24: Buy Entry Refinement** - Gap-up neutralization and 6% rally attempt threshold for FTD timing on VN30
 - [ ] **Phase 25: MA50/200dma Review** - A/B research testing whether MA50 should be removed from SELL trigger and BUY filter logic
 - [ ] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods
@@ -442,7 +443,11 @@ Plans:
   3. When VN30 has declined 6% or more from its recent peak, FTD requires classic day-3+ timing -- verified by checking that deep correction entries still wait for proper follow-through
   4. A/B backtest on VN30 comparing V2 baseline vs V2+gap_filter shows gap filter reduces false entry count without significantly reducing total return
   5. A/B backtest on VN30 comparing V2 baseline vs V2+rally_threshold shows the 6% logic improves entry timing (fewer whipsaw trades in shallow pullbacks)
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 24-01-PLAN.md -- BuyEntryFilter module, config, engine integration, unit tests (GAP-01, RALLY-01, RALLY-02)
+- [ ] 24-02-PLAN.md -- A/B validation script and rules documentation update (GAP-02, RALLY-03)
 
 ### Phase 25: MA50/200dma Review
 **Goal**: Evidence-based decision on whether MA50 should remain in V2 signal logic, based on Dr. K's statement that MA50/200dma have "little value"
