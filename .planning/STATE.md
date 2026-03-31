@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
-status: executing
-stopped_at: Completed 21-01-PLAN.md
-last_updated: "2026-03-31T02:21:36.837Z"
+status: verifying
+stopped_at: Completed 21-02-PLAN.md
+last_updated: "2026-03-31T02:27:15.649Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 50
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 Phase: 21 (buy-selectivity) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-03-31
 
 Progress: [█████░░░░░] 50%
@@ -57,6 +57,7 @@ Progress: [█████░░░░░] 50%
 | Phase 20-sell-acceleration P01 | 2min | 2 tasks | 4 files |
 | Phase 20-sell-acceleration P02 | 4min | 2 tasks | 2 files |
 | Phase 21-buy-selectivity P01 | 23min | 2 tasks | 5 files |
+| Phase 21-buy-selectivity P02 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,7 @@ Recent decisions affecting current work:
 - [Phase 20-sell-acceleration]: A/B validation proves SELL acceleration does not delay bear market signals (0-day in 2008, 1-day in VN30 2022)
 - [Phase 21-buy-selectivity]: DD check during confirmation uses side-effect-free methods to avoid polluting dd_history
 - [Phase 21-buy-selectivity]: MA50/52WEEK breakouts supersede pending FTD confirmation
+- [Phase 21-buy-selectivity]: Walk-forward degradation uses WARNING level since market regimes differ fundamentally between periods
 
 ### Pending Todos
 
@@ -92,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T02:21:36.832Z
-Stopped at: Completed 21-01-PLAN.md
+Last session: 2026-03-31T02:27:15.643Z
+Stopped at: Completed 21-02-PLAN.md
 Resume file: None
