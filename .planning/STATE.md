@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
 status: executing
-stopped_at: Completed 23-01-PLAN.md, executing Wave 2
-last_updated: "2026-03-31T05:45:33.426Z"
+stopped_at: Completed 23-02-PLAN.md
+last_updated: "2026-03-31T05:58:56.400Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 81
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 23 (fail-safe-mechanism) — EXECUTING
-Plan: 1 of 2 complete
-Status: Wave 1 complete, executing Wave 2
+Plan: 2 of 2 complete
+Status: Ready to execute
 Last activity: 2026-03-31
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
@@ -65,6 +65,7 @@ Recent decisions affecting current work:
 - [v6.0 Roadmap]: MAREVIEW is a research/A/B phase -- outcome may change V2 logic significantly
 - [Phase 23]: Fail-safe check runs BEFORE FTD in SELL state (priority order per Dr. K FAQ)
 - [Phase 23]: prev_high (standby-sell day HIGH) used as fail-safe threshold, not current day HIGH
+- [Phase 23]: Fail-safe improves VN30 return 7.4%->58.1% but triggers during 2022 bear -- needs refinement
 
 ### Pending Todos
 
@@ -78,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T05:45:33.421Z
-Stopped at: Completed 23-01-PLAN.md
+Last session: 2026-03-31T05:58:56.396Z
+Stopped at: Completed 23-02-PLAN.md
 Resume file: None

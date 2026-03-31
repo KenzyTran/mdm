@@ -9,7 +9,7 @@
 
 - [x] **SAFE-01**: Khi V2 engine phat SELL signal, ghi nhan HIGH cua standby-sell day (ngay ngay truoc sell signal day) lam fail-safe threshold
 - [x] **SAFE-02**: Neu VN30 close vuot standby-sell HIGH sau khi vao SELL -> auto-exit ve CASH (false signal detected)
-- [ ] **SAFE-03**: Backtest tren VN30 xac nhan fail-safe giam false signal loss
+- [x] **SAFE-03**: Backtest tren VN30 xac nhan fail-safe giam false signal loss
 
 ### Gap-Up Buy Neutralization
 
@@ -71,7 +71,7 @@
 |-------------|-------|--------|
 | SAFE-01 | Phase 23 | Complete |
 | SAFE-02 | Phase 23 | Complete |
-| SAFE-03 | Phase 23 | Pending |
+| SAFE-03 | Phase 23 | Complete |
 | GAP-01 | Phase 24 | Pending |
 | GAP-02 | Phase 24 | Pending |
 | RALLY-01 | Phase 24 | Pending |
