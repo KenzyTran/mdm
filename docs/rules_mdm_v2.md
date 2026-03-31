@@ -84,19 +84,30 @@ MDM V2 là phiên bản cải tiến của MDM Classic, thay đổi từ máy tr
 * **Hành động:** Chuyển sang BUY.
 * **Stop loss đặc biệt:** Đặt stop loss tại $L_{ngày\_mua} \times 0.99$ (1% dưới đáy ngày mua).
 
-### 5. Chuyển CASH -> SELL (Thị trường xấu đi):
+### 5. Chuyen CASH -> SELL (Thi truong xau di):
 
-Nếu không có tín hiệu mua, kiểm tra 2 điều kiện chuyển sang SELL:
+Neu khong co tin hieu mua, kiem tra 2 dieu kien chuyen sang SELL:
 
 * **MA50 Breakdown** (khi `ma50_sell_enabled=True`):
-  * Giá đóng cửa dưới MA50 ($C < MA50$).
-  * -> Chuyển sang trạng thái SELL.
+  * Gia dong cua duoi MA50 ($C < MA50$).
 
-* **Cash Deterioration** (Xuống cấp do ở CASH quá lâu):
-  * Số ngày ở trạng thái CASH >= `cash_deterioration_days` (NASDAQ: 10, VN30: 20 ngày).
-  * -> Chuyển sang trạng thái SELL.
+* **Cash Deterioration** (Xuong cap do o CASH qua lau):
+  * So ngay o trang thai CASH >= `cash_deterioration_days` (NASDAQ: 10, VN30: 20 ngay).
 
-**Thứ tự ưu tiên:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
+**Cong tang toc SELL (SELL Acceleration Gate, v5.0 SELL-01):**
+
+Khi `sell_acceleration_enabled=True` (mac dinh), cac dieu kien tren chi duoc thuc hien khi **it nhat 1 dieu kien tang toc** duoc xac nhan (logic OR):
+
+1. **Price ROC < threshold**: Ty le thay doi gia trong `roc_window` phien < `roc_threshold` (mac dinh: ROC 10 phien < -4%). Day la dau hieu dong luc giam manh.
+2. **DD Clustering**: Co >= `dd_cluster_count` ngay phan phoi trong `dd_cluster_window` phien gan nhat (mac dinh: 3 DD trong 5 phien). Day la dau hieu to chuc ban ra tap trung.
+3. **Volume-confirmed MA50 Breakdown**: Gia vuot xuong duoi MA50 (hom nay close < MA50, hom qua close >= MA50) VA khoi luong tang so voi phien truoc.
+
+**Thu tu uu tien gate:** QE floor suppress > Acceleration gate > Trigger condition.
+- Neu QE floor suppress = True -> SELL bi suppress (bat ke acceleration).
+- Neu acceleration khong met -> SELL bi defer ("SELL deferred: no acceleration").
+- Chi khi ca hai cho phep -> SELL duoc thuc hien.
+
+**Thu tu uu tien trigger:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
 
 ---
 
@@ -203,6 +214,14 @@ Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT
                                                  +-------+
 ```
 
+**CASH -> SELL transitions (v5.0 update):**
+
+CASH -> SELL transitions now require acceleration gate confirmation:
+  - MA50 breakdown: C < MA50 AND acceleration_met AND NOT suppress_sell
+  - Cash deterioration: days_in_cash >= threshold AND acceleration_met AND NOT suppress_sell
+
+Where `acceleration_met` = at least one of: Price ROC < -4%, DD clustering (3 in 5), volume-confirmed MA50 breakdown.
+
 ---
 
 ## VIII. BẢNG THÔNG SỐ CẤU HÌNH (MDMV2Config)
@@ -224,6 +243,11 @@ Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT
 | `ma50_sell_enabled` | True | Bật/tắt MA50 breakdown cho CASH -> SELL |
 | `cash_deterioration_days` | 10 (NASDAQ) / **20 (VN30)** | Số ngày ở CASH trước khi tự động chuyển SELL |
 | `stop_loss_pct` | 0.025 | Phần trăm cắt lỗ từ giá mua (2.5%) |
+| `sell_acceleration_enabled` | True | Bat/tat cong tang toc SELL (v5.0 SELL-01) |
+| `roc_threshold` | -0.04 | Nguong ROC cho dieu kien tang toc (mac dinh -4%) |
+| `roc_window` | 10 | So phien tinh ROC (mac dinh 10 phien) |
+| `dd_cluster_count` | 3 | So DD toi thieu cho dieu kien clustering |
+| `dd_cluster_window` | 5 | Cua so phien cho DD clustering |
 | `name` | "default" | Tên giả thuyết (metadata) |
 
 ---
