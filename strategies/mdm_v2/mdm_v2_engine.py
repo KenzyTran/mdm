@@ -19,6 +19,7 @@ from .liquidity import LiquidityLoader
 from .sell_acceleration import SellAccelerationGate
 from .buy_filter import BuyFilter
 from .buy_confirmation import BuyConfirmation
+from .buy_entry import BuyEntryFilter
 
 
 class MDMV2Engine:
@@ -57,6 +58,10 @@ class MDMV2Engine:
         self.buy_confirmation = None
         if self.config.buy_confirmation_enabled:
             self.buy_confirmation = BuyConfirmation(self.config)
+
+        self.buy_entry_filter = None
+        if self.config.gap_filter_enabled or self.config.rally_threshold_enabled:
+            self.buy_entry_filter = BuyEntryFilter(self.config)
 
         self.results: Optional[pd.DataFrame] = None
 
@@ -166,10 +171,19 @@ class MDMV2Engine:
             drawdown_pct = Indicators.drawdown_from_peak(close, rolling_high)
 
             if current_state in [V2MarketState.CASH, V2MarketState.SELL]:
+                # Rally threshold: allow early FTD in shallow pullbacks (RALLY-01, per D-06)
+                allow_early = (self.buy_entry_filter is not None
+                               and self.buy_entry_filter.should_allow_early_ftd(drawdown_pct))
+
                 # Check traditional FTD
-                if rally_day >= 4:
+                if rally_day >= 4 or allow_early:
+                    # Pitfall 2: when early FTD allowed, pass adjusted rally_day to
+                    # satisfy FTDSignalDetector's internal min_rally_day check
+                    ftd_rally_day = rally_day
+                    if allow_early and rally_day < self.config.ftd_min_rally_day:
+                        ftd_rally_day = self.config.ftd_min_rally_day
                     is_ftd, signal = self.ftd_detector.check_ftd(
-                        rally_day, price_change_pct, volume_up, date, close
+                        ftd_rally_day, price_change_pct, volume_up, date, close
                     )
                     if is_ftd and signal:
                         ftd_price = signal.price
@@ -213,6 +227,12 @@ class MDMV2Engine:
             # Determine signal_type for filter if not already set
             if is_ftd and not signal_type:
                 signal_type = "FTD"  # Classic FTD (no signal_type set by breakout checks)
+
+            # Gate 0: Gap-up filter (GAP-01, per D-01, D-02)
+            if is_ftd and signal_type == "FTD" and self.buy_entry_filter is not None:
+                if not self.buy_entry_filter.check_gap(signal_type, low, prev_close):
+                    is_ftd = False
+                    buy_rejected = True
 
             # Gate 1: MA10/MA50 trend filter (BUY-01, per D-01)
             if is_ftd and signal_type == "FTD" and self.buy_filter is not None:
