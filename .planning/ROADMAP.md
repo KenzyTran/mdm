@@ -402,7 +402,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 22-01-PLAN.md -- A/B validation script + walk-forward + CASH duration + 8-combo integration test (VAL-05, VAL-07)
+- [x] 22-01-PLAN.md -- A/B validation script + walk-forward + CASH duration + 8-combo integration test (VAL-05, VAL-07)
 - [ ] 22-02-PLAN.md -- Dashboard export extension with V2 filtered model and liquidity overlay + S3 deploy (VAL-06)
 **UI hint**: yes
 
@@ -434,4 +434,4 @@ Phases execute in numeric order: 19 -> 20 -> 21 -> 22
 | 19. Global Liquidity Integration | v5.0 | 2/2 | Complete    | 2026-03-30 |
 | 20. SELL Acceleration | v5.0 | 2/2 | Complete    | 2026-03-31 |
 | 21. BUY Selectivity | v5.0 | 2/2 | Complete    | 2026-03-31 |
-| 22. Combined Integration & Validation | v5.0 | 0/2 | Not started | - |
+| 22. Combined Integration & Validation | v5.0 | 1/2 | In Progress|  |

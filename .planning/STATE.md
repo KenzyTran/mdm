@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
-status: verifying
-stopped_at: Phase 22 context gathered
-last_updated: "2026-03-31T03:01:32.762Z"
+status: executing
+stopped_at: Completed 22-01-PLAN.md
+last_updated: "2026-03-31T03:32:55.161Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
   percent: 50
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Position
 
-Phase: 22
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 22 (combined-integration-validation) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-03-31
 
 Progress: [█████░░░░░] 50%
@@ -58,6 +58,7 @@ Progress: [█████░░░░░] 50%
 | Phase 20-sell-acceleration P02 | 4min | 2 tasks | 2 files |
 | Phase 21-buy-selectivity P01 | 23min | 2 tasks | 5 files |
 | Phase 21-buy-selectivity P02 | 3min | 2 tasks | 2 files |
+| Phase 22 P01 | 7min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ Recent decisions affecting current work:
 - [Phase 21-buy-selectivity]: DD check during confirmation uses side-effect-free methods to avoid polluting dd_history
 - [Phase 21-buy-selectivity]: MA50/52WEEK breakouts supersede pending FTD confirmation
 - [Phase 21-buy-selectivity]: Walk-forward degradation uses WARNING level since market regimes differ fundamentally between periods
+- [Phase 22]: 10% drawdown tolerance for 2008 bear tests -- filters tuned for post-2019 markets
 
 ### Pending Todos
 
@@ -94,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T03:01:32.754Z
-Stopped at: Phase 22 context gathered
-Resume file: .planning/phases/22-combined-integration-validation/22-CONTEXT.md
+Last session: 2026-03-31T03:32:55.158Z
+Stopped at: Completed 22-01-PLAN.md
+Resume file: None

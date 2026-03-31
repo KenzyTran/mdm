@@ -151,9 +151,9 @@
 
 ### Validation & Dashboard
 
-- [ ] **VAL-05**: A/B backtest comparing V2 baseline vs V2+filters on both VN30 and NASDAQ with identical metrics
+- [x] **VAL-05**: A/B backtest comparing V2 baseline vs V2+filters on both VN30 and NASDAQ with identical metrics
 - [ ] **VAL-06**: Update S3 dashboard with new performance metrics and Global Liquidity overlay chart
-- [ ] **VAL-07**: Walk-forward out-of-sample validation (train pre-2020, test 2020-2026) to detect overfitting
+- [x] **VAL-07**: Walk-forward out-of-sample validation (train pre-2020, test 2020-2026) to detect overfitting
 
 ## Out of Scope
 
@@ -239,9 +239,9 @@
 | SELL-02 | Phase 20 | Complete |
 | BUY-01 | Phase 21 | Complete |
 | BUY-02 | Phase 21 | Complete |
-| VAL-05 | Phase 22 | Pending |
+| VAL-05 | Phase 22 | Complete |
 | VAL-06 | Phase 22 | Pending |
-| VAL-07 | Phase 22 | Pending |
+| VAL-07 | Phase 22 | Complete |
 
 **v1.0 Coverage:**
 - v1 requirements: 22 total
