@@ -163,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 — Phase 23 (Fail-Safe Mechanism) complete: SAFE-01/02/03 verified, fail-safe improves VN30 return 7.4%→58.1%*
+*Last updated: 2026-03-31 — Phase 24 (Buy Entry Refinement) complete: GAP-01/02, RALLY-01/02/03 verified. Gap-up filter has zero VN30 impact (7% daily limit), rally threshold adds early entries but reduces return (40.2% vs 58.1% baseline).*
