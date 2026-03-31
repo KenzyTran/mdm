@@ -295,6 +295,7 @@ class MDMV2Engine:
             # 5. Update position
             ma10 = row['ma10'] if 'ma10' in row else None
             ma50_val = row['ma50'] if 'ma50' in row else None
+            prev_high = row['prev_high'] if 'prev_high' in row.index else 0.0
 
             new_state, action = self.position_manager.process_day(
                 date=date,
@@ -312,6 +313,7 @@ class MDMV2Engine:
                 ma50=ma50_val,
                 suppress_sell=suppress_sell,
                 acceleration_met=acceleration_met,
+                prev_high=prev_high if pd.notna(prev_high) else 0.0,
             )
 
             # If FTD triggered, reset rally tracker

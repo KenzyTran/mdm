@@ -575,3 +575,48 @@ results = engine.run(df)
 suppressed = results[results['action'].str.contains('SELL suppressed', na=False)]
 print(f"So SELL bi suppress: {len(suppressed)}")
 ```
+
+---
+
+## Co che Fail-Safe (SAFE-01, SAFE-02)
+
+Co che fail-safe giam lo tu false SELL signal bang cach tu dong thoat SELL khi thi truong phuc hoi nhanh, theo dinh nghia cua Dr. K trong VOSI FAQ.
+
+### 1. Nguyen ly hoat dong
+
+Khi V2 engine phat SELL signal (tu MA50 breakdown hoac cash deterioration), he thong ghi nhan HIGH cua **standby-sell day** (ngay truoc sell signal day) lam `fail_safe_threshold`. Day la muc gia tham chieu de xac dinh thi truong da phuc hoi hay chua.
+
+### 2. Quy tac chuyen trang thai (SAFE-02)
+
+Trong trang thai SELL, moi ngay he thong kiem tra:
+- Neu `close > fail_safe_threshold` -> tu dong chuyen ve **CASH** (fail-safe triggered)
+- Neu `close <= fail_safe_threshold` -> giu nguyen trang thai SELL
+
+**Thu tu uu tien:** Fail-safe check co uu tien **cao hon** FTD check trong trang thai SELL. Neu ca hai dieu kien deu thoa man (close > threshold VA co FTD), fail-safe se kich hoat truoc va chuyen ve CASH thay vi BUY.
+
+### 3. Ghi nhan threshold (SAFE-01)
+
+- `fail_safe_threshold` duoc ghi tu `prev_high` (HIGH cua ngay truoc khi SELL signal phat)
+- Gia tri nay luu trong `V2Position.fail_safe_threshold`
+- Duoc truyen qua `enter_sell(date, reason, fail_safe_threshold=prev_high)`
+
+### 4. Trade record
+
+Khi fail-safe trigger, he thong ghi trade voi:
+- `type`: `FAIL_SAFE_EXIT`
+- `reason`: `"Fail-safe: close {close} > standby-sell HIGH {threshold}"`
+- `price`: gia close tai thoi diem trigger
+
+### 5. Thong so cau hinh
+
+| Thong so | Kieu | Mac dinh | Mo ta |
+| :--- | :--- | :---: | :--- |
+| `fail_safe_enabled` | bool | `True` | Cong tac bat/tat co che fail-safe |
+
+Co the tat bang `fail_safe_enabled=False` trong config. Khi tat, SELL state hoat dong nhu truoc (chi FTD moi chuyen ve BUY).
+
+### 6. Muc dich
+
+- Giam lo tu false SELL signal khi thi truong phuc hoi nhanh
+- Tranh giu SELL qua lau khi thi truong da reclaim muc gia truoc khi sell
+- Dua tren dinh nghia "fail-safe" cua Dr. K: "standby-sell day HIGH" la nguong tham chieu

@@ -58,17 +58,18 @@ class Indicators:
     @staticmethod
     def add_prev_columns(df: pd.DataFrame) -> pd.DataFrame:
         """
-        Add previous day's close and volume columns.
-        
+        Add previous day's close, volume, and high columns.
+
         Args:
-            df: DataFrame with 'close' and 'volume' columns
-            
+            df: DataFrame with 'close', 'volume', and 'high' columns
+
         Returns:
-            DataFrame with 'prev_close' and 'prev_volume' columns added
+            DataFrame with 'prev_close', 'prev_volume', and 'prev_high' columns added
         """
         df = df.copy()
         df['prev_close'] = df['close'].shift(1)
         df['prev_volume'] = df['volume'].shift(1)
+        df['prev_high'] = df['high'].shift(1)
         return df
     
     @staticmethod

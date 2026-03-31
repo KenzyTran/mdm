@@ -162,6 +162,7 @@ class V2PositionManager:
         ma50: float = None,
         suppress_sell: bool = False,
         acceleration_met: bool = True,
+        prev_high: float = 0.0,
     ) -> Tuple[V2MarketState, str]:
         """
         Process a trading day and update state.
@@ -203,7 +204,7 @@ class V2PositionManager:
                 elif not acceleration_met:
                     action = "SELL deferred: no acceleration (MA50 breakdown)"
                 else:
-                    self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})")
+                    self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})", fail_safe_threshold=prev_high)
                     action = f"SELL signal: MA50 breakdown"
             # Check for CASH -> SELL: deterioration
             elif self.position.days_in_cash >= self.config.cash_deterioration_days:
@@ -212,7 +213,7 @@ class V2PositionManager:
                 elif not acceleration_met:
                     action = "SELL deferred: no acceleration (cash deterioration)"
                 else:
-                    self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)")
+                    self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)", fail_safe_threshold=prev_high)
                     action = f"SELL signal: cash deterioration"
 
         elif current_state == V2MarketState.BUY:

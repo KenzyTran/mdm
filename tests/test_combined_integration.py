@@ -62,6 +62,7 @@ def _run_engine_on_data(nasdaq_data, qe, sell_accel, buy_filt):
         buy_confirmation_enabled=buy_filt,  # tracks buy_filter per Pitfall 2
         confirmation_window_days=3,
         confirmation_max_dd=1,
+        fail_safe_enabled=False,  # Disable fail-safe for filter combo regression tests
         liquidity_csv_path=str(MAIN_REPO / "data" / "global_liquidity.csv"),
         name=f"combo_qe{qe}_sa{sell_accel}_bf{buy_filt}",
     )
