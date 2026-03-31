@@ -4,7 +4,7 @@ milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
 status: verifying
 stopped_at: Completed 21-02-PLAN.md
-last_updated: "2026-03-31T02:27:15.649Z"
+last_updated: "2026-03-31T02:47:26.455Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Position
 
-Phase: 21 (buy-selectivity) — EXECUTING
-Plan: 2 of 2
+Phase: 22
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-03-31
 
