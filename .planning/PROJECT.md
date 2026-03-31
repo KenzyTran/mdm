@@ -14,7 +14,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 
 **Target features:**
 - [x] Tích hợp Global Liquidity Index (Fed+ECB+BOJ) vào V2 engine — suppress SELL khi liquidity tăng (Phase 19)
-- [ ] Cải thiện SELL transition — thêm momentum/acceleration condition
+- [x] Cải thiện SELL transition — thêm momentum/acceleration condition (Phase 20)
 - [ ] Tinh chỉnh BUY selectivity — giảm whipsaw, cải thiện entry quality
 - [ ] Cập nhật dashboard với hiệu suất mới
 - [ ] Backtest so sánh trước/sau trên VN30 và NASDAQ
@@ -152,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after Phase 19 complete*
+*Last updated: 2026-03-31 after Phase 20 complete*
