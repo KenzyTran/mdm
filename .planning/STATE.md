@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
 status: verifying
-stopped_at: Completed 21-02-PLAN.md
-last_updated: "2026-03-31T02:47:26.455Z"
+stopped_at: Phase 22 context gathered
+last_updated: "2026-03-31T03:01:32.762Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
@@ -94,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T02:27:15.643Z
-Stopped at: Completed 21-02-PLAN.md
-Resume file: None
+Last session: 2026-03-31T03:01:32.754Z
+Stopped at: Phase 22 context gathered
+Resume file: .planning/phases/22-combined-integration-validation/22-CONTEXT.md
