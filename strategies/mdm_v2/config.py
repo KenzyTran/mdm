@@ -62,6 +62,11 @@ class MDMV2Config:
     # Fail-Safe Mechanism (v6.0, SAFE-01, SAFE-02)
     fail_safe_enabled: bool = True        # Auto-exit SELL when close > standby-sell HIGH
 
+    # Buy Entry Refinement (v6.0, GAP-01, RALLY-01)
+    gap_filter_enabled: bool = True           # Reject FTD when gap-up broken (low < prev_close)
+    rally_threshold_enabled: bool = True      # Allow early FTD in shallow pullbacks
+    rally_threshold_pct: float = -0.06        # Threshold: decline < 6% = shallow
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -77,6 +82,7 @@ class MDMV2Config:
         assert self.dd_cluster_window > 0, "DD cluster window must be positive"
         assert self.confirmation_window_days > 0, "Confirmation window must be positive"
         assert self.confirmation_max_dd >= 0, "Confirmation max DD must be non-negative"
+        assert self.rally_threshold_pct < 0, "Rally threshold must be negative"
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
