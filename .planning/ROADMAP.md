@@ -367,7 +367,11 @@ Plans:
   2. Backtest on 2008 bear market sub-period shows SELL acceleration does not delay the first correct SELL signal by more than 5 trading days vs V2 baseline
   3. Backtest on 2022 bear market sub-period shows max drawdown is not worse than V2 baseline
   4. A/B comparison of V2 vs V2+sell_acceleration in isolation shows performance delta on both NASDAQ and VN30
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 20-01-PLAN.md -- SellAccelerationGate module, config fields, engine and position manager wiring (SELL-01)
+- [ ] 20-02-PLAN.md -- Bear market A/B validation script and rule docs update (SELL-01, SELL-02)
 
 ### Phase 21: BUY Selectivity
 **Goal**: FTD entries are filtered to reject low-quality setups, reducing whipsaw without missing major rallies
@@ -378,7 +382,11 @@ Plans:
   2. Post-FTD confirmation window requires N days without a distribution day after FTD before committing to BUY -- early DD triggers immediate exit to CASH
   3. Walk-forward validation (train pre-2020, test 2020-2026) shows BUY selectivity filters degrade less than 10% out-of-sample vs in-sample performance
   4. Trade count reduction from BUY filtering is between 15-40% -- too few rejections means the filter is not working, too many means it is over-fitted
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 20-01-PLAN.md -- SellAccelerationGate module, config fields, engine and position manager wiring (SELL-01)
+- [ ] 20-02-PLAN.md -- Bear market A/B validation script and rule docs update (SELL-01, SELL-02)
 
 ### Phase 22: Combined Integration & Validation
 **Goal**: All three filters operate together without conflicting, validated end-to-end with A/B comparison and dashboard update
@@ -390,7 +398,11 @@ Plans:
   3. S3 dashboard is updated with new performance metrics, Global Liquidity overlay chart, and signal quality annotations
   4. Average CASH duration with all filters enabled stays below 130% of V2 baseline CASH duration -- filters are not trapping capital
   5. Integration test covers all 8 filter combinations (liquidity x sell_accel x buy_quality on/off) and confirms no combination produces worse max drawdown than V2 baseline on 2008 or 2022 sub-periods
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 20-01-PLAN.md -- SellAccelerationGate module, config fields, engine and position manager wiring (SELL-01)
+- [ ] 20-02-PLAN.md -- Bear market A/B validation script and rule docs update (SELL-01, SELL-02)
 **UI hint**: yes
 
 ## Progress
