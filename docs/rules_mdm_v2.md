@@ -385,7 +385,7 @@ $$equity[i] = equity[i-1] \times \frac{close[i-1]}{close[i]}$$
 BUY -> SELL    : DD count >= threshold (trên ngày DD)
 BUY -> CASH    : Stop loss, MA10 breakdown
 SELL -> CASH   : FTD, MA50 breakout, Short stop loss (DD5 high)
-CASH -> BUY    : FTD, MA50 breakout, 52-week breakout
+CASH -> BUY    : FTD (qua Gap filter + MA filter + Confirmation), MA50 breakout, 52-week breakout
 SELL -> BUY    : KHÔNG CHO PHÉP (phải qua CASH trước)
 ```
 
@@ -620,3 +620,55 @@ Co the tat bang `fail_safe_enabled=False` trong config. Khi tat, SELL state hoat
 - Giam lo tu false SELL signal khi thi truong phuc hoi nhanh
 - Tranh giu SELL qua lau khi thi truong da reclaim muc gia truoc khi sell
 - Dua tren dinh nghia "fail-safe" cua Dr. K: "standby-sell day HIGH" la nguong tham chieu
+
+---
+
+## XV. BUY ENTRY REFINEMENT (v6.0)
+
+*Cap nhat v6.0: Hai co che loc tin hieu mua (buy entry filter) tu webinar Dr. K.*
+
+### 1. Gap-Up Invalidation (GAP-01)
+
+**Muc dich:** Loai bo tin hieu FTD gia khi gap-up bi pha (intraday low xuong duoi previous close).
+
+**Dieu kien kich hoat:** `gap_filter_enabled = True` (mac dinh: True)
+
+**Logic:**
+* Chi ap dung cho tin hieu FTD classic. MA50 breakout va 52-week breakout **BYPASS** filter nay (per D-01).
+* Gap-up bi pha khi: `signal_day_low < previous_day_close` (per D-02)
+* Khong co margin/buffer -- so sanh truc tiep.
+
+**Hanh dong:**
+* Neu gap-up bi pha: `is_ftd = False`, `buy_rejected = True`
+* Neu gap-up con nguyen (low >= prev_close): cho phep tin hieu FTD di tiep qua cac gate khac
+
+**Thu tu gate:** Gate 0 (Gap filter) -> Gate 1 (MA10/MA50 filter) -> Gate 2 (Confirmation window)
+
+### 2. Rally Threshold - Do Sau Dieu Chinh (RALLY-01, RALLY-02)
+
+**Muc dich:** Cho phep FTD som hon khi thi truong chi giam nhe (< 6%), giu nguyen yeu cau day-3+ khi giam sau (>= 6%).
+
+**Dieu kien kich hoat:** `rally_threshold_enabled = True` (mac dinh: True)
+
+**Logic:**
+* Su dung `drawdown_pct` (tinh tu `Indicators.drawdown_from_peak(close, rolling_high)`) -- KHONG thay doi `correction_threshold` (per D-03)
+* Rally tracker van yeu cau `in_correction = True` (per D-05) -- 6% rule khong bypass correction detection
+* `rally_threshold_pct = -0.06` (mac dinh)
+
+**Hai truong hop:**
+
+| Drawdown | Dieu kien | Hanh dong |
+|----------|-----------|-----------|
+| 0% den -6% (shallow pullback) | `drawdown_pct > rally_threshold_pct` | FTD co the trigger bat ky ngay nao (khong can rally_day >= 4) |
+| >= -6% (deep correction) | `drawdown_pct <= rally_threshold_pct` | FTD yeu cau rally_day >= 4 (classic timing) |
+
+**Xu ly Pitfall 2 (FTD Detector day-count):**
+* Khi early FTD duoc cho phep va `rally_day < ftd_min_rally_day`: truyen `max(rally_day, ftd_min_rally_day)` vao `check_ftd()` de bypass internal min check, giu nguyen upper bound check.
+
+### 3. Config Parameters
+
+| Parameter | Type | Default | Mo ta |
+|-----------|------|---------|-------|
+| `gap_filter_enabled` | bool | True | Bat/tat gap-up invalidation |
+| `rally_threshold_enabled` | bool | True | Bat/tat 6% rally threshold |
+| `rally_threshold_pct` | float | -0.06 | Nguong phan biet shallow vs deep pullback |
