@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: verifying
-stopped_at: Completed 23-01-PLAN.md
+status: executing
+stopped_at: Completed 23-01-PLAN.md, executing Wave 2
 last_updated: "2026-03-31T05:45:33.426Z"
 last_activity: 2026-03-31
 progress:
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals -- optimized for VN30
-**Current focus:** Phase 23: Fail-Safe Mechanism
+**Current focus:** Phase 23 — fail-safe-mechanism
 
 ## Current Position
 
-Phase: 23 of 27 (Fail-Safe Mechanism)
-Plan: 0 of 0 in current phase (not yet planned)
-Status: Phase complete — ready for verification
+Phase: 23 (fail-safe-mechanism) — EXECUTING
+Plan: 1 of 2 complete
+Status: Wave 1 complete, executing Wave 2
 Last activity: 2026-03-31
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
