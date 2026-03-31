@@ -30,6 +30,7 @@ class V2Position:
     signal_type: str = "FTD"
     days_in_cash: int = 0
     ma10_below_count: int = 0
+    fail_safe_threshold: float = 0.0
 
 
 class V2PositionManager:
@@ -116,7 +117,7 @@ class V2PositionManager:
             ma10_below_count=0,
         )
 
-    def enter_sell(self, date: pd.Timestamp, reason: str):
+    def enter_sell(self, date: pd.Timestamp, reason: str, fail_safe_threshold: float = 0.0):
         """Enter SELL state from CASH (no position to close)."""
         self.trades.append({
             'type': 'SELL_SIGNAL',
@@ -125,6 +126,21 @@ class V2PositionManager:
         })
         self.position = V2Position(
             state=V2MarketState.SELL,
+            days_in_cash=0,
+            ma10_below_count=0,
+            fail_safe_threshold=fail_safe_threshold,
+        )
+
+    def fail_safe_exit(self, date: pd.Timestamp, close: float):
+        """Exit SELL state to CASH via fail-safe (SAFE-02)."""
+        self.trades.append({
+            'type': 'FAIL_SAFE_EXIT',
+            'date': date,
+            'price': close,
+            'reason': f"Fail-safe: close {close:.2f} > standby-sell HIGH {self.position.fail_safe_threshold:.2f}",
+        })
+        self.position = V2Position(
+            state=V2MarketState.CASH,
             days_in_cash=0,
             ma10_below_count=0,
         )
@@ -221,8 +237,14 @@ class V2PositionManager:
                 action = f"CASH exit: MA10 below count {self.position.ma10_below_count}"
 
         elif current_state == V2MarketState.SELL:
-            # SELL is persistent -- only FTD can transition to BUY
-            if is_ftd:
+            # Check fail-safe first: close > standby-sell HIGH -> exit to CASH (SAFE-02)
+            if (self.config.fail_safe_enabled
+                and self.position.fail_safe_threshold > 0
+                and close > self.position.fail_safe_threshold):
+                self.fail_safe_exit(date, close)
+                action = f"CASH: fail-safe triggered (close {close:.2f} > threshold {self.position.fail_safe_threshold:.2f})"
+            # FTD -> BUY (from SELL)
+            elif is_ftd:
                 self.enter_buy(ftd_price, date, low, signal_type)
                 action = f"BUY at {ftd_price:.2f} ({signal_type}) from SELL"
 

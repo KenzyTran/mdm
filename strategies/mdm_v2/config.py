@@ -59,6 +59,9 @@ class MDMV2Config:
     confirmation_window_days: int = 3         # Days to confirm (D-03, D-12)
     confirmation_max_dd: int = 1              # Max DD allowed in window (D-04, D-12)
 
+    # Fail-Safe Mechanism (v6.0, SAFE-01, SAFE-02)
+    fail_safe_enabled: bool = True        # Auto-exit SELL when close > standby-sell HIGH
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
