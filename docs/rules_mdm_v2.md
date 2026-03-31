@@ -109,6 +109,48 @@ Khi `sell_acceleration_enabled=True` (mac dinh), cac dieu kien tren chi duoc thu
 
 **Thu tu uu tien trigger:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
 
+### 6. Bộ lọc BUY Selectivity (v5.0, BUY-01, BUY-02)
+
+Hai bộ lọc được áp dụng CHỈ cho tín hiệu FTD cổ điển. MA50 breakout và 52-week breakout bỏ qua cả hai bộ lọc và vào BUY ngay lập tức.
+
+#### 6a. Lọc xu hướng MA10/MA50 (BUY-01)
+
+**Điều kiện từ chối:** FTD bị từ chối khi MA10 < MA50 tại thời điểm FTD.
+
+* **Lý do:** Khi MA10 < MA50, xu hướng ngắn hạn yếu hơn xu hướng trung hạn, cho thấy market chưa xác nhận đảo chiều.
+* **Bật/tắt:** `buy_filter_enabled` (mặc định: True)
+* **Công thức:** Cho phép FTD khi $MA_{10} \geq MA_{50}$
+
+#### 6b. Cửa sổ xác nhận sau FTD (BUY-02)
+
+**Cơ chế:** Sau khi FTD vượt qua bộ lọc MA10/MA50, engine chờ thêm N ngày giao dịch trước khi vào BUY.
+
+* **Số ngày chờ:** `confirmation_window_days` (mặc định: 3 ngày)
+* **Điều kiện hủy:** FTD bị hủy nếu có > `confirmation_max_dd` Distribution Days trong cửa sổ (mặc định: > 1 DD, tức là 2+ DD hủy FTD)
+* **Giá vào lệnh:** Giá đóng cửa của ngày xác nhận (ngày thứ 3), KHÔNG phải giá ngày FTD
+* **Trạng thái trong cửa sổ:** Engine giữ trạng thái CASH, không mở vị thế
+* **Bật/tắt:** `buy_confirmation_enabled` (mặc định: True)
+
+**Quy trình:**
+1. FTD cổ điển phát hiện -> kiểm tra MA10 >= MA50
+2. Nếu pass -> bắt đầu cửa sổ xác nhận (3 ngày)
+3. Mỗi ngày trong cửa sổ: đếm Distribution Days (side-effect-free, không ảnh hưởng DD counter chính)
+4. Nếu DD count > 1 -> hủy FTD, quay lại chờ tín hiệu mới
+5. Nếu 3 ngày pass (0-1 DD) -> xác nhận BUY, vào lệnh tại giá đóng cửa ngày 3
+
+**Tương tác với tín hiệu khác:**
+* MA50 breakout hoặc 52-week breakout trong cửa sổ xác nhận -> hủy cửa sổ, vào BUY ngay
+* SELL transition trong cửa sổ -> hủy pending FTD
+
+#### Cấu hình BUY Selectivity
+
+| Tham số | Mặc định | Mô tả |
+|---------|----------|-------|
+| `buy_filter_enabled` | True | Bật lọc MA10/MA50 |
+| `buy_confirmation_enabled` | True | Bật cửa sổ xác nhận |
+| `confirmation_window_days` | 3 | Số ngày chờ xác nhận |
+| `confirmation_max_dd` | 1 | Số DD tối đa cho phép trong cửa sổ |
+
 ---
 
 ## IV. TRẠNG THÁI 2: BUY (NẮM GIỮ VỊ THẾ)
@@ -248,6 +290,10 @@ Where `acceleration_met` = at least one of: Price ROC < -4%, DD clustering (3 in
 | `roc_window` | 10 | So phien tinh ROC (mac dinh 10 phien) |
 | `dd_cluster_count` | 3 | So DD toi thieu cho dieu kien clustering |
 | `dd_cluster_window` | 5 | Cua so phien cho DD clustering |
+| `buy_filter_enabled` | True | Bật lọc MA10/MA50 cho FTD (v5.0 BUY-01) |
+| `buy_confirmation_enabled` | True | Bật cửa sổ xác nhận sau FTD (v5.0 BUY-02) |
+| `confirmation_window_days` | 3 | Số ngày chờ xác nhận sau FTD |
+| `confirmation_max_dd` | 1 | Số DD tối đa cho phép trong cửa sổ xác nhận |
 | `name` | "default" | Tên giả thuyết (metadata) |
 
 ---
