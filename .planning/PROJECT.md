@@ -8,18 +8,24 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
-## Current State
+## Current Milestone: v6.0 MDM Fail-Safe & Signal Refinement
 
-**Latest milestone:** v5.0 Signal Quality & Macro Filter — shipped 2026-03-31
+**Goal:** Implement Dr. K's specific signal rules (fail-safe, gap-up neutralization, 6% threshold) và review lại vai trò của MA50/200dma + volatility filter để giảm whipsaw.
 
-**V2 engine (best performer):** +190.8% total return, CAGR 10%, max DD -31.8% trên VN30
-- QE Floor filter (suppress SELL during liquidity expansion) — available but disabled on VN30 (Fed liquidity ít tương quan)
-- SELL Acceleration Gate (ROC/DD-clustering/volume-MA50) — active, 0-day delay in 2008 bear
-- BUY Selectivity (MA10/MA50 trend filter + 3-day confirmation) — active, giảm 19.6% whipsaw trades trên VN30
-- Walk-forward validation: no overfitting detected (OOS outperforms IS)
+**Target features:**
+- [ ] Fail-safe mechanism — auto-CASH khi NASDAQ vượt HIGH của standby-sell day
+- [ ] Gap-up buy neutralization — invalidate buy nếu low < prev_close
+- [ ] 6% rally attempt threshold — FTD classic chỉ required khi drop ≥ 6%
+- [ ] MA50/200dma review — A/B test deprioritize MA50 theo Dr. K statement
+- [ ] Banding/volatility filter — ATR-based suppress signals trong low-vol periods
+
+**Baseline (V2 hiện tại):** +190.8% total return, CAGR 10%, max DD -31.8% trên VN30
+
+**Key context:**
+- Features 1-3: rules cụ thể từ Dr. K FAQ + webinar transcripts
+- Features 4-5: cần research — Dr. K nói "little value" cho 200dma/50dma, "banding width" ảnh hưởng performance
+- V2 hiện dùng MA50 breakdown làm SELL trigger chính — nếu Dr. K nói không quan trọng thì cần review
 - Dashboard: http://mdm-trading-dashboard.s3-website-ap-southeast-1.amazonaws.com
-
-**Key finding:** QE Floor designed for NASDAQ, degrades VN30 (93.7% vs 190.8%). Kept as optional config flag.
 
 ## Requirements
 
@@ -157,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 after v5.0 milestone complete*
+*Last updated: 2026-03-31 after v6.0 milestone started*

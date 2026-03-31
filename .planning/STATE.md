@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v5.0
-milestone_name: Signal Quality & Macro Filter
-status: executing
-stopped_at: Completed 22-01-PLAN.md
-last_updated: "2026-03-31T04:13:11.135Z"
-last_activity: 2026-03-31
+milestone: v6.0
+milestone_name: MDM Fail-Safe & Signal Refinement
+status: planning
+stopped_at: Defining requirements
+last_updated: "2026-03-31T05:00:00.000Z"
+last_activity: 2026-03-31 -- Milestone v6.0 started
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 22 — combined-integration-validation
+**Current focus:** v6.0 — MDM Fail-Safe & Signal Refinement
 
 ## Current Position
 
-Phase: 22
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-03-31
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-31 — Milestone v6.0 started
 
 Progress: [█████░░░░░] 50%
 
