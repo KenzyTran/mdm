@@ -426,10 +426,10 @@ Plans:
   2. While in SELL state, if VN30 close exceeds the fail-safe threshold, engine auto-transitions to CASH with a "fail-safe triggered" annotation in the signal log
   3. A/B backtest on VN30 shows fail-safe reduces average loss on false SELL trades (trades where SELL was followed by market recovery) compared to V2 baseline
   4. Fail-safe does not trigger during genuine bear markets (2022 VN30 drawdown) -- verified by checking that no fail-safe exit occurs within 10 days of a SELL that precedes a 10%+ decline
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 23-01-PLAN.md -- Fail-safe core logic: config, position state, SELL->CASH transition, unit tests (SAFE-01, SAFE-02)
+- [x] 23-01-PLAN.md -- Fail-safe core logic: config, position state, SELL->CASH transition, unit tests (SAFE-01, SAFE-02)
 - [ ] 23-02-PLAN.md -- A/B validation script comparing V2 baseline vs V2+fail-safe on VN30 (SAFE-03)
 
 ### Phase 24: Buy Entry Refinement
@@ -507,7 +507,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 20. SELL Acceleration | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 21. BUY Selectivity | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 22. Combined Integration & Validation | v5.0 | 2/2 | Complete | 2026-03-31 |
-| 23. Fail-Safe Mechanism | v6.0 | 0/0 | Not started | - |
+| 23. Fail-Safe Mechanism | v6.0 | 1/2 | In Progress|  |
 | 24. Buy Entry Refinement | v6.0 | 0/0 | Not started | - |
 | 25. MA50/200dma Review | v6.0 | 0/0 | Not started | - |
 | 26. Banding/Volatility Filter | v6.0 | 0/0 | Not started | - |

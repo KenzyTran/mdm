@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: planning
-stopped_at: Roadmap created, ready to plan Phase 23
-last_updated: "2026-03-31T06:00:00.000Z"
-last_activity: 2026-03-31 -- v6.0 roadmap created (Phases 23-27)
+status: verifying
+stopped_at: Completed 23-01-PLAN.md
+last_updated: "2026-03-31T05:45:33.426Z"
+last_activity: 2026-03-31
 progress:
-  total_phases: 27
-  completed_phases: 22
-  total_plans: 46
-  completed_plans: 46
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 81
 ---
 
@@ -27,14 +27,15 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Phase: 23 of 27 (Fail-Safe Mechanism)
 Plan: 0 of 0 in current phase (not yet planned)
-Status: Ready to plan
-Last activity: 2026-03-31 -- v6.0 roadmap created (Phases 23-27)
+Status: Phase complete — ready for verification
+Last activity: 2026-03-31
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 46 (across v1.0-v5.0)
 - Average duration: ~15 min
 - Total execution time: ~12 hours
@@ -62,6 +63,8 @@ Recent decisions affecting current work:
 - [v6.0 Roadmap]: 5-phase structure: Fail-Safe -> Buy Refinement -> MA Review -> Volatility -> Integration
 - [v6.0 Roadmap]: GAP + RALLY grouped together (both are buy-entry refinements)
 - [v6.0 Roadmap]: MAREVIEW is a research/A/B phase -- outcome may change V2 logic significantly
+- [Phase 23]: Fail-safe check runs BEFORE FTD in SELL state (priority order per Dr. K FAQ)
+- [Phase 23]: prev_high (standby-sell day HIGH) used as fail-safe threshold, not current day HIGH
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31
-Stopped at: v6.0 roadmap created, ready to plan Phase 23
+Last session: 2026-03-31T05:45:33.421Z
+Stopped at: Completed 23-01-PLAN.md
 Resume file: None
