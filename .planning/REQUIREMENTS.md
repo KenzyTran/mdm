@@ -14,13 +14,13 @@
 ### Gap-Up Buy Neutralization
 
 - [x] **GAP-01**: Invalidate buy signal neu intraday low < previous day close (gap-up bi pha)
-- [ ] **GAP-02**: A/B backtest so sanh V2 co/khong gap-up filter tren VN30
+- [x] **GAP-02**: A/B backtest so sanh V2 co/khong gap-up filter tren VN30
 
 ### Rally Attempt Threshold
 
 - [x] **RALLY-01**: Khi VN30 giam < 6% tu dinh, FTD co the den bat cu ngay nao (khong can cho day 3+)
 - [x] **RALLY-02**: Khi VN30 giam >= 6% tu dinh, yeu cau FTD classic (day 3+)
-- [ ] **RALLY-03**: A/B backtest tren VN30 so sanh co/khong 6% threshold logic
+- [x] **RALLY-03**: A/B backtest tren VN30 so sanh co/khong 6% threshold logic
 
 ### MA50/200dma Review
 
@@ -73,10 +73,10 @@
 | SAFE-02 | Phase 23 | Complete |
 | SAFE-03 | Phase 23 | Complete |
 | GAP-01 | Phase 24 | Complete |
-| GAP-02 | Phase 24 | Pending |
+| GAP-02 | Phase 24 | Complete |
 | RALLY-01 | Phase 24 | Complete |
 | RALLY-02 | Phase 24 | Complete |
-| RALLY-03 | Phase 24 | Pending |
+| RALLY-03 | Phase 24 | Complete |
 | MAREVIEW-01 | Phase 25 | Pending |
 | MAREVIEW-02 | Phase 25 | Pending |
 | MAREVIEW-03 | Phase 25 | Pending |

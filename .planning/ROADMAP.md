@@ -411,7 +411,7 @@ Plans:
 
 - [x] **Phase 23: Fail-Safe Mechanism** - Auto-exit SELL to CASH when VN30 reclaims standby-sell HIGH, with A/B validation
  (completed 2026-03-31)
-- [ ] **Phase 24: Buy Entry Refinement** - Gap-up neutralization and 6% rally attempt threshold for FTD timing on VN30
+- [x] **Phase 24: Buy Entry Refinement** - Gap-up neutralization and 6% rally attempt threshold for FTD timing on VN30 (completed 2026-03-31)
 - [ ] **Phase 25: MA50/200dma Review** - A/B research testing whether MA50 should be removed from SELL trigger and BUY filter logic
 - [ ] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods
 - [ ] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features
@@ -443,11 +443,11 @@ Plans:
   3. When VN30 has declined 6% or more from its recent peak, FTD requires classic day-3+ timing -- verified by checking that deep correction entries still wait for proper follow-through
   4. A/B backtest on VN30 comparing V2 baseline vs V2+gap_filter shows gap filter reduces false entry count without significantly reducing total return
   5. A/B backtest on VN30 comparing V2 baseline vs V2+rally_threshold shows the 6% logic improves entry timing (fewer whipsaw trades in shallow pullbacks)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 24-01-PLAN.md -- BuyEntryFilter module, config, engine integration, unit tests (GAP-01, RALLY-01, RALLY-02)
-- [ ] 24-02-PLAN.md -- A/B validation script and rules documentation update (GAP-02, RALLY-03)
+- [x] 24-02-PLAN.md -- A/B validation script and rules documentation update (GAP-02, RALLY-03)
 
 ### Phase 25: MA50/200dma Review
 **Goal**: Evidence-based decision on whether MA50 should remain in V2 signal logic, based on Dr. K's statement that MA50/200dma have "little value"
@@ -513,7 +513,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 21. BUY Selectivity | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 22. Combined Integration & Validation | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 23. Fail-Safe Mechanism | v6.0 | 2/2 | Complete    | 2026-03-31 |
-| 24. Buy Entry Refinement | v6.0 | 1/2 | In Progress|  |
+| 24. Buy Entry Refinement | v6.0 | 2/2 | Complete   | 2026-03-31 |
 | 25. MA50/200dma Review | v6.0 | 0/0 | Not started | - |
 | 26. Banding/Volatility Filter | v6.0 | 0/0 | Not started | - |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |
