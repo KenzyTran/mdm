@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
-status: verifying
-stopped_at: Phase 20 context gathered
-last_updated: "2026-03-31T00:08:20.632Z"
-last_activity: 2026-03-30
+status: executing
+stopped_at: Completed 20-01-PLAN.md
+last_updated: "2026-03-31T00:33:59.140Z"
+last_activity: 2026-03-31
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 50
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 19 — global-liquidity-integration
+**Current focus:** Phase 20 — sell-acceleration
 
 ## Current Position
 
-Phase: 20
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-03-30
+Phase: 20 (sell-acceleration) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-03-31
 
 Progress: [█████░░░░░] 50%
 
@@ -54,6 +54,7 @@ Progress: [█████░░░░░] 50%
 *Updated after each plan completion*
 | Phase 19 P01 | 3min | 2 tasks | 3 files |
 | Phase 19 P02 | 8min | 3 tasks | 4 files |
+| Phase 20-sell-acceleration P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - [Phase 19]: merge_asof backward for weekly-to-daily alignment, no interpolation
 - [Phase 19]: suppress_sell defaults False for full backward compatibility
 - [Phase 19]: V2 engine baseline is 22.6% (not 190.8% which is hybrid engine)
+- [Phase 20-sell-acceleration]: Acceleration gate uses OR logic across 3 conditions, suppress_sell takes priority
 
 ### Pending Todos
 
@@ -85,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T00:08:20.629Z
-Stopped at: Phase 20 context gathered
-Resume file: .planning/phases/20-sell-acceleration/20-CONTEXT.md
+Last session: 2026-03-31T00:33:59.137Z
+Stopped at: Completed 20-01-PLAN.md
+Resume file: None
