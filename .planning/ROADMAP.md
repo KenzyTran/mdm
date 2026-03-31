@@ -7,6 +7,7 @@
 - ✅ **v3.0 Hybrid MDM Engine** - Phases 11-15 (shipped 2026-03-29)
 - ✅ **v4.0 MDM Short Signal & Dr. K Alignment** - Phases 16-18 (shipped 2026-03-30)
 - ✅ **v5.0 Signal Quality & Macro Filter** - Phases 19-22 (shipped 2026-03-31)
+- 📋 **v6.0 MDM Fail-Safe & Signal Refinement** - Phases 23-27
 
 ## Phases
 
@@ -338,9 +339,7 @@ Plans:
 - [x] **Phase 19: Global Liquidity Integration** - Load liquidity data, implement QE floor filter suppressing SELL during liquidity expansion (completed 2026-03-30)
 - [x] **Phase 20: SELL Acceleration** - Require downside momentum/acceleration before SELL transition, validated on bear markets (completed 2026-03-31)
 - [x] **Phase 21: BUY Selectivity** - Reject weak FTD entries and add post-FTD confirmation window to reduce whipsaw (completed 2026-03-31)
-- [x] **Phase 22: Combined Integration & Validation** - A/B comparison, walk-forward validation, dashboard update with all filters combined (completed 2026-03-31)
-
-## Phase Details
+- [x] **Phase 22: Combined Integration & Validation** - A/B comparison, walk-forward validation, dashboard update with all filters combined (completed 2026-03-31)
 
 ### Phase 19: Global Liquidity Integration
 **Goal**: V2 engine can suppress SELL signals during central bank liquidity expansion, implementing Dr. K's confirmed QE floor behavior
@@ -406,10 +405,79 @@ Plans:
 
 </details>
 
+### v6.0 MDM Fail-Safe & Signal Refinement (Phases 23-27)
+
+**Milestone Goal:** Implement Dr. K's specific signal rules (fail-safe, gap-up neutralization, 6% threshold) and review MA50/volatility filter role to reduce whipsaw on VN30.
+
+- [ ] **Phase 23: Fail-Safe Mechanism** - Auto-exit SELL to CASH when VN30 reclaims standby-sell HIGH, with A/B validation
+- [ ] **Phase 24: Buy Entry Refinement** - Gap-up neutralization and 6% rally attempt threshold for FTD timing on VN30
+- [ ] **Phase 25: MA50/200dma Review** - A/B research testing whether MA50 should be removed from SELL trigger and BUY filter logic
+- [ ] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods
+- [ ] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features
+
+## Phase Details
+
+### Phase 23: Fail-Safe Mechanism
+**Goal**: False SELL signals are automatically detected and exited when VN30 reclaims the standby-sell day HIGH
+**Depends on**: Phase 22
+**Requirements**: SAFE-01, SAFE-02, SAFE-03
+**Success Criteria** (what must be TRUE):
+  1. When V2 engine transitions to SELL, the HIGH of the day immediately before the sell signal day is recorded as the fail-safe threshold in engine state
+  2. While in SELL state, if VN30 close exceeds the fail-safe threshold, engine auto-transitions to CASH with a "fail-safe triggered" annotation in the signal log
+  3. A/B backtest on VN30 shows fail-safe reduces average loss on false SELL trades (trades where SELL was followed by market recovery) compared to V2 baseline
+  4. Fail-safe does not trigger during genuine bear markets (2022 VN30 drawdown) -- verified by checking that no fail-safe exit occurs within 10 days of a SELL that precedes a 10%+ decline
+**Plans**: TBD
+
+### Phase 24: Buy Entry Refinement
+**Goal**: BUY entries on VN30 are refined with gap-up invalidation and decline-severity-aware FTD timing rules from Dr. K's webinar
+**Depends on**: Phase 23
+**Requirements**: GAP-01, GAP-02, RALLY-01, RALLY-02, RALLY-03
+**Success Criteria** (what must be TRUE):
+  1. A buy signal is invalidated when the signal day's intraday low is below the previous day's close (gap-up broken) -- verified by identifying 3+ historical VN30 instances where this filter would have prevented a losing trade
+  2. When VN30 has declined less than 6% from its recent peak, FTD can trigger on any day (no day-3+ requirement) -- verified by checking that shallow pullback recoveries are captured faster
+  3. When VN30 has declined 6% or more from its recent peak, FTD requires classic day-3+ timing -- verified by checking that deep correction entries still wait for proper follow-through
+  4. A/B backtest on VN30 comparing V2 baseline vs V2+gap_filter shows gap filter reduces false entry count without significantly reducing total return
+  5. A/B backtest on VN30 comparing V2 baseline vs V2+rally_threshold shows the 6% logic improves entry timing (fewer whipsaw trades in shallow pullbacks)
+**Plans**: TBD
+
+### Phase 25: MA50/200dma Review
+**Goal**: Evidence-based decision on whether MA50 should remain in V2 signal logic, based on Dr. K's statement that MA50/200dma have "little value"
+**Depends on**: Phase 24
+**Requirements**: MAREVIEW-01, MAREVIEW-02, MAREVIEW-03
+**Success Criteria** (what must be TRUE):
+  1. A/B backtest on VN30 shows performance delta (total return, max drawdown, Sharpe) between V2 with MA50 breakdown as SELL trigger vs V2 without it
+  2. A/B backtest on VN30 shows performance delta between V2 with MA50 in BUY filter logic vs V2 without it
+  3. A written report recommends one of three actions (keep MA50, remove MA50, replace MA50 with alternative) with quantitative evidence from the backtests
+  4. If MA50 is recommended for removal, the report identifies what (if anything) replaces its role in the signal logic
+**Plans**: TBD
+
+### Phase 26: Banding/Volatility Filter
+**Goal**: V2 engine suppresses signal switching during low-volatility sideways periods on VN30, implementing Dr. K's "banding width" concept
+**Depends on**: Phase 25
+**Requirements**: BAND-01, BAND-02, BAND-03
+**Success Criteria** (what must be TRUE):
+  1. ATR-based volatility regime classifier labels each VN30 trading day as high/normal/low volatility, with regime boundaries calibrated to VN30's historical ATR distribution
+  2. When volatility regime is "low", signal transitions (both BUY and SELL) are suppressed -- engine stays in current state until volatility returns to normal/high
+  3. A/B backtest on VN30 sideways periods (identified by ATR regime) shows the volatility filter reduces false signal count by at least 20% during those periods
+  4. The filter does not delay entries or exits during high-volatility trending periods -- verified by checking that 2020 crash exit and 2021 rally entry timing are unchanged
+**Plans**: TBD
+
+### Phase 27: Combined v6.0 Validation & Dashboard
+**Goal**: All v6.0 features validated together with walk-forward testing and dashboard updated with new performance metrics
+**Depends on**: Phase 26
+**Requirements**: VAL-08, VAL-09, VAL-10
+**Success Criteria** (what must be TRUE):
+  1. A/B backtest report comparing V2 baseline vs V2+all_v6_features shows side-by-side metrics (total return, CAGR, max drawdown, Sharpe, trade count, false signal rate) on VN30
+  2. Walk-forward validation (train pre-2022, test 2022-2026) shows combined v6.0 features degrade less than 10% out-of-sample vs in-sample on VN30
+  3. S3 dashboard is updated with v6.0 performance metrics, fail-safe annotations, volatility regime overlay, and updated equity curve
+  4. Combined v6.0 configuration does not produce worse max drawdown than V2 baseline on any VN30 bear market sub-period (2020, 2022)
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 19 -> 20 -> 21 -> 22
+Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -431,7 +499,12 @@ Phases execute in numeric order: 19 -> 20 -> 21 -> 22
 | 16. Short Position & State Transitions | v4.0 | 2/2 | Complete | 2026-03-30 |
 | 17. Stop Loss & Risk Management | v4.0 | 2/2 | Complete | 2026-03-30 |
 | 18. Short P&L & Comparative Validation | v4.0 | 2/2 | Complete | 2026-03-30 |
-| 19. Global Liquidity Integration | v5.0 | 2/2 | Complete    | 2026-03-30 |
-| 20. SELL Acceleration | v5.0 | 2/2 | Complete    | 2026-03-31 |
-| 21. BUY Selectivity | v5.0 | 2/2 | Complete    | 2026-03-31 |
-| 22. Combined Integration & Validation | v5.0 | 2/2 | Complete    | 2026-03-31 |
+| 19. Global Liquidity Integration | v5.0 | 2/2 | Complete | 2026-03-30 |
+| 20. SELL Acceleration | v5.0 | 2/2 | Complete | 2026-03-31 |
+| 21. BUY Selectivity | v5.0 | 2/2 | Complete | 2026-03-31 |
+| 22. Combined Integration & Validation | v5.0 | 2/2 | Complete | 2026-03-31 |
+| 23. Fail-Safe Mechanism | v6.0 | 0/0 | Not started | - |
+| 24. Buy Entry Refinement | v6.0 | 0/0 | Not started | - |
+| 25. MA50/200dma Review | v6.0 | 0/0 | Not started | - |
+| 26. Banding/Volatility Filter | v6.0 | 0/0 | Not started | - |
+| 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |
