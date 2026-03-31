@@ -17,6 +17,8 @@ from .position_manager import V2PositionManager, V2MarketState
 from .config import MDMV2Config
 from .liquidity import LiquidityLoader
 from .sell_acceleration import SellAccelerationGate
+from .buy_filter import BuyFilter
+from .buy_confirmation import BuyConfirmation
 
 
 class MDMV2Engine:
@@ -48,6 +50,14 @@ class MDMV2Engine:
         if self.config.sell_acceleration_enabled:
             self.sell_acceleration_gate = SellAccelerationGate(self.config)
 
+        self.buy_filter = None
+        if self.config.buy_filter_enabled:
+            self.buy_filter = BuyFilter(self.config)
+
+        self.buy_confirmation = None
+        if self.config.buy_confirmation_enabled:
+            self.buy_confirmation = BuyConfirmation(self.config)
+
         self.results: Optional[pd.DataFrame] = None
 
     def reset(self):
@@ -56,6 +66,8 @@ class MDMV2Engine:
         self.rally_tracker.full_reset()
         self.ftd_detector.reset()
         self.position_manager.reset()
+        if self.buy_confirmation is not None:
+            self.buy_confirmation.reset()
         self.results = None
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -106,6 +118,9 @@ class MDMV2Engine:
         df['action'] = ''
         df['buy_price'] = 0.0
         df['drawdown_pct'] = 0.0
+        df['buy_rejected'] = False
+        df['buy_pending'] = False
+        df['buy_confirmed'] = False
 
         all_dates = df['date'].tolist()
 
@@ -185,6 +200,52 @@ class MDMV2Engine:
                         ftd_price = signal.price
                         signal_type = signal.signal_type
                         self.dd_counter.reset()
+
+            # 2b. BUY selectivity gates (BUY-01, BUY-02, per D-08)
+            buy_rejected = False
+            buy_pending = False
+            buy_confirmed = False
+
+            # If a strong breakout fires while FTD is pending confirmation, cancel the pending FTD (per pitfall 2)
+            if is_ftd and signal_type in ("MA50", "52WEEK") and self.buy_confirmation is not None:
+                self.buy_confirmation.reset()
+
+            # Determine signal_type for filter if not already set
+            if is_ftd and not signal_type:
+                signal_type = "FTD"  # Classic FTD (no signal_type set by breakout checks)
+
+            # Gate 1: MA10/MA50 trend filter (BUY-01, per D-01)
+            if is_ftd and signal_type == "FTD" and self.buy_filter is not None:
+                ma10_val = row['ma10'] if 'ma10' in row else None
+                ma50_check = row['ma50'] if 'ma50' in row else None
+                if not self.buy_filter.check("FTD", ma10_val, ma50_check):
+                    is_ftd = False
+                    buy_rejected = True
+
+            # Gate 2: Confirmation window (BUY-02, per D-03 to D-06)
+            if is_ftd and signal_type == "FTD" and self.buy_confirmation is not None:
+                self.buy_confirmation.submit_ftd(date)
+                is_ftd = False  # Suppress immediate entry, wait for confirmation
+                buy_pending = True
+
+            # Process pending confirmation (every day, per D-03)
+            if self.buy_confirmation is not None and self.buy_confirmation.is_pending():
+                # Detect DD for confirmation window WITHOUT side effects
+                # Use the same conditions as DistributionDayCounter but do NOT append to dd_history
+                confirm_is_dd = (
+                    self.dd_counter.is_distribution_day_type1(price_change_pct, volume_up)
+                    or self.dd_counter.is_distribution_day_type2(price_change_pct, volume_up, p_loc)
+                )
+                confirmed, rejected, entry_price = self.buy_confirmation.process_day(
+                    confirm_is_dd, close
+                )
+                if confirmed:
+                    is_ftd = True
+                    ftd_price = entry_price  # Day-3 close per D-05
+                    signal_type = "FTD"
+                    buy_confirmed = True
+                elif rejected:
+                    buy_rejected = True  # FTD canceled due to DD threshold
 
             # 3. Count distribution days (only when in BUY state)
             is_dd = False
@@ -271,6 +332,9 @@ class MDMV2Engine:
             df.at[idx, 'buy_price'] = self.position_manager.get_buy_price()
             df.at[idx, 'drawdown_pct'] = drawdown_pct
             df.at[idx, 'acceleration_met'] = acceleration_met
+            df.at[idx, 'buy_rejected'] = buy_rejected
+            df.at[idx, 'buy_pending'] = buy_pending
+            df.at[idx, 'buy_confirmed'] = buy_confirmed
 
         self.results = df
         return df
