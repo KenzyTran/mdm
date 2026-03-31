@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: completed
-stopped_at: Completed 24-02-PLAN.md
-last_updated: "2026-03-31T10:30:39.271Z"
-last_activity: 2026-03-31 -- Plan 02 validation and docs complete
+status: executing
+stopped_at: Phase 24 context gathered
+last_updated: "2026-03-31T10:38:23.206Z"
+last_activity: 2026-03-31
 progress:
   total_phases: 4
   completed_phases: 2
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals -- optimized for VN30
-**Current focus:** Phase 23 — fail-safe-mechanism
+**Current focus:** Phase 24 — buy-entry-refinement
 
 ## Current Position
 
-Phase: 24 (buy-entry-refinement) -- COMPLETE
-Plan: 2 of 2
-Status: Phase 24 complete
-Last activity: 2026-03-31 -- Plan 02 validation and docs complete
+Phase: 25
+Plan: Not started
+Status: Executing Phase 24
+Last activity: 2026-03-31
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
 
@@ -66,10 +66,6 @@ Recent decisions affecting current work:
 - [Phase 23]: Fail-safe check runs BEFORE FTD in SELL state (priority order per Dr. K FAQ)
 - [Phase 23]: prev_high (standby-sell day HIGH) used as fail-safe threshold, not current day HIGH
 - [Phase 23]: Fail-safe improves VN30 return 7.4%->58.1% but triggers during 2022 bear -- needs refinement
-- [Phase 24]: Gate 0 (gap filter) before Gate 1 (MA10/MA50) -- gap-up broken is fundamental invalidation
-- [Phase 24]: Pitfall 2: pass max(rally_day, ftd_min_rally_day) to check_ftd() when early FTD allowed
-- [Phase 24]: Gap filter has zero impact on VN30 classic FTDs -- all gap-broken signals are MA50/52WEEK breakouts (bypassed per D-01)
-- [Phase 24]: Rally threshold adds 31 early entries but reduces return (40.2% vs 58.1%) on VN30 -- calibrated for US market patterns
 
 ### Pending Todos
 
@@ -83,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T10:30:39.266Z
-Stopped at: Completed 24-02-PLAN.md
-Resume file: None
+Last session: 2026-03-31T09:25:37.046Z
+Stopped at: Phase 24 context gathered
+Resume file: .planning/phases/24-buy-entry-refinement/24-CONTEXT.md

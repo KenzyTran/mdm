@@ -513,7 +513,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 21. BUY Selectivity | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 22. Combined Integration & Validation | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 23. Fail-Safe Mechanism | v6.0 | 2/2 | Complete    | 2026-03-31 |
-| 24. Buy Entry Refinement | v6.0 | 2/2 | Complete   | 2026-03-31 |
+| 24. Buy Entry Refinement | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 25. MA50/200dma Review | v6.0 | 0/0 | Not started | - |
 | 26. Banding/Volatility Filter | v6.0 | 0/0 | Not started | - |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |
