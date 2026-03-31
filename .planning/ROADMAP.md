@@ -426,7 +426,11 @@ Plans:
   2. While in SELL state, if VN30 close exceeds the fail-safe threshold, engine auto-transitions to CASH with a "fail-safe triggered" annotation in the signal log
   3. A/B backtest on VN30 shows fail-safe reduces average loss on false SELL trades (trades where SELL was followed by market recovery) compared to V2 baseline
   4. Fail-safe does not trigger during genuine bear markets (2022 VN30 drawdown) -- verified by checking that no fail-safe exit occurs within 10 days of a SELL that precedes a 10%+ decline
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 23-01-PLAN.md -- Fail-safe core logic: config, position state, SELL->CASH transition, unit tests (SAFE-01, SAFE-02)
+- [ ] 23-02-PLAN.md -- A/B validation script comparing V2 baseline vs V2+fail-safe on VN30 (SAFE-03)
 
 ### Phase 24: Buy Entry Refinement
 **Goal**: BUY entries on VN30 are refined with gap-up invalidation and decline-severity-aware FTD timing rules from Dr. K's webinar
