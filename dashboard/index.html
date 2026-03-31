@@ -42,34 +42,8 @@ header {
 header h1 { font-size: 24px; font-weight: 700; }
 header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
 
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: 0;
-  background: var(--bg-secondary);
-  border-bottom: 2px solid var(--border);
-  padding: 0 20px;
-}
-.tab {
-  padding: 12px 24px;
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: all 0.2s;
-  user-select: none;
-}
-.tab:hover { color: var(--text-primary); background: var(--bg-hover); }
-.tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
 /* Tab content */
-.tab-content { display: none; padding: 24px 0; }
-.tab-content.active { display: block; }
+.tab-content { padding: 24px 0; }
 
 /* Metrics cards */
 .metrics-row {
@@ -266,18 +240,8 @@ footer {
   </div>
 </header>
 
-<div class="tabs">
-  <div class="container" style="display:flex; gap:0;">
-    <div class="tab active" data-model="mdm_v2">V2 State Machine</div>
-    <div class="tab" data-model="mdm_hybrid">Hybrid (3 Filters)</div>
-    <div class="tab" data-model="mdm_p15">Phase 15 (HA Smoothed)</div>
-  </div>
-</div>
-
 <main class="container">
   <div id="content-mdm_v2" class="tab-content active"><div class="loading">Loading...</div></div>
-  <div id="content-mdm_hybrid" class="tab-content"><div class="loading">Loading...</div></div>
-  <div id="content-mdm_p15" class="tab-content"><div class="loading">Loading...</div></div>
 </main>
 
 <footer>
@@ -290,18 +254,7 @@ footer {
 const DATA_PATH = 'data';
 const modelCache = {};
 const chartInstances = {};
-
-// Tab switching
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    tab.classList.add('active');
-    const model = tab.dataset.model;
-    document.getElementById('content-' + model).classList.add('active');
-    loadModel(model);
-  });
-});
+let liquidityData = null;
 
 // Load metadata
 fetch(DATA_PATH + '/metadata.json')
@@ -310,6 +263,12 @@ fetch(DATA_PATH + '/metadata.json')
     document.getElementById('footer-info').textContent =
       `Hệ thống MDM | Dữ liệu: ${meta.data_range.start} - ${meta.data_range.end} | Cập nhật: ${meta.generated_at}`;
   });
+
+// Load liquidity overlay
+fetch(DATA_PATH + '/liquidity_overlay.json')
+  .then(r => r.json())
+  .then(d => { liquidityData = d; })
+  .catch(() => {});
 
 // Load first tab
 loadModel('mdm_v2');
@@ -515,6 +474,33 @@ function renderPriceChart(key, data) {
   }).observe(el);
 }
 
+// Chart.js plugin to draw QE floor shaded zones
+const qeZonePlugin = {
+  id: 'qeZones',
+  beforeDraw(chart) {
+    if (!liquidityData || !liquidityData.qe_zones) return;
+    const ctx = chart.ctx;
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+    const labels = chart.data.labels;
+    if (!labels || labels.length === 0) return;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(23, 191, 99, 0.08)';
+    liquidityData.qe_zones.forEach(zone => {
+      const startIdx = labels.findIndex(l => l >= zone.start);
+      const endIdx = labels.findIndex(l => l > zone.end);
+      if (startIdx < 0) return;
+      const si = startIdx;
+      const ei = endIdx < 0 ? labels.length - 1 : endIdx;
+      const x1 = xScale.getPixelForValue(si);
+      const x2 = xScale.getPixelForValue(ei);
+      ctx.fillRect(x1, yScale.top, x2 - x1, yScale.bottom - yScale.top);
+    });
+    ctx.restore();
+  }
+};
+
 function renderEquityChart(key, data) {
   const ctx = document.getElementById('equity-chart-' + key).getContext('2d');
   const eq = data.equity_curve;
@@ -588,6 +574,7 @@ function renderEquityChart(key, data) {
         },
       },
     },
+    plugins: [qeZonePlugin],
   });
 }
 
