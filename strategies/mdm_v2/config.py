@@ -53,6 +53,12 @@ class MDMV2Config:
     dd_cluster_count: int = 3                 # 3 DDs required for clustering
     dd_cluster_window: int = 5               # within 5 trading sessions
 
+    # BUY Selectivity (v5.0, BUY-01, BUY-02)
+    buy_filter_enabled: bool = True           # MA10 < MA50 rejection (D-12)
+    buy_confirmation_enabled: bool = True     # Post-FTD confirmation (D-12)
+    confirmation_window_days: int = 3         # Days to confirm (D-03, D-12)
+    confirmation_max_dd: int = 1              # Max DD allowed in window (D-04, D-12)
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -66,6 +72,8 @@ class MDMV2Config:
         assert self.roc_window > 0, "ROC window must be positive"
         assert self.dd_cluster_count > 0, "DD cluster count must be positive"
         assert self.dd_cluster_window > 0, "DD cluster window must be positive"
+        assert self.confirmation_window_days > 0, "Confirmation window must be positive"
+        assert self.confirmation_max_dd >= 0, "Confirmation max DD must be non-negative"
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
