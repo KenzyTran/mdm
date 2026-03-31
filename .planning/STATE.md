@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 21 — buy-selectivity
+**Current focus:** Phase 22 — combined-integration-validation
 
 ## Current Position
 
