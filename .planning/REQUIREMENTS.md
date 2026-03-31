@@ -146,8 +146,8 @@
 
 ### BUY Selectivity
 
-- [ ] **BUY-01**: Reject FTD signal when MA10 < MA50 (trend not confirmed), reducing whipsaw entries
-- [ ] **BUY-02**: Post-FTD confirmation window — require N days without distribution day after FTD before committing to BUY
+- [x] **BUY-01**: Reject FTD signal when MA10 < MA50 (trend not confirmed), reducing whipsaw entries
+- [x] **BUY-02**: Post-FTD confirmation window — require N days without distribution day after FTD before committing to BUY
 
 ### Validation & Dashboard
 
@@ -237,8 +237,8 @@
 | LIQ-03 | Phase 19 | Complete |
 | SELL-01 | Phase 20 | Complete |
 | SELL-02 | Phase 20 | Complete |
-| BUY-01 | Phase 21 | Pending |
-| BUY-02 | Phase 21 | Pending |
+| BUY-01 | Phase 21 | Complete |
+| BUY-02 | Phase 21 | Complete |
 | VAL-05 | Phase 22 | Pending |
 | VAL-06 | Phase 22 | Pending |
 | VAL-07 | Phase 22 | Pending |

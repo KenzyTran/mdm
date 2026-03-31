@@ -386,7 +386,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 21-01-PLAN.md -- BuyFilter + BuyConfirmation modules, config fields, engine wiring, unit + integration tests (BUY-01, BUY-02)
+- [x] 21-01-PLAN.md -- BuyFilter + BuyConfirmation modules, config fields, engine wiring, unit + integration tests (BUY-01, BUY-02)
 - [ ] 21-02-PLAN.md -- A/B validation script with walk-forward analysis and rule docs update (BUY-01, BUY-02)
 
 ### Phase 22: Combined Integration & Validation
@@ -433,5 +433,5 @@ Phases execute in numeric order: 19 -> 20 -> 21 -> 22
 | 18. Short P&L & Comparative Validation | v4.0 | 2/2 | Complete | 2026-03-30 |
 | 19. Global Liquidity Integration | v5.0 | 2/2 | Complete    | 2026-03-30 |
 | 20. SELL Acceleration | v5.0 | 2/2 | Complete    | 2026-03-31 |
-| 21. BUY Selectivity | v5.0 | 0/2 | Planning complete | - |
+| 21. BUY Selectivity | v5.0 | 1/2 | In Progress|  |
 | 22. Combined Integration & Validation | v5.0 | 0/0 | Not started | - |

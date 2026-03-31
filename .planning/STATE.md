@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: Signal Quality & Macro Filter
-status: verifying
-stopped_at: Phase 21 context gathered
-last_updated: "2026-03-31T01:38:40.782Z"
+status: executing
+stopped_at: Completed 21-01-PLAN.md
+last_updated: "2026-03-31T02:21:36.837Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
   percent: 50
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals
-**Current focus:** Phase 20 — sell-acceleration
+**Current focus:** Phase 21 — buy-selectivity
 
 ## Current Position
 
-Phase: 21
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 21 (buy-selectivity) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-03-31
 
 Progress: [█████░░░░░] 50%
@@ -56,6 +56,7 @@ Progress: [█████░░░░░] 50%
 | Phase 19 P02 | 8min | 3 tasks | 4 files |
 | Phase 20-sell-acceleration P01 | 2min | 2 tasks | 4 files |
 | Phase 20-sell-acceleration P02 | 4min | 2 tasks | 2 files |
+| Phase 21-buy-selectivity P01 | 23min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 19]: V2 engine baseline is 22.6% (not 190.8% which is hybrid engine)
 - [Phase 20-sell-acceleration]: Acceleration gate uses OR logic across 3 conditions, suppress_sell takes priority
 - [Phase 20-sell-acceleration]: A/B validation proves SELL acceleration does not delay bear market signals (0-day in 2008, 1-day in VN30 2022)
+- [Phase 21-buy-selectivity]: DD check during confirmation uses side-effect-free methods to avoid polluting dd_history
+- [Phase 21-buy-selectivity]: MA50/52WEEK breakouts supersede pending FTD confirmation
 
 ### Pending Todos
 
@@ -89,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T01:38:40.777Z
-Stopped at: Phase 21 context gathered
-Resume file: .planning/phases/21-buy-selectivity/21-CONTEXT.md
+Last session: 2026-03-31T02:21:36.832Z
+Stopped at: Completed 21-01-PLAN.md
+Resume file: None
