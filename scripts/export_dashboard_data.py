@@ -23,6 +23,8 @@ from core.indicators import build_indicator_dataframe
 from strategies.mdm_hybrid.mdm_hybrid_engine import HybridEngine
 from strategies.mdm_hybrid.config import HybridConfig, MDMV2Config, VN30_PRESET
 from strategies.mdm_hybrid.indicator_filter import FilterConfig
+from strategies.mdm_v2.config import MDMV2Config as V2StandaloneConfig
+from strategies.mdm_v2.mdm_v2_engine import MDMV2Engine
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -270,6 +272,97 @@ def export_model(key: str, info: dict, df: pd.DataFrame) -> dict:
     }
 
 
+def export_v2_filtered_model(df: pd.DataFrame, output_data: dict):
+    """Export MDM V2 with all v5.0 filters enabled (QE floor, SELL acceleration, BUY selectivity).
+
+    Uses MDMV2Engine directly (not HybridEngine) with all filters ON.
+    """
+    config = V2StandaloneConfig(
+        qe_floor_enabled=True,
+        sell_acceleration_enabled=True,
+        buy_filter_enabled=True,
+        buy_confirmation_enabled=True,
+        confirmation_window_days=3,
+        confirmation_max_dd=1,
+        name="v2_filtered",
+    )
+    engine = MDMV2Engine(config)
+    results = engine.run(df.copy())
+
+    model_data = {
+        'name': 'MDM V2 + All Filters (v5.0)',
+        'description_md': load_doc('rules_mdm_v2.md'),
+        'metrics': compute_metrics(results),
+        'benchmark': compute_benchmark(df),
+        'equity_curve': build_equity_curve(results),
+        'signals': detect_signals(results),
+        'trades': format_trades(engine),
+        'signal_history': build_signal_history(results),
+        'price_data': build_price_data(df),
+    }
+
+    output_data['models']['mdm_v2_filtered'] = model_data
+    print(f"    MDM V2 Filtered: {model_data['metrics']}")
+
+
+def export_liquidity_overlay(output_data: dict):
+    """Export Global Liquidity overlay data for dashboard chart.
+
+    Reads global_liquidity.csv and extracts:
+    - Line chart data (date + value)
+    - QE floor active zones (start/end date pairs for shaded regions)
+    """
+    csv_path = os.path.join(PROJECT_ROOT, 'data', 'global_liquidity.csv')
+    if not os.path.exists(csv_path):
+        print(f"  WARNING: {csv_path} not found, skipping liquidity overlay")
+        return
+
+    liq_df = pd.read_csv(csv_path)
+    liq_df['date'] = pd.to_datetime(liq_df['date'])
+
+    # Build line chart data
+    data_points = []
+    step = max(1, len(liq_df) // 500)  # Sample to reduce JSON size
+    for i in range(0, len(liq_df), step):
+        row = liq_df.iloc[i]
+        data_points.append({
+            'date': row['date'].strftime('%Y-%m-%d'),
+            'value': round(float(row['global_liquidity']), 2),
+        })
+    # Always include last point
+    if len(liq_df) % step != 1:
+        last = liq_df.iloc[-1]
+        data_points.append({
+            'date': last['date'].strftime('%Y-%m-%d'),
+            'value': round(float(last['global_liquidity']), 2),
+        })
+
+    # Compute QE floor active zones (contiguous runs of qe_floor == 1)
+    qe_zones = []
+    in_zone = False
+    zone_start = None
+    for i in range(len(liq_df)):
+        row = liq_df.iloc[i]
+        qe_val = row.get('qe_floor', 0)
+        if qe_val == 1 and not in_zone:
+            in_zone = True
+            zone_start = row['date'].strftime('%Y-%m-%d')
+        elif qe_val != 1 and in_zone:
+            in_zone = False
+            zone_end = liq_df.iloc[i - 1]['date'].strftime('%Y-%m-%d')
+            qe_zones.append({'start': zone_start, 'end': zone_end})
+    # Close final zone if still active
+    if in_zone:
+        zone_end = liq_df.iloc[-1]['date'].strftime('%Y-%m-%d')
+        qe_zones.append({'start': zone_start, 'end': zone_end})
+
+    output_data['liquidity_overlay'] = {
+        'data': data_points,
+        'qe_zones': qe_zones,
+    }
+    print(f"  Liquidity overlay: {len(data_points)} points, {len(qe_zones)} QE zones")
+
+
 def main():
     os.makedirs(DASHBOARD_DATA_DIR, exist_ok=True)
 
@@ -277,13 +370,14 @@ def main():
     print("MDM DASHBOARD DATA EXPORT")
     print("=" * 60)
 
-    print("\n[1/3] Loading VN30 data + indicators...")
+    print("\n[1/5] Loading VN30 data + indicators...")
     loader = DataLoader('vn30')
     df = loader.load(start_date=START_DATE, end_date=END_DATE)
     df = build_indicator_dataframe(df)
     print(f"  Loaded {len(df)} rows ({df['date'].min().date()} to {df['date'].max().date()})")
 
-    print("\n[2/3] Running models and exporting...")
+    print("\n[2/5] Running HybridEngine models and exporting...")
+    all_model_keys = list(MODELS.keys())
     for key, info in MODELS.items():
         print(f"  Processing {info['name']}...")
         data = export_model(key, info, df)
@@ -292,21 +386,69 @@ def main():
             json.dump(data, f, ensure_ascii=False)
         print(f"    -> {output_path} ({os.path.getsize(output_path) // 1024} KB)")
 
-    print("\n[3/3] Writing metadata...")
+    print("\n[3/5] Running MDM V2 + All Filters model...")
+    v2_filtered_data = {}
+    v2_filtered_data['models'] = {}
+    export_v2_filtered_model(df, v2_filtered_data)
+    v2f_path = os.path.join(DASHBOARD_DATA_DIR, 'mdm_v2_filtered.json')
+    with open(v2f_path, 'w', encoding='utf-8') as f:
+        json.dump(v2_filtered_data['models']['mdm_v2_filtered'], f, ensure_ascii=False)
+    print(f"    -> {v2f_path} ({os.path.getsize(v2f_path) // 1024} KB)")
+    all_model_keys.append('mdm_v2_filtered')
+
+    print("\n[4/5] Exporting Global Liquidity overlay...")
+    liquidity_data = {}
+    export_liquidity_overlay(liquidity_data)
+    if 'liquidity_overlay' in liquidity_data:
+        liq_path = os.path.join(DASHBOARD_DATA_DIR, 'liquidity_overlay.json')
+        with open(liq_path, 'w', encoding='utf-8') as f:
+            json.dump(liquidity_data['liquidity_overlay'], f, ensure_ascii=False)
+        print(f"    -> {liq_path} ({os.path.getsize(liq_path) // 1024} KB)")
+
+    print("\n[5/5] Writing metadata...")
     metadata = {
         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
         'data_range': {
             'start': df['date'].min().strftime('%Y-%m-%d'),
             'end': df['date'].max().strftime('%Y-%m-%d'),
         },
-        'models': list(MODELS.keys()),
+        'models': all_model_keys,
+        'has_liquidity_overlay': 'liquidity_overlay' in liquidity_data,
     }
     meta_path = os.path.join(DASHBOARD_DATA_DIR, 'metadata.json')
     with open(meta_path, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, ensure_ascii=False, indent=2)
 
+    # Also write combined dashboard_data.json for convenience
+    dashboard_data = {
+        'models': {},
+        'metadata': metadata,
+    }
+    # Include all model summaries (metrics only, not full data)
+    for key in MODELS:
+        model_path = os.path.join(DASHBOARD_DATA_DIR, f'{key}.json')
+        with open(model_path, 'r', encoding='utf-8') as f:
+            model_json = json.load(f)
+        dashboard_data['models'][key] = {
+            'name': model_json['name'],
+            'metrics': model_json['metrics'],
+        }
+    # Add v2_filtered
+    dashboard_data['models']['mdm_v2_filtered'] = {
+        'name': v2_filtered_data['models']['mdm_v2_filtered']['name'],
+        'metrics': v2_filtered_data['models']['mdm_v2_filtered']['metrics'],
+    }
+    if 'liquidity_overlay' in liquidity_data:
+        dashboard_data['liquidity_overlay'] = liquidity_data['liquidity_overlay']
+
+    dd_path = os.path.join(DASHBOARD_DATA_DIR, 'dashboard_data.json')
+    with open(dd_path, 'w', encoding='utf-8') as f:
+        json.dump(dashboard_data, f, ensure_ascii=False, indent=2)
+    print(f"    -> {dd_path} ({os.path.getsize(dd_path) // 1024} KB)")
+
+    total_models = len(all_model_keys)
     print(f"\n{'=' * 60}")
-    print(f"DONE - {len(MODELS)} models exported to {DASHBOARD_DATA_DIR}")
+    print(f"DONE - {total_models} models exported to {DASHBOARD_DATA_DIR}")
     print(f"{'=' * 60}")
 
 
