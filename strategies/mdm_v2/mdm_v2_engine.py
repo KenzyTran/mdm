@@ -16,6 +16,7 @@ from .stop_loss import StopLossChecker
 from .position_manager import V2PositionManager, V2MarketState
 from .config import MDMV2Config
 from .liquidity import LiquidityLoader
+from .sell_acceleration import SellAccelerationGate
 
 
 class MDMV2Engine:
@@ -42,6 +43,10 @@ class MDMV2Engine:
         self.liquidity_loader = None
         if self.config.qe_floor_enabled:
             self.liquidity_loader = LiquidityLoader(self.config.liquidity_csv_path)
+
+        self.sell_acceleration_gate = None
+        if self.config.sell_acceleration_enabled:
+            self.sell_acceleration_gate = SellAccelerationGate(self.config)
 
         self.results: Optional[pd.DataFrame] = None
 
@@ -211,6 +216,21 @@ class MDMV2Engine:
                 qe_val = df.iloc[idx]['qe_floor']
                 suppress_sell = bool(qe_val == 1) if pd.notna(qe_val) else False
 
+            # 4c. Compute sell acceleration gate (SELL-01, per D-05)
+            acceleration_met = True  # default: allow SELL
+            if self.config.sell_acceleration_enabled and self.sell_acceleration_gate is not None:
+                acceleration_met = self.sell_acceleration_gate.check(
+                    close=close,
+                    closes_history=df['close'].iloc[max(0, idx - self.config.roc_window):idx + 1],
+                    dd_dates=self.dd_counter.dd_history,
+                    date=date,
+                    volume=row['volume'],
+                    prev_volume=row['prev_volume'],
+                    ma50=row['ma50'] if 'ma50' in row else None,
+                    prev_close=prev_close,
+                    prev_ma50=row['prev_ma50'] if 'prev_ma50' in row else None,
+                )
+
             # 5. Update position
             ma10 = row['ma10'] if 'ma10' in row else None
             ma50_val = row['ma50'] if 'ma50' in row else None
@@ -230,6 +250,7 @@ class MDMV2Engine:
                 ma10=ma10,
                 ma50=ma50_val,
                 suppress_sell=suppress_sell,
+                acceleration_met=acceleration_met,
             )
 
             # If FTD triggered, reset rally tracker
@@ -249,6 +270,7 @@ class MDMV2Engine:
             df.at[idx, 'action'] = action
             df.at[idx, 'buy_price'] = self.position_manager.get_buy_price()
             df.at[idx, 'drawdown_pct'] = drawdown_pct
+            df.at[idx, 'acceleration_met'] = acceleration_met
 
         self.results = df
         return df

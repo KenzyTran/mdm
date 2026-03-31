@@ -145,6 +145,7 @@ class V2PositionManager:
         ma10: float = None,
         ma50: float = None,
         suppress_sell: bool = False,
+        acceleration_met: bool = True,
     ) -> Tuple[V2MarketState, str]:
         """
         Process a trading day and update state.
@@ -181,18 +182,22 @@ class V2PositionManager:
                 action = f"BUY at {ftd_price:.2f} ({signal_type})"
             # Check for CASH -> SELL: MA50 breakdown
             elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
-                if not suppress_sell:
+                if suppress_sell:
+                    action = "SELL suppressed: QE floor (MA50 breakdown)"
+                elif not acceleration_met:
+                    action = "SELL deferred: no acceleration (MA50 breakdown)"
+                else:
                     self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})")
                     action = f"SELL signal: MA50 breakdown"
-                else:
-                    action = "SELL suppressed: QE floor (MA50 breakdown)"
             # Check for CASH -> SELL: deterioration
             elif self.position.days_in_cash >= self.config.cash_deterioration_days:
-                if not suppress_sell:
+                if suppress_sell:
+                    action = "SELL suppressed: QE floor (cash deterioration)"
+                elif not acceleration_met:
+                    action = "SELL deferred: no acceleration (cash deterioration)"
+                else:
                     self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)")
                     action = f"SELL signal: cash deterioration"
-                else:
-                    action = "SELL suppressed: QE floor (cash deterioration)"
 
         elif current_state == V2MarketState.BUY:
             # Track MA10 below count
