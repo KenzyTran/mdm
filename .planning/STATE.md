@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
 status: executing
-stopped_at: Phase 24 context gathered
-last_updated: "2026-03-31T09:25:37.050Z"
+stopped_at: Completed 24-01-PLAN.md
+last_updated: "2026-03-31T10:19:29.554Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 81
 ---
 
@@ -66,6 +66,8 @@ Recent decisions affecting current work:
 - [Phase 23]: Fail-safe check runs BEFORE FTD in SELL state (priority order per Dr. K FAQ)
 - [Phase 23]: prev_high (standby-sell day HIGH) used as fail-safe threshold, not current day HIGH
 - [Phase 23]: Fail-safe improves VN30 return 7.4%->58.1% but triggers during 2022 bear -- needs refinement
+- [Phase 24]: Gate 0 (gap filter) before Gate 1 (MA10/MA50) -- gap-up broken is fundamental invalidation
+- [Phase 24]: Pitfall 2: pass max(rally_day, ftd_min_rally_day) to check_ftd() when early FTD allowed
 
 ### Pending Todos
 
@@ -79,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T09:25:37.046Z
-Stopped at: Phase 24 context gathered
-Resume file: .planning/phases/24-buy-entry-refinement/24-CONTEXT.md
+Last session: 2026-03-31T10:19:29.550Z
+Stopped at: Completed 24-01-PLAN.md
+Resume file: None
