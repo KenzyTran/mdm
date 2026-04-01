@@ -117,6 +117,14 @@ None - all tests are concrete and runnable. Config flags are wired to MDMV2Confi
 - Plan 03 A/B validation can use all new config flags for comparison runs
 - test_ma50_review.py::test_breakout_gated will be expanded in Plan 02 with actual engine gating test
 
+## Self-Check: PASSED
+
+- FOUND: tests/test_ma50_review.py
+- FOUND: 25-01-SUMMARY.md
+- FOUND: 7abd5e3 (RED tests commit)
+- FOUND: 7efa10c (GREEN implementation commit)
+- FOUND: 8814c0d (Task 2 test scaffolding + docs commit)
+
 ---
 *Phase: 25-ma50-200dma-review*
 *Completed: 2026-04-01*
