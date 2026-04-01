@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
 status: executing
-stopped_at: Completed 25-01-PLAN.md
-last_updated: "2026-04-01T05:47:19.990Z"
+stopped_at: Completed 25-02-PLAN.md
+last_updated: "2026-04-01T06:04:43.237Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 81
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 25 (ma50-200dma-review) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-01
 
@@ -67,6 +67,9 @@ Recent decisions affecting current work:
 - [Phase 23]: prev_high (standby-sell day HIGH) used as fail-safe threshold, not current day HIGH
 - [Phase 23]: Fail-safe improves VN30 return 7.4%->58.1% but triggers during 2022 bear -- needs refinement
 - [Phase 25-ma50-200dma-review]: ma50_breakout_enabled defaults True (backward compat), ma200_enabled defaults False (v5.0 convention - new features off by default)
+- [Phase 25]: 200dma breakout reuses ma50_breakout_correction threshold (-6%) for consistent depth requirement
+- [Phase 25]: sma200=None default in process_day maintains backward compat, no callers broken
+- [Phase 25]: 200dma SELL uses elif chain after MA50 SELL block to prevent double-firing
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T05:47:19.983Z
-Stopped at: Completed 25-01-PLAN.md
+Last session: 2026-04-01T06:04:43.229Z
+Stopped at: Completed 25-02-PLAN.md
 Resume file: None
