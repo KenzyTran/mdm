@@ -162,6 +162,7 @@ class V2PositionManager:
         ma50: float = None,
         sma200: float = None,
         suppress_sell: bool = False,
+        suppress_buy: bool = False,
         acceleration_met: bool = True,
         prev_high: float = 0.0,
     ) -> Tuple[V2MarketState, str]:
@@ -183,7 +184,8 @@ class V2PositionManager:
             ma10: Current 10-day MA
             ma50: Current 50-day MA
             sma200: Current 200-day SMA (optional, for 200dma SELL trigger)
-            suppress_sell: Whether to suppress CASH->SELL transitions (QE floor)
+            suppress_sell: Whether to suppress CASH->SELL transitions (QE floor / volatility)
+            suppress_buy: Whether to suppress BUY entries (low volatility regime, BAND-02)
             acceleration_met: Whether sell acceleration conditions are met
             prev_high: High of previous day (for fail-safe threshold)
 
@@ -199,8 +201,11 @@ class V2PositionManager:
 
             # Check for FTD -> BUY
             if is_ftd:
-                self.enter_buy(ftd_price, date, low, signal_type)
-                action = f"BUY at {ftd_price:.2f} ({signal_type})"
+                if suppress_buy:
+                    action = "BUY suppressed: low volatility"
+                else:
+                    self.enter_buy(ftd_price, date, low, signal_type)
+                    action = f"BUY at {ftd_price:.2f} ({signal_type})"
             # Check for CASH -> SELL: MA50 breakdown
             elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
                 if suppress_sell:
@@ -259,8 +264,11 @@ class V2PositionManager:
                 action = f"CASH: fail-safe triggered (close {close:.2f} > threshold {self.position.fail_safe_threshold:.2f})"
             # FTD -> BUY (from SELL)
             elif is_ftd:
-                self.enter_buy(ftd_price, date, low, signal_type)
-                action = f"BUY at {ftd_price:.2f} ({signal_type}) from SELL"
+                if suppress_buy:
+                    action = "BUY suppressed: low volatility (from SELL)"
+                else:
+                    self.enter_buy(ftd_price, date, low, signal_type)
+                    action = f"BUY at {ftd_price:.2f} ({signal_type}) from SELL"
 
         return self.position.state, action
 

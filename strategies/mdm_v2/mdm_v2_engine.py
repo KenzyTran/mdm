@@ -20,6 +20,7 @@ from .sell_acceleration import SellAccelerationGate
 from .buy_filter import BuyFilter
 from .buy_confirmation import BuyConfirmation
 from .buy_entry import BuyEntryFilter
+from .volatility_filter import VolatilityFilter
 
 
 class MDMV2Engine:
@@ -63,6 +64,10 @@ class MDMV2Engine:
         if self.config.gap_filter_enabled or self.config.rally_threshold_enabled:
             self.buy_entry_filter = BuyEntryFilter(self.config)
 
+        self.volatility_filter = None
+        if self.config.volatility_filter_enabled:
+            self.volatility_filter = VolatilityFilter(self.config)
+
         self.results: Optional[pd.DataFrame] = None
 
     def reset(self):
@@ -105,6 +110,10 @@ class MDMV2Engine:
         if self.config.ma200_enabled:
             df = Indicators.add_sma200_column(df)
             df['prev_sma200'] = df['sma200'].shift(1)
+
+        # Add ATR indicator for volatility regime classification (BAND-01)
+        if self.config.volatility_filter_enabled:
+            df = Indicators.add_atr_column(df, self.config.atr_period)
 
         # Merge global liquidity data if QE floor enabled (LIQ-01, LIQ-02)
         if self.config.qe_floor_enabled and self.liquidity_loader is not None:
@@ -333,6 +342,13 @@ class MDMV2Engine:
                     prev_ma50=row['prev_ma50'] if 'prev_ma50' in row else None,
                 )
 
+            # 4d. Compute volatility filter suppression (BAND-02)
+            suppress_volatility = False
+            if self.volatility_filter is not None and 'atr_pct' in df.columns:
+                atr_pct = df.iloc[idx]['atr_pct']
+                if pd.notna(atr_pct):
+                    suppress_volatility = self.volatility_filter.should_suppress(atr_pct)
+
             # 5. Update position
             ma10 = row['ma10'] if 'ma10' in row else None
             ma50_val = row['ma50'] if 'ma50' in row else None
@@ -353,7 +369,8 @@ class MDMV2Engine:
                 ma10=ma10,
                 ma50=ma50_val,
                 sma200=row.get('sma200') if hasattr(row, 'get') else (row['sma200'] if 'sma200' in row.index else None),
-                suppress_sell=suppress_sell,
+                suppress_sell=suppress_sell or suppress_volatility,
+                suppress_buy=suppress_volatility,
                 acceleration_met=acceleration_met,
                 prev_high=prev_high if pd.notna(prev_high) else 0.0,
             )
