@@ -412,7 +412,7 @@ Plans:
 - [x] **Phase 23: Fail-Safe Mechanism** - Auto-exit SELL to CASH when VN30 reclaims standby-sell HIGH, with A/B validation
  (completed 2026-03-31)
 - [x] **Phase 24: Buy Entry Refinement** - Gap-up neutralization and 6% rally attempt threshold for FTD timing on VN30 (completed 2026-03-31)
-- [ ] **Phase 25: MA50/200dma Review** - A/B research testing whether MA50 should be removed from SELL trigger and BUY filter logic
+- [x] **Phase 25: MA50/200dma Review** - A/B research testing whether MA50 should be removed from SELL trigger and BUY filter logic (completed 2026-04-01)
 - [ ] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods
 - [ ] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features
 
@@ -458,12 +458,12 @@ Plans:
   2. A/B backtest on VN30 shows performance delta between V2 with MA50 in BUY filter logic vs V2 without it
   3. A written report recommends one of three actions (keep MA50, remove MA50, replace MA50 with alternative) with quantitative evidence from the backtests
   4. If MA50 is recommended for removal, the report identifies what (if anything) replaces its role in the signal logic
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 25-01-PLAN.md -- Config flags (ma50_breakout_enabled, ma200_enabled), sma200 indicator, test scaffolding (MAREVIEW-01, MAREVIEW-02)
 - [x] 25-02-PLAN.md -- Engine wiring: gate MA50 breakout, 200dma crossover buy, 200dma SELL trigger (MAREVIEW-01, MAREVIEW-02)
-- [ ] 25-03-PLAN.md -- 5-scenario A/B validation script and rules documentation update (MAREVIEW-01, MAREVIEW-02, MAREVIEW-03)
+- [x] 25-03-PLAN.md -- 5-scenario A/B validation script and rules documentation update (MAREVIEW-01, MAREVIEW-02, MAREVIEW-03)
 
 ### Phase 26: Banding/Volatility Filter
 **Goal**: V2 engine suppresses signal switching during low-volatility sideways periods on VN30, implementing Dr. K's "banding width" concept
@@ -519,6 +519,6 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 22. Combined Integration & Validation | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 23. Fail-Safe Mechanism | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 24. Buy Entry Refinement | v6.0 | 2/2 | Complete    | 2026-03-31 |
-| 25. MA50/200dma Review | v6.0 | 2/3 | In Progress|  |
+| 25. MA50/200dma Review | v6.0 | 3/3 | Complete   | 2026-04-01 |
 | 26. Banding/Volatility Filter | v6.0 | 0/0 | Not started | - |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |

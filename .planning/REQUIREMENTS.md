@@ -26,7 +26,7 @@
 
 - [x] **MAREVIEW-01**: A/B backtest V2 hien tai vs V2 loai bo MA50 breakdown khoi SELL trigger logic tren VN30
 - [x] **MAREVIEW-02**: A/B backtest V2 hien tai vs V2 loai bo MA50 khoi BUY filter logic tren VN30
-- [ ] **MAREVIEW-03**: Report ket luan: giu/bo/thay the MA50 trong signal logic, voi evidence tu backtest VN30
+- [x] **MAREVIEW-03**: Report ket luan: giu/bo/thay the MA50 trong signal logic, voi evidence tu backtest VN30
 
 ### Banding/Volatility Filter
 
@@ -79,7 +79,7 @@
 | RALLY-03 | Phase 24 | Complete |
 | MAREVIEW-01 | Phase 25 | Complete |
 | MAREVIEW-02 | Phase 25 | Complete |
-| MAREVIEW-03 | Phase 25 | Pending |
+| MAREVIEW-03 | Phase 25 | Complete |
 | BAND-01 | Phase 26 | Pending |
 | BAND-02 | Phase 26 | Pending |
 | BAND-03 | Phase 26 | Pending |

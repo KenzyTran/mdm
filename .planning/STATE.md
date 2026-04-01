@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: executing
-stopped_at: Completed 25-02-PLAN.md
-last_updated: "2026-04-01T06:04:43.237Z"
+status: verifying
+stopped_at: Completed 25-03-PLAN.md
+last_updated: "2026-04-01T06:47:55.892Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
   percent: 81
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Phase: 25 (ma50-200dma-review) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
@@ -70,6 +70,7 @@ Recent decisions affecting current work:
 - [Phase 25]: 200dma breakout reuses ma50_breakout_correction threshold (-6%) for consistent depth requirement
 - [Phase 25]: sma200=None default in process_day maintains backward compat, no callers broken
 - [Phase 25]: 200dma SELL uses elif chain after MA50 SELL block to prevent double-firing
+- [Phase 25]: MAREVIEW-03: REMOVE MA50 SELL trigger (Sharpe 0.34->0.50, return +38.4%) -- keep buy_filter=True, integrate in Phase 27
 
 ### Pending Todos
 
@@ -83,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T06:04:43.229Z
-Stopped at: Completed 25-02-PLAN.md
+Last session: 2026-04-01T06:47:55.888Z
+Stopped at: Completed 25-03-PLAN.md
 Resume file: None
