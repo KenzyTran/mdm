@@ -71,6 +71,12 @@ class MDMV2Config:
     ma50_breakout_enabled: bool = True    # Gate MA50 breakout buy signal (True = existing behavior)
     ma200_enabled: bool = False           # 200dma replacement mode (False = off per v5.0 convention)
 
+    # Banding/Volatility Filter (v6.0, BAND-01, BAND-02)
+    volatility_filter_enabled: bool = False    # Master switch (default OFF per v5.0 convention)
+    volatility_low_threshold: float = 1.04     # ATR% below this = low volatility (P25 of VN30)
+    volatility_high_threshold: float = 1.73    # ATR% above this = high volatility (P75 of VN30)
+    atr_period: int = 14                       # ATR lookback window
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -87,6 +93,7 @@ class MDMV2Config:
         assert self.confirmation_window_days > 0, "Confirmation window must be positive"
         assert self.confirmation_max_dd >= 0, "Confirmation max DD must be non-negative"
         assert self.rally_threshold_pct < 0, "Rally threshold must be negative"
+        assert self.atr_period > 0, "ATR period must be positive"
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)

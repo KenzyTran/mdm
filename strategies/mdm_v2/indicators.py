@@ -142,6 +142,34 @@ class Indicators:
         return df
 
     @staticmethod
+    def add_atr_column(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
+        """Add ATR-14 and ATR% columns for volatility regime classification (BAND-01).
+
+        True Range = max(H-L, |H-prev_C|, |L-prev_C|)
+        ATR = rolling mean of TR over `period` days
+        ATR% = ATR / close * 100
+
+        Args:
+            df: DataFrame with 'high', 'low', 'close', 'prev_close' columns.
+            period: ATR lookback window (default 14).
+
+        Returns:
+            DataFrame with 'tr', 'atr', 'atr_pct' columns added.
+        """
+        df = df.copy()
+        prev_close = df['prev_close']
+        df['tr'] = np.maximum(
+            df['high'] - df['low'],
+            np.maximum(
+                (df['high'] - prev_close).abs(),
+                (df['low'] - prev_close).abs()
+            )
+        )
+        df['atr'] = df['tr'].rolling(window=period, min_periods=1).mean()
+        df['atr_pct'] = df['atr'] / df['close'] * 100
+        return df
+
+    @staticmethod
     def add_ma10_column(df: pd.DataFrame) -> pd.DataFrame:
         """
         Add 10-day Moving Average column.
