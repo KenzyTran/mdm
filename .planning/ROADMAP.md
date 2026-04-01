@@ -458,10 +458,10 @@ Plans:
   2. A/B backtest on VN30 shows performance delta between V2 with MA50 in BUY filter logic vs V2 without it
   3. A written report recommends one of three actions (keep MA50, remove MA50, replace MA50 with alternative) with quantitative evidence from the backtests
   4. If MA50 is recommended for removal, the report identifies what (if anything) replaces its role in the signal logic
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
-- [ ] 25-01-PLAN.md -- Config flags (ma50_breakout_enabled, ma200_enabled), sma200 indicator, test scaffolding (MAREVIEW-01, MAREVIEW-02)
+- [x] 25-01-PLAN.md -- Config flags (ma50_breakout_enabled, ma200_enabled), sma200 indicator, test scaffolding (MAREVIEW-01, MAREVIEW-02)
 - [ ] 25-02-PLAN.md -- Engine wiring: gate MA50 breakout, 200dma crossover buy, 200dma SELL trigger (MAREVIEW-01, MAREVIEW-02)
 - [ ] 25-03-PLAN.md -- 5-scenario A/B validation script and rules documentation update (MAREVIEW-01, MAREVIEW-02, MAREVIEW-03)
 
@@ -519,6 +519,6 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 22. Combined Integration & Validation | v5.0 | 2/2 | Complete | 2026-03-31 |
 | 23. Fail-Safe Mechanism | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 24. Buy Entry Refinement | v6.0 | 2/2 | Complete    | 2026-03-31 |
-| 25. MA50/200dma Review | v6.0 | 0/0 | Not started | - |
+| 25. MA50/200dma Review | v6.0 | 1/3 | In Progress|  |
 | 26. Banding/Volatility Filter | v6.0 | 0/0 | Not started | - |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |

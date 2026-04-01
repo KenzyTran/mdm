@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
 status: executing
-stopped_at: Phase 25 context gathered
-last_updated: "2026-04-01T04:39:36.079Z"
-last_activity: 2026-03-31
+stopped_at: Completed 25-01-PLAN.md
+last_updated: "2026-04-01T05:47:19.990Z"
+last_activity: 2026-04-01
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 7
+  completed_plans: 5
   percent: 81
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals -- optimized for VN30
-**Current focus:** Phase 24 — buy-entry-refinement
+**Current focus:** Phase 25 — ma50-200dma-review
 
 ## Current Position
 
-Phase: 25
-Plan: Not started
-Status: Executing Phase 24
-Last activity: 2026-03-31
+Phase: 25 (ma50-200dma-review) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-01
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
 
@@ -66,6 +66,7 @@ Recent decisions affecting current work:
 - [Phase 23]: Fail-safe check runs BEFORE FTD in SELL state (priority order per Dr. K FAQ)
 - [Phase 23]: prev_high (standby-sell day HIGH) used as fail-safe threshold, not current day HIGH
 - [Phase 23]: Fail-safe improves VN30 return 7.4%->58.1% but triggers during 2022 bear -- needs refinement
+- [Phase 25-ma50-200dma-review]: ma50_breakout_enabled defaults True (backward compat), ma200_enabled defaults False (v5.0 convention - new features off by default)
 
 ### Pending Todos
 
@@ -79,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T04:39:36.076Z
-Stopped at: Phase 25 context gathered
-Resume file: .planning/phases/25-ma50-200dma-review/25-CONTEXT.md
+Last session: 2026-04-01T05:47:19.983Z
+Stopped at: Completed 25-01-PLAN.md
+Resume file: None
