@@ -67,6 +67,10 @@ class MDMV2Config:
     rally_threshold_enabled: bool = True      # Allow early FTD in shallow pullbacks
     rally_threshold_pct: float = -0.06        # Threshold: decline < 6% = shallow
 
+    # MA50/200dma Review (v6.0, MAREVIEW-01, MAREVIEW-02)
+    ma50_breakout_enabled: bool = True    # Gate MA50 breakout buy signal (True = existing behavior)
+    ma200_enabled: bool = False           # 200dma replacement mode (False = off per v5.0 convention)
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
