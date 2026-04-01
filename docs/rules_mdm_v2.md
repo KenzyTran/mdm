@@ -781,3 +781,37 @@ Evidence:
 
 **Luu y pham vi:** Stop loss Rule 3 va sell acceleration gate van su dung MA50 bat ke scenario.
 Day la dung per phase scope -- day la cac concern rieng biet.
+
+---
+
+## XII. VOLATILITY FILTER (BANDING)
+
+**Source:** Dr. K's "banding width" concept -- when the market trades in a narrow band, signals are unreliable.
+
+**Mechanism:**
+- ATR-14 is computed as percentage of close price (ATR%) for each trading day
+- Volatility regime classification: low (ATR% < 1.04%), normal (1.04-1.73%), high (>= 1.73%)
+- Thresholds calibrated to VN30's historical ATR distribution (P25=1.04%, P75=1.73%)
+
+**Signal Suppression:**
+- When regime = low: both BUY entries and CASH->SELL transitions are suppressed
+- Engine stays in current state until volatility returns to normal/high
+- Stop loss exits (BUY->CASH) are NEVER suppressed -- protective exits always active
+- Fail-safe exits (SELL->CASH) are NEVER suppressed -- safety mechanism always active
+
+**Config:**
+- `volatility_filter_enabled`: Master switch (default OFF)
+- `volatility_low_threshold`: ATR% boundary for low regime (default 1.04)
+- `volatility_high_threshold`: ATR% boundary for high regime (default 1.73, informational)
+- `atr_period`: ATR lookback window (default 14)
+
+**A/B Validation Results (VN30 2011-2026):**
+
+| Period | Baseline transitions | Filtered transitions | Reduction |
+| :--- | ---: | ---: | ---: |
+| 2019 Apr-Sep (low vol) | 14 | 3 | 78.6% |
+| 2025 Q1 (low vol) | 10 | 5 | 50.0% |
+
+Trending period trade timing (2020 crash, 2021 rally) remains identical between baseline and filtered variants.
+
+**Note:** Filter is default OFF. When Phase 27 integrates all v6.0 features, volatility filter will be evaluated in combination with other signal refinements.
