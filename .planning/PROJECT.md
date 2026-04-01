@@ -163,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 — Phase 24 (Buy Entry Refinement) complete: GAP-01/02, RALLY-01/02/03 verified. Gap-up filter has zero VN30 impact (7% daily limit), rally threshold adds early entries but reduces return (40.2% vs 58.1% baseline).*
+*Last updated: 2026-04-01 — Phase 25 (MA50/200dma Review) complete: MAREVIEW-01/02/03 verified. A/B test across 5 scenarios shows removing MA50 SELL trigger improves return 52.8%→91.2% and Sharpe 0.34→0.50. Recommendation: remove MA50 from signal logic. Integration deferred to Phase 27.*
