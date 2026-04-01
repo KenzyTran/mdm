@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
 status: executing
-stopped_at: Phase 24 context gathered
-last_updated: "2026-03-31T10:38:23.206Z"
+stopped_at: Phase 25 context gathered
+last_updated: "2026-04-01T04:39:36.079Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 4
@@ -79,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T09:25:37.046Z
-Stopped at: Phase 24 context gathered
-Resume file: .planning/phases/24-buy-entry-refinement/24-CONTEXT.md
+Last session: 2026-04-01T04:39:36.076Z
+Stopped at: Phase 25 context gathered
+Resume file: .planning/phases/25-ma50-200dma-review/25-CONTEXT.md
