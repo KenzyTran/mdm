@@ -128,6 +128,20 @@ class Indicators:
         return df
     
     @staticmethod
+    def add_sma200_column(df: pd.DataFrame) -> pd.DataFrame:
+        """Add 200-day Simple Moving Average column.
+
+        Args:
+            df: DataFrame with 'close' column
+
+        Returns:
+            DataFrame with 'sma200' column added
+        """
+        df = df.copy()
+        df['sma200'] = df['close'].rolling(window=200, min_periods=1).mean()
+        return df
+
+    @staticmethod
     def add_ma10_column(df: pd.DataFrame) -> pd.DataFrame:
         """
         Add 10-day Moving Average column.
