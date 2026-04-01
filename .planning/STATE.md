@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: executing
-stopped_at: Completed 26-01-PLAN.md
-last_updated: "2026-04-01T07:58:58.814Z"
+status: verifying
+stopped_at: Completed 26-02-PLAN.md
+last_updated: "2026-04-01T08:13:50.911Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
   percent: 81
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Phase: 26 (banding-volatility-filter) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
@@ -72,6 +72,8 @@ Recent decisions affecting current work:
 - [Phase 25]: 200dma SELL uses elif chain after MA50 SELL block to prevent double-firing
 - [Phase 25]: MAREVIEW-03: REMOVE MA50 SELL trigger (Sharpe 0.34->0.50, return +38.4%) -- keep buy_filter=True, integrate in Phase 27
 - [Phase 26]: ATR uses simple rolling mean with min_periods=1 for consistency with existing indicator pattern
+- [Phase 26]: Replaced 2024 Apr-Sep with 2025 Q1 as low-vol validation period (ATR% data shows 2024 not truly low-vol)
+- [Phase 26]: suppress_volatility OR'd into suppress_sell; fail-safe/stop loss never suppressed
 
 ### Pending Todos
 
@@ -85,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T07:58:58.811Z
-Stopped at: Completed 26-01-PLAN.md
+Last session: 2026-04-01T08:13:50.908Z
+Stopped at: Completed 26-02-PLAN.md
 Resume file: None
