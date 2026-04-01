@@ -730,3 +730,54 @@ Su dung `min_periods=1` de tranh NaN (tuong tu add_ma50_column). WARMUP_DAYS=300
 
 - Script so sanh 5 scenarios: baseline, no-MA50-sell, no-MA50-breakout, no-MA50-all, 200dma-replace
 - Metrics: total return, CAGR, MaxDD, Sharpe, win rate
+
+### MA50/200dma Review (Phase 25)
+
+*Ket qua thuc te tu `analysis/validate_ma50_review.py` tren VN30 2018-2026.*
+
+#### 5 scenarios duoc test
+
+| Scenario | Mo ta |
+|----------|-------|
+| 1_baseline | Tat ca MA50 bat: ma50_sell=True, buy_filter=True, ma50_breakout=True, ma200=False |
+| 2_no_ma50_sell | Chi tat MA50 SELL trigger (ma50_sell=False), giu buy_filter va breakout |
+| 3_no_buy_filter | Chi tat MA10<MA50 buy filter, giu MA50 SELL va breakout |
+| 4_no_ma50_all | Tat toan bo MA50: sell=False, buy_filter=False, breakout=False, ma200=False |
+| 5_200dma_replace | Tat toan bo MA50 + bat 200dma thay the (ma200=True) |
+
+Tat ca scenarios giu nguyen: sell_acceleration=True, buy_confirmation=True, fail_safe=True, gap_filter=True, rally_threshold=True, rally_threshold_pct=-0.06.
+
+#### Ket qua so sanh (VN30 2018-2026)
+
+```
+Scenario                   Return      MaxDD   Sharpe   Trades    WinRate
+-------------------------------------------------------------------------
+1_baseline                  52.8%     -47.9%    0.34       75      28.0%
+2_no_ma50_sell              91.2%     -40.5%    0.50       67      31.3%
+3_no_buy_filter             29.6%     -46.7%    0.25       88      33.0%
+4_no_ma50_all               47.8%     -34.2%    0.35       74      29.7%
+5_200dma_replace            37.7%     -34.8%    0.29       76      30.3%
+```
+
+#### MAREVIEW-03: Recommendation
+
+**RECOMMENDATION: REMOVE MA50 from signal logic.**
+
+Evidence:
+- `4_no_ma50_all` (Sharpe=0.35) > `1_baseline` (Sharpe=0.34) > `5_200dma_replace` (Sharpe=0.29)
+- Removing all MA50 uses improves risk-adjusted returns: Sharpe 0.34 -> 0.35, MaxDD -47.9% -> -34.2%
+- `2_no_ma50_sell` has the highest Sharpe (0.50) and return (+91.2%), indicating MA50 SELL trigger is the main drag
+- SELL falls back to cash_deterioration_days only (per D-04)
+
+**Chi tiet theo tung MA50 role:**
+- MA50 SELL trigger: loai bo cai thien manh (Sharpe 0.34->0.50, return +38.4%)
+- MA10<MA50 buy filter: giu nguyen co loi (loai bo lam giam return -23.2%, Sharpe xuong 0.25)
+- MA50 breakout buy signal: neutral (loai bo kem anh huong, included in 4_no_ma50_all)
+
+**Dieu chinh trong Phase 27 (combined validation):**
+- Thay doi nay chua duoc ap dung vao default config
+- Khi tich hop, can xem xet: tat ma50_sell_enabled=False, giu buy_filter_enabled=True (buy filter co gia tri)
+- 4_no_ma50_all Sharpe cao hon baseline nhung 2_no_ma50_sell (Sharpe=0.50) cho thay tat MA50 SELL la quan trong nhat
+
+**Luu y pham vi:** Stop loss Rule 3 va sell acceleration gate van su dung MA50 bat ke scenario.
+Day la dung per phase scope -- day la cac concern rieng biet.
