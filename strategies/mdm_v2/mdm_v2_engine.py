@@ -101,6 +101,11 @@ class MDMV2Engine:
         df['prev_ma50'] = df['ma50'].shift(1)
         df['prev_ma10'] = df['ma10'].shift(1)
 
+        # Add 200dma indicator if replacement mode enabled (MAREVIEW, D-03)
+        if self.config.ma200_enabled:
+            df = Indicators.add_sma200_column(df)
+            df['prev_sma200'] = df['sma200'].shift(1)
+
         # Merge global liquidity data if QE floor enabled (LIQ-01, LIQ-02)
         if self.config.qe_floor_enabled and self.liquidity_loader is not None:
             df = self.liquidity_loader.load_and_merge(df, self.config.publication_lag_days)
@@ -116,6 +121,7 @@ class MDMV2Engine:
         df['is_day1'] = False
         df['is_ftd'] = False
         df['is_ma50_breakout'] = False
+        df['is_200dma_breakout'] = False
         df['is_dd'] = False
         df['dd_type'] = 0
         df['dd_count'] = 0
@@ -190,7 +196,7 @@ class MDMV2Engine:
                         self.dd_counter.reset()
 
                 # Check MA50 breakout signal (alternative buy signal)
-                if not is_ftd:
+                if not is_ftd and self.config.ma50_breakout_enabled:
                     ma50 = row['ma50'] if 'ma50' in row else None
                     prev_ma50 = row['prev_ma50'] if 'prev_ma50' in row else None
                     if ma50 is not None and prev_ma50 is not None:
@@ -202,6 +208,21 @@ class MDMV2Engine:
                             ftd_price = signal.price
                             signal_type = signal.signal_type
                             self.dd_counter.reset()
+
+                # Check 200dma breakout signal (replaces MA50 breakout when ma200_enabled, per D-03)
+                if not is_ftd and self.config.ma200_enabled:
+                    sma200 = row['sma200'] if 'sma200' in row.index else None
+                    prev_sma200 = row['prev_sma200'] if 'prev_sma200' in row.index else None
+                    if sma200 is not None and prev_sma200 is not None:
+                        is_200dma, signal = self.ftd_detector.check_200dma_breakout(
+                            close, prev_close, sma200, prev_sma200, volume_up, drawdown_pct, date
+                        )
+                        if is_200dma and signal:
+                            is_ftd = True
+                            ftd_price = signal.price
+                            signal_type = signal.signal_type
+                            self.dd_counter.reset()
+                            df.at[df.index[idx], 'is_200dma_breakout'] = True
 
                 # Check 52-Week Breakout signal
                 if not is_ftd:
@@ -331,6 +352,7 @@ class MDMV2Engine:
                 signal_type=signal_type,
                 ma10=ma10,
                 ma50=ma50_val,
+                sma200=row.get('sma200') if hasattr(row, 'get') else (row['sma200'] if 'sma200' in row.index else None),
                 suppress_sell=suppress_sell,
                 acceleration_met=acceleration_met,
                 prev_high=prev_high if pd.notna(prev_high) else 0.0,

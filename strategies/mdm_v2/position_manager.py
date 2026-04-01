@@ -160,6 +160,7 @@ class V2PositionManager:
         signal_type: str = "FTD",
         ma10: float = None,
         ma50: float = None,
+        sma200: float = None,
         suppress_sell: bool = False,
         acceleration_met: bool = True,
         prev_high: float = 0.0,
@@ -181,7 +182,10 @@ class V2PositionManager:
             signal_type: Type of buy signal
             ma10: Current 10-day MA
             ma50: Current 50-day MA
+            sma200: Current 200-day SMA (optional, for 200dma SELL trigger)
             suppress_sell: Whether to suppress CASH->SELL transitions (QE floor)
+            acceleration_met: Whether sell acceleration conditions are met
+            prev_high: High of previous day (for fail-safe threshold)
 
         Returns:
             Tuple of (new_state, action_taken)
@@ -206,6 +210,15 @@ class V2PositionManager:
                 else:
                     self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})", fail_safe_threshold=prev_high)
                     action = f"SELL signal: MA50 breakdown"
+            # Check for CASH -> SELL: 200dma breakdown (per D-03, Scenario 5)
+            elif self.config.ma200_enabled and sma200 is not None and close < sma200:
+                if suppress_sell:
+                    action = "SELL suppressed: QE floor (200dma breakdown)"
+                elif not acceleration_met:
+                    action = "SELL deferred: no acceleration (200dma breakdown)"
+                else:
+                    self.enter_sell(date, f"200dma breakdown (close {close:.2f} < 200dma {sma200:.2f})", fail_safe_threshold=prev_high)
+                    action = "SELL signal: 200dma breakdown"
             # Check for CASH -> SELL: deterioration
             elif self.position.days_in_cash >= self.config.cash_deterioration_days:
                 if suppress_sell:

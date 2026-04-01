@@ -140,6 +140,55 @@ class FTDSignalDetector:
         
         return True, signal
 
+    def check_200dma_breakout(
+        self,
+        close: float,
+        prev_close: float,
+        sma200: float,
+        prev_sma200: float,
+        volume_up: bool,
+        drawdown_pct: float,
+        date: pd.Timestamp
+    ) -> Tuple[bool, Optional[FTDSignal]]:
+        """Check if price breaks above 200dma after a correction.
+
+        Per D-03: 200dma crossover replaces MA50 breakout in Scenario 5.
+        Same conditions as MA50 breakout but using 200-day SMA.
+
+        Args:
+            close: Current close price
+            prev_close: Previous close price
+            sma200: Current 200-day SMA
+            prev_sma200: Previous 200-day SMA
+            volume_up: Whether volume increased
+            drawdown_pct: Current drawdown from peak (negative value)
+            date: Current date
+
+        Returns:
+            Tuple of (is_breakout, signal)
+        """
+        # Check correction depth (reuse ma50_breakout_correction threshold)
+        if drawdown_pct > self.config.ma50_breakout_correction:
+            return False, None
+
+        # Check if crossing above 200dma (prev below or at, now above)
+        if not (prev_close <= prev_sma200 and close > sma200):
+            return False, None
+
+        # Check volume
+        if not volume_up:
+            return False, None
+
+        # All conditions met - 200dma breakout signal
+        signal = FTDSignal(
+            date=date,
+            price=close,
+            rally_day=0,
+            signal_type="200DMA"
+        )
+        self.last_signal = signal
+        return True, signal
+
     def check_52week_breakout(
         self,
         close: float,

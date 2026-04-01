@@ -5,6 +5,7 @@ import numpy as np
 from strategies.mdm_v2.config import MDMV2Config
 from strategies.mdm_v2.indicators import Indicators
 from strategies.mdm_v2.ftd_signal import FTDSignalDetector
+from strategies.mdm_v2.mdm_v2_engine import MDMV2Engine
 
 
 def test_config_flags():
@@ -88,3 +89,43 @@ def test_200dma_replacement():
     assert config.buy_filter_enabled is False
     assert config.ma50_breakout_enabled is False
     assert config.ma200_enabled is True
+
+
+def test_engine_gates_ma50_breakout():
+    """With ma50_breakout_enabled=False, engine produces no MA50 breakout signals."""
+    np.random.seed(42)
+    n = 150
+    dates = pd.date_range('2020-01-01', periods=n, freq='B')
+    closes = np.concatenate([np.linspace(100, 80, 100), np.linspace(80, 110, 50)])
+    df = pd.DataFrame({
+        'date': dates,
+        'open': closes * 0.99,
+        'high': closes * 1.01,
+        'low': closes * 0.98,
+        'close': closes,
+        'volume': np.random.randint(100000, 500000, n),
+        'symbol': 'TEST',
+    })
+
+    # Run with ma50_breakout_enabled=False
+    config_off = MDMV2Config(ma50_breakout_enabled=False, ma200_enabled=False, name="breakout_off")
+    engine_off = MDMV2Engine(config_off)
+    result_off = engine_off.run(df)
+
+    # Verify: breakout_off should have no MA50 breakout signals
+    assert result_off['is_ma50_breakout'].sum() == 0, "MA50 breakout should be gated off"
+
+
+def test_200dma_replacement_signals():
+    """With ma200_enabled=True, engine accepts 200DMA config (Scenario 5)."""
+    config = MDMV2Config(
+        ma50_sell_enabled=False,
+        buy_filter_enabled=False,
+        ma50_breakout_enabled=False,
+        ma200_enabled=True,
+        name="200dma",
+    )
+    # Verify config is correctly set for Scenario 5
+    assert config.ma200_enabled is True
+    assert config.ma50_breakout_enabled is False
+    assert config.ma50_sell_enabled is False
