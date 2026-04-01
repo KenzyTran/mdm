@@ -30,8 +30,8 @@
 
 ### Banding/Volatility Filter
 
-- [ ] **BAND-01**: Compute ATR-based volatility regime (high/normal/low) tren VN30 daily data
-- [ ] **BAND-02**: Suppress signal switching khi volatility regime = low (banding qua hep cho VN30)
+- [x] **BAND-01**: Compute ATR-based volatility regime (high/normal/low) tren VN30 daily data
+- [x] **BAND-02**: Suppress signal switching khi volatility regime = low (banding qua hep cho VN30)
 - [ ] **BAND-03**: Backtest tren VN30 cac giai doan sideways xac nhan filter giam false signals
 
 ### Validation
@@ -80,8 +80,8 @@
 | MAREVIEW-01 | Phase 25 | Complete |
 | MAREVIEW-02 | Phase 25 | Complete |
 | MAREVIEW-03 | Phase 25 | Complete |
-| BAND-01 | Phase 26 | Pending |
-| BAND-02 | Phase 26 | Pending |
+| BAND-01 | Phase 26 | Complete |
+| BAND-02 | Phase 26 | Complete |
 | BAND-03 | Phase 26 | Pending |
 | VAL-08 | Phase 27 | Pending |
 | VAL-09 | Phase 27 | Pending |

@@ -475,10 +475,10 @@ Plans:
   2. When volatility regime is "low", signal transitions (both BUY and SELL) are suppressed -- engine stays in current state until volatility returns to normal/high
   3. A/B backtest on VN30 sideways periods (identified by ATR regime) shows the volatility filter reduces false signal count by at least 20% during those periods
   4. The filter does not delay entries or exits during high-volatility trending periods -- verified by checking that 2020 crash exit and 2021 rally entry timing are unchanged
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 26-01-PLAN.md -- Config, ATR indicator, VolatilityFilter module with unit tests (BAND-01, BAND-02)
+- [x] 26-01-PLAN.md -- Config, ATR indicator, VolatilityFilter module with unit tests (BAND-01, BAND-02)
 - [ ] 26-02-PLAN.md -- Engine/position manager integration, A/B validation, docs update (BAND-02, BAND-03)
 
 ### Phase 27: Combined v6.0 Validation & Dashboard
@@ -524,5 +524,5 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 23. Fail-Safe Mechanism | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 24. Buy Entry Refinement | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 25. MA50/200dma Review | v6.0 | 3/3 | Complete    | 2026-04-01 |
-| 26. Banding/Volatility Filter | v6.0 | 0/2 | Planning | - |
+| 26. Banding/Volatility Filter | v6.0 | 1/2 | In Progress|  |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |

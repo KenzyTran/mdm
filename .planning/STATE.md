@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: verifying
-stopped_at: Completed 25-03-PLAN.md
-last_updated: "2026-04-01T07:26:02.693Z"
+status: executing
+stopped_at: Completed 26-01-PLAN.md
+last_updated: "2026-04-01T07:58:58.814Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 8
   percent: 81
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals -- optimized for VN30
-**Current focus:** Phase 25 — ma50-200dma-review
+**Current focus:** Phase 26 — banding-volatility-filter
 
 ## Current Position
 
-Phase: 26
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 26 (banding-volatility-filter) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-01
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
@@ -71,6 +71,7 @@ Recent decisions affecting current work:
 - [Phase 25]: sma200=None default in process_day maintains backward compat, no callers broken
 - [Phase 25]: 200dma SELL uses elif chain after MA50 SELL block to prevent double-firing
 - [Phase 25]: MAREVIEW-03: REMOVE MA50 SELL trigger (Sharpe 0.34->0.50, return +38.4%) -- keep buy_filter=True, integrate in Phase 27
+- [Phase 26]: ATR uses simple rolling mean with min_periods=1 for consistency with existing indicator pattern
 
 ### Pending Todos
 
@@ -84,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T06:47:55.888Z
-Stopped at: Completed 25-03-PLAN.md
+Last session: 2026-04-01T07:58:58.811Z
+Stopped at: Completed 26-01-PLAN.md
 Resume file: None
