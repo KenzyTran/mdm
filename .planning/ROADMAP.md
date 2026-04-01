@@ -411,7 +411,8 @@ Plans:
 
 - [x] **Phase 23: Fail-Safe Mechanism** - Auto-exit SELL to CASH when VN30 reclaims standby-sell HIGH, with A/B validation
  (completed 2026-03-31)
-- [x] **Phase 24: Buy Entry Refinement** - Gap-up neutralization and 6% rally attempt threshold for FTD timing on VN30 (completed 2026-03-31)
+- [x] **Phase 24: Buy Entry Refinement** - Gap-up neutralization and 6% rally attempt threshold for FTD timing on VN30
+ (completed 2026-03-31)
 - [x] **Phase 25: MA50/200dma Review** - A/B research testing whether MA50 should be removed from SELL trigger and BUY filter logic (completed 2026-04-01)
 - [ ] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods
 - [ ] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features
@@ -474,7 +475,11 @@ Plans:
   2. When volatility regime is "low", signal transitions (both BUY and SELL) are suppressed -- engine stays in current state until volatility returns to normal/high
   3. A/B backtest on VN30 sideways periods (identified by ATR regime) shows the volatility filter reduces false signal count by at least 20% during those periods
   4. The filter does not delay entries or exits during high-volatility trending periods -- verified by checking that 2020 crash exit and 2021 rally entry timing are unchanged
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 26-01-PLAN.md -- Config, ATR indicator, VolatilityFilter module with unit tests (BAND-01, BAND-02)
+- [ ] 26-02-PLAN.md -- Engine/position manager integration, A/B validation, docs update (BAND-02, BAND-03)
 
 ### Phase 27: Combined v6.0 Validation & Dashboard
 **Goal**: All v6.0 features validated together with walk-forward testing and dashboard updated with new performance metrics
@@ -484,7 +489,6 @@ Plans:
   1. A/B backtest report comparing V2 baseline vs V2+all_v6_features shows side-by-side metrics (total return, CAGR, max drawdown, Sharpe, trade count, false signal rate) on VN30
   2. Walk-forward validation (train pre-2022, test 2022-2026) shows combined v6.0 features degrade less than 10% out-of-sample vs in-sample on VN30
   3. S3 dashboard is updated with v6.0 performance metrics, fail-safe annotations, volatility regime overlay, and updated equity curve
-  4. Combined v6.0 configuration does not produce worse max drawdown than V2 baseline on any VN30 bear market sub-period (2020, 2022)
 **Plans**: TBD
 **UI hint**: yes
 
@@ -520,5 +524,5 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 23. Fail-Safe Mechanism | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 24. Buy Entry Refinement | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 25. MA50/200dma Review | v6.0 | 3/3 | Complete    | 2026-04-01 |
-| 26. Banding/Volatility Filter | v6.0 | 0/0 | Not started | - |
+| 26. Banding/Volatility Filter | v6.0 | 0/2 | Planning | - |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |
