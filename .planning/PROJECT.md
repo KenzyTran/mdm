@@ -17,7 +17,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - [ ] Gap-up buy neutralization — invalidate buy nếu low < prev_close
 - [ ] 6% rally attempt threshold — FTD classic chỉ required khi drop ≥ 6%
 - [ ] MA50/200dma review — A/B test deprioritize MA50 theo Dr. K statement
-- [ ] Banding/volatility filter — ATR-based suppress signals trong low-vol periods
+- [x] Banding/volatility filter — ATR-based suppress signals trong low-vol periods (Phase 26 ✓)
 
 **Baseline (V2 hiện tại):** +190.8% total return, CAGR 10%, max DD -31.8% trên VN30
 
@@ -163,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 — Phase 25 (MA50/200dma Review) complete: MAREVIEW-01/02/03 verified. A/B test across 5 scenarios shows removing MA50 SELL trigger improves return 52.8%→91.2% and Sharpe 0.34→0.50. Recommendation: remove MA50 from signal logic. Integration deferred to Phase 27.*
+*Last updated: 2026-04-01 — Phase 26 (Banding/Volatility Filter) complete: BAND-01/02/03 verified. ATR-14 based volatility filter suppresses BUY entries in low-vol regimes (ATR% < 1.04). A/B validation: 78.6% transition reduction in 2019 sideways, 50% in 2025 Q1 low-vol. Protective exits (stop loss, DD, fail-safe) unaffected. Filter disabled by default for backward compatibility.*
