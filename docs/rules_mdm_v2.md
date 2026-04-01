@@ -294,6 +294,8 @@ Where `acceleration_met` = at least one of: Price ROC < -4%, DD clustering (3 in
 | `buy_confirmation_enabled` | True | Bật cửa sổ xác nhận sau FTD (v5.0 BUY-02) |
 | `confirmation_window_days` | 3 | Số ngày chờ xác nhận sau FTD |
 | `confirmation_max_dd` | 1 | Số DD tối đa cho phép trong cửa sổ xác nhận |
+| `ma50_breakout_enabled` | True | Bật/tắt tín hiệu mua MA50 breakout (v6.0 MAREVIEW-01) |
+| `ma200_enabled` | False | Bật chế độ thay thế 200dma (v6.0 MAREVIEW-02) — xem Mục XIII |
 | `name` | "default" | Tên giả thuyết (metadata) |
 
 ---
@@ -703,9 +705,28 @@ df['sma200'] = df['close'].rolling(window=200, min_periods=1).mean()
 
 Su dung `min_periods=1` de tranh NaN (tuong tu add_ma50_column). WARMUP_DAYS=300 trong validation scripts da du de warm up SMA200.
 
-### 4. Trang thai hien tai (Plan 01)
+### 4. Wiring Logic (Plan 02)
 
-- Config flags da them (ma50_breakout_enabled, ma200_enabled)
-- SMA200 indicator da them
-- Gating logic va 200dma wiring se duoc them trong Plan 02
-- A/B validation se chay trong Plan 03
+**MA50 Breakout gating:**
+- Khi `ma50_breakout_enabled=False`: engine khong goi `check_ma50_breakout()` -> tat hoan toan tin hieu MA50 breakout BUY.
+- Khi `ma50_breakout_enabled=True` (mac dinh): hanh vi giu nguyen nhu truoc.
+
+**200dma BUY signal (khi `ma200_enabled=True`):**
+- Engine tinh `sma200` va `prev_sma200` columns.
+- Check `check_200dma_breakout()`: C crosses above SMA200, volume up, drawdown >= 6%.
+- Signal type: `"200DMA"`.
+- Uu tien: FTD -> MA50 breakout (neu bat) -> 200dma breakout -> 52-week breakout.
+
+**200dma SELL trigger (khi `ma200_enabled=True`):**
+- CASH state: khi `close < sma200` (thay vi `close < ma50`).
+- QE floor suppression va acceleration gate ap dung tuong tu MA50 SELL.
+- Chi fires khi `ma50_sell_enabled=False` (vi logic elif chain).
+
+**Backward compatibility:** Voi config mac dinh (`ma50_breakout_enabled=True, ma200_enabled=False`), tat ca hanh vi giu nguyen 100%.
+
+**Thu tu uu tien SELL:** MA50 SELL (neu bat) -> 200dma SELL (neu bat) -> Cash Deterioration.
+
+### 5. A/B validation (Plan 03)
+
+- Script so sanh 5 scenarios: baseline, no-MA50-sell, no-MA50-breakout, no-MA50-all, 200dma-replace
+- Metrics: total return, CAGR, MaxDD, Sharpe, win rate
