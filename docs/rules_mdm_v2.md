@@ -672,3 +672,40 @@ Co the tat bang `fail_safe_enabled=False` trong config. Khi tat, SELL state hoat
 | `gap_filter_enabled` | bool | True | Bat/tat gap-up invalidation |
 | `rally_threshold_enabled` | bool | True | Bat/tat 6% rally threshold |
 | `rally_threshold_pct` | float | -0.06 | Nguong phan biet shallow vs deep pullback |
+
+---
+
+## XVI. MA50/200DMA REVIEW (v6.0, MAREVIEW-01, MAREVIEW-02)
+
+*Cap nhat v6.0: Them co che A/B test de danh gia vai tro cua MA50 va 200dma.*
+
+### 1. Muc dich
+
+Dr. K noi MA50/200dma co "little value" trong model hien tai. Phase nay A/B test cac ket hop:
+- Tat MA50 SELL trigger
+- Tat MA50 breakout BUY filter
+- Thay the bang 200dma (SMA200)
+
+### 2. Config Parameters
+
+| Parameter | Type | Default | Mo ta |
+|-----------|------|---------|-------|
+| `ma50_breakout_enabled` | bool | True | Bat/tat MA50 breakout buy signal (True = hanh vi hien tai) |
+| `ma200_enabled` | bool | False | Che do thay the 200dma (False = tat, mac dinh per v5.0) |
+
+### 3. Chi bao SMA200
+
+Phuong thuc `Indicators.add_sma200_column(df)` tinh trung binh dong 200 phien:
+
+```python
+df['sma200'] = df['close'].rolling(window=200, min_periods=1).mean()
+```
+
+Su dung `min_periods=1` de tranh NaN (tuong tu add_ma50_column). WARMUP_DAYS=300 trong validation scripts da du de warm up SMA200.
+
+### 4. Trang thai hien tai (Plan 01)
+
+- Config flags da them (ma50_breakout_enabled, ma200_enabled)
+- SMA200 indicator da them
+- Gating logic va 200dma wiring se duoc them trong Plan 02
+- A/B validation se chay trong Plan 03
