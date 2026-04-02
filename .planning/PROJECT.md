@@ -8,24 +8,18 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
-## Current Milestone: v6.0 MDM Fail-Safe & Signal Refinement
+## Completed: v6.0 MDM Fail-Safe & Signal Refinement (shipped 2026-04-02)
 
-**Goal:** Implement Dr. K's specific signal rules (fail-safe, gap-up neutralization, 6% threshold) và review lại vai trò của MA50/200dma + volatility filter để giảm whipsaw.
+**Kết quả:**
+- [x] Fail-safe mechanism — auto-CASH khi close vượt standby-sell HIGH → +47% return (Phase 23)
+- [x] Gap-up buy neutralization — invalidate buy nếu low < prev_close (Phase 24)
+- [x] 6% rally attempt threshold — FTD sớm hơn khi giảm nông (Phase 24)
+- [x] MA50/200dma review — A/B test: loại MA50 SELL tăng Sharpe 0.34→0.50 (Phase 25)
+- [x] Banding/volatility filter — ATR-based suppress trong low-vol, giảm 50-79% transitions (Phase 26)
+- [x] Combined validation — A/B + walk-forward ALL PASS (Phase 27)
 
-**Target features:**
-- [ ] Fail-safe mechanism — auto-CASH khi NASDAQ vượt HIGH của standby-sell day
-- [ ] Gap-up buy neutralization — invalidate buy nếu low < prev_close
-- [ ] 6% rally attempt threshold — FTD classic chỉ required khi drop ≥ 6%
-- [ ] MA50/200dma review — A/B test deprioritize MA50 theo Dr. K statement
-- [x] Banding/volatility filter — ATR-based suppress signals trong low-vol periods (Phase 26 ✓)
-
-**Baseline (V2 hiện tại):** +190.8% total return, CAGR 10%, max DD -31.8% trên VN30
-
-**Key context:**
-- Features 1-3: rules cụ thể từ Dr. K FAQ + webinar transcripts
-- Features 4-5: cần research — Dr. K nói "little value" cho 200dma/50dma, "banding width" ảnh hưởng performance
-- V2 hiện dùng MA50 breakdown làm SELL trigger chính — nếu Dr. K nói không quan trọng thì cần review
-- Dashboard: http://mdm-trading-dashboard.s3-website-ap-southeast-1.amazonaws.com
+**Best model:** HybridEngine + fail-safe = **+239%** return, CAGR 11.5%, MaxDD -28.2% (beat Buy & Hold +205%)
+**Dashboard:** http://mdm-trading-dashboard.s3-website-ap-southeast-1.amazonaws.com
 
 ## Requirements
 
@@ -163,4 +157,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 — Phase 26 (Banding/Volatility Filter) complete: BAND-01/02/03 verified. ATR-14 based volatility filter suppresses BUY entries in low-vol regimes (ATR% < 1.04). A/B validation: 78.6% transition reduction in 2019 sideways, 50% in 2025 Q1 low-vol. Protective exits (stop loss, DD, fail-safe) unaffected. Filter disabled by default for backward compatibility.*
+*Last updated: 2026-04-02 — v6.0 milestone shipped. Best model: HybridEngine + fail-safe = +239%, CAGR 11.5%, MaxDD -28.2% on VN30 (beats Buy & Hold +205%). Key discovery: fail-safe is the only v6.0 feature that improves HybridEngine — other features (gap filter, buy selectivity, sell acceleration, volatility filter) only benefit MDMV2Engine.*
