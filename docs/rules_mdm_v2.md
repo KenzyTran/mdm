@@ -84,30 +84,30 @@ MDM V2 là phiên bản cải tiến của MDM Classic, thay đổi từ máy tr
 * **Hành động:** Chuyển sang BUY.
 * **Stop loss đặc biệt:** Đặt stop loss tại $L_{ngày\_mua} \times 0.99$ (1% dưới đáy ngày mua).
 
-### 5. Chuyen CASH -> SELL (Thi truong xau di):
+### 5. Chuyển CASH -> SELL (Thị trường xấu đi):
 
-Neu khong co tin hieu mua, kiem tra 2 dieu kien chuyen sang SELL:
+Nếu không có tín hiệu mua, kiểm tra 2 điều kiện chuyển sang SELL:
 
 * **MA50 Breakdown** (khi `ma50_sell_enabled=True`):
-  * Gia dong cua duoi MA50 ($C < MA50$).
+  * Giá đóng cửa dưới MA50 ($C < MA50$).
 
-* **Cash Deterioration** (Xuong cap do o CASH qua lau):
-  * So ngay o trang thai CASH >= `cash_deterioration_days` (NASDAQ: 10, VN30: 20 ngay).
+* **Cash Deterioration** (Xuống cấp do ở CASH quá lâu):
+  * Số ngày ở trạng thái CASH >= `cash_deterioration_days` (NASDAQ: 10, VN30: 20 ngày).
 
-**Cong tang toc SELL (SELL Acceleration Gate, v5.0 SELL-01):**
+**Cổng tăng tốc SELL (SELL Acceleration Gate, v5.0 SELL-01):**
 
-Khi `sell_acceleration_enabled=True` (mac dinh), cac dieu kien tren chi duoc thuc hien khi **it nhat 1 dieu kien tang toc** duoc xac nhan (logic OR):
+Khi `sell_acceleration_enabled=True` (mặc định), các điều kiện trên chỉ được thực hiện khi **ít nhất 1 điều kiện tăng tốc** được xác nhận (logic OR):
 
-1. **Price ROC < threshold**: Ty le thay doi gia trong `roc_window` phien < `roc_threshold` (mac dinh: ROC 10 phien < -4%). Day la dau hieu dong luc giam manh.
-2. **DD Clustering**: Co >= `dd_cluster_count` ngay phan phoi trong `dd_cluster_window` phien gan nhat (mac dinh: 3 DD trong 5 phien). Day la dau hieu to chuc ban ra tap trung.
-3. **Volume-confirmed MA50 Breakdown**: Gia vuot xuong duoi MA50 (hom nay close < MA50, hom qua close >= MA50) VA khoi luong tang so voi phien truoc.
+1. **Price ROC < threshold**: Tỷ lệ thay đổi giá trong `roc_window` phiên < `roc_threshold` (mặc định: ROC 10 phiên < -4%). Đây là dấu hiệu động lực giảm mạnh.
+2. **DD Clustering**: Có >= `dd_cluster_count` ngày phân phối trong `dd_cluster_window` phiên gần nhất (mặc định: 3 DD trong 5 phiên). Đây là dấu hiệu tổ chức bán ra tập trung.
+3. **Volume-confirmed MA50 Breakdown**: Giá vượt xuống dưới MA50 (hôm nay close < MA50, hôm qua close >= MA50) VÀ khối lượng tăng so với phiên trước.
 
-**Thu tu uu tien gate:** QE floor suppress > Acceleration gate > Trigger condition.
-- Neu QE floor suppress = True -> SELL bi suppress (bat ke acceleration).
-- Neu acceleration khong met -> SELL bi defer ("SELL deferred: no acceleration").
-- Chi khi ca hai cho phep -> SELL duoc thuc hien.
+**Thứ tự ưu tiên gate:** QE floor suppress > Acceleration gate > Trigger condition.
+- Nếu QE floor suppress = True -> SELL bị suppress (bất kể acceleration).
+- Nếu acceleration không met -> SELL bị defer ("SELL deferred: no acceleration").
+- Chỉ khi cả hai cho phép -> SELL được thực hiện.
 
-**Thu tu uu tien trigger:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
+**Thứ tự ưu tiên trigger:** FTD > MA50 Breakout > 52-Week Breakout > MA50 Sell > Cash Deterioration.
 
 ### 6. Bộ lọc BUY Selectivity (v5.0, BUY-01, BUY-02)
 
@@ -194,11 +194,11 @@ Hai bộ lọc được áp dụng CHỈ cho tín hiệu FTD cổ điển. MA50 
 
 ## V. QUY TẮC CẮT LỖ (STOP LOSS)
 
-Chỉ áp dụng khi đang ở trạng thái BUY. Không có stop loss cho SHORT (đã bỏ SHORT trong V2).
+Chỉ áp dụng khi đang ở trạng thái BUY. Short stop loss xem Mục XII.
 
 ### 1. Cắt lỗ theo phần trăm (Rule 1):
 * Giá đóng cửa giảm quá `stop_loss_pct` từ giá mua.
-* Mặc định: $C < P_{buy} \times (1 - 0.025)$ (giảm 2.5%).
+* Mặc định: $C < P_{buy} \times (1 - 0.015)$ (giảm 1.5%, cập nhật v4.0 — xem Mục XII).
 
 ### 2. Phá thủng đáy ngày mua (Rule 2):
 * Giá đóng cửa thấp hơn giá thấp nhất của ngày mua ($C < L_{buy\_day}$).
@@ -284,7 +284,7 @@ Where `acceleration_met` = at least one of: Price ROC < -4%, DD clustering (3 in
 | `ma10_cash_consecutive` | 2 (NASDAQ) / **3 (VN30)** | Số phiên liên tiếp dưới MA10 để kích hoạt |
 | `ma50_sell_enabled` | True | Bật/tắt MA50 breakdown cho CASH -> SELL |
 | `cash_deterioration_days` | 10 (NASDAQ) / **20 (VN30)** | Số ngày ở CASH trước khi tự động chuyển SELL |
-| `stop_loss_pct` | 0.025 | Phần trăm cắt lỗ từ giá mua (2.5%) |
+| `stop_loss_pct` | 0.015 | Phần trăm cắt lỗ từ giá mua (1.5%, cập nhật v4.0) |
 | `sell_acceleration_enabled` | True | Bat/tat cong tang toc SELL (v5.0 SELL-01) |
 | `roc_threshold` | -0.04 | Nguong ROC cho dieu kien tang toc (mac dinh -4%) |
 | `roc_window` | 10 | So phien tinh ROC (mac dinh 10 phien) |
@@ -295,14 +295,27 @@ Where `acceleration_met` = at least one of: Price ROC < -4%, DD clustering (3 in
 | `confirmation_window_days` | 3 | Số ngày chờ xác nhận sau FTD |
 | `confirmation_max_dd` | 1 | Số DD tối đa cho phép trong cửa sổ xác nhận |
 | `ma50_breakout_enabled` | True | Bật/tắt tín hiệu mua MA50 breakout (v6.0 MAREVIEW-01) |
-| `ma200_enabled` | False | Bật chế độ thay thế 200dma (v6.0 MAREVIEW-02) — xem Mục XIII |
+| `ma200_enabled` | False | Bật chế độ thay thế 200dma (v6.0 MAREVIEW-02) — xem Mục XVI |
+| `fail_safe_enabled` | True | Bật/tắt cơ chế fail-safe auto-exit SELL (v6.0 SAFE-01) |
+| `gap_filter_enabled` | True | Reject FTD khi gap-up bị phá (v6.0 GAP-01) — xem Mục XV |
+| `rally_threshold_enabled` | True | Cho phép FTD sớm khi giảm nông < 6% (v6.0 RALLY-01) — xem Mục XV |
+| `rally_threshold_pct` | -0.06 | Ngưỡng phân biệt shallow vs deep pullback |
+| `volatility_filter_enabled` | False | Bật/tắt bộ lọc biến động ATR (v6.0 BAND-01) — xem Mục XII (Volatility) |
+| `volatility_low_threshold` | 1.04 | ATR% dưới mức này = low volatility (P25 VN30) |
+| `volatility_high_threshold` | 1.73 | ATR% trên mức này = high volatility (P75 VN30) |
+| `atr_period` | 14 | Số phiên tính ATR (dùng cho cả volatility filter và adaptive stop loss) |
+| `short_stop_pct_above_dd5` | 0.01 | Phần trăm trên DD5 high để cover short (v4.0) — xem Mục XII |
+| `volatility_adaptive` | True | Bật/tắt ATR adaptive stop loss scaling (v4.0) — xem Mục XII |
+| `atr_baseline_period` | 50 | Số phiên baseline cho ATR adaptive ratio |
+| `stop_loss_min_multiplier` | 0.5 | Hệ số nhân tối thiểu cho adaptive stop loss |
+| `stop_loss_max_multiplier` | 2.5 | Hệ số nhân tối đa cho adaptive stop loss |
 | `name` | "default" | Tên giả thuyết (metadata) |
 
 ---
 
 ## IX. GHI CHÚ QUAN TRỌNG
 
-1. **Vị thế SHORT khi SELL (v4.0):** Khi `short_mode = True` (mặc định), trạng thái SELL mở vị thế short thật sự. Khi `short_mode = False`, SELL chỉ là tín hiệu cảnh báo. Xem Mục X để biết chi tiết.
+1. **Vị thế SHORT khi SELL (v4.0):** Trạng thái SELL luôn mở vị thế short thật sự trong V2 engine. Equity curve tính inverse return khi ở SELL (xem Mục X). Dùng `long_only_equity=True` trong `V2PerformanceAnalyzer` nếu muốn bỏ qua short P&L.
 
 2. **DD chỉ đếm khi BUY:** Ngày phân phối chỉ được đếm khi đang ở trạng thái BUY. Khi ở CASH hoặc SELL, bộ đếm DD không hoạt động.
 
@@ -327,8 +340,7 @@ Where `acceleration_met` = at least one of: Price ROC < -4%, DD clustering (3 in
 ### 1. Mở vị thế Short:
 * Khi engine chuyển sang trạng thái **SELL**, vị thế short được mở tự động.
 * **Giá entry** = Giá đóng cửa phiên chuyển sang SELL.
-* Cấu hình: `short_mode = True` (mặc định) để bật vị thế short khi SELL.
-* Khi `short_mode = False`, SELL chỉ là tín hiệu cảnh báo, không mở vị thế bán khống (hành vi V2 cũ).
+* V2 engine luôn mở short khi SELL. Dùng `long_only_equity=True` trong analyzer nếu muốn tính equity không short.
 
 ### 2. Công thức tính P&L cho Short:
 $$pnl = \frac{gia\_entry - gia\_cover}{gia\_entry}$$
@@ -356,7 +368,7 @@ Có **3 điều kiện** cover short, theo thứ tự ưu tiên:
 * Khi ở trạng thái SELL (có short):
 $$equity[i] = equity[i-1] \times \frac{close[i-1]}{close[i]}$$
 * Đây là **inverse return** — equity tăng khi thị trường giảm, giảm khi thị trường tăng.
-* Khi `short_mode = False` hoặc `long_only_equity = True`: equity giữ nguyên (flat) khi ở SELL.
+* Khi `long_only_equity = True` trong analyzer: equity giữ nguyên (flat) khi ở SELL.
 
 **Quy tắc quan trọng — Tránh Look-Ahead Bias:**
 * Equity curve **phải** dùng trạng thái ngày hôm trước (`state[i-1]`) để quyết định return ngày hôm nay (`i`).
@@ -417,7 +429,7 @@ SELL -> BUY    : KHÔNG CHO PHÉP (phải qua CASH trước)
 * Ratio được **clamp** trong khoảng **[0.5x, 2.5x]**:
   * Khi ATR cao (thị trường volatile): stop loss rộng hơn (ví dụ $1.5\% \times 2.0 = 3.0\%$)
   * Khi ATR thấp (thị trường ổn định): stop loss chặt hơn (ví dụ $1.5\% \times 0.7 = 1.05\%$)
-* Config: `atr_period = 14`, `atr_adaptive_enabled = True` (mặc định: `volatility_adaptive = True`)
+* Config: `atr_period = 14`, `volatility_adaptive = True` (mặc định)
 
 ### 3. Short Stop Loss — DD5 High:
 * **DD5 high** = Giá cao nhất ($H$) của ngày phân phối thứ 5 (ngày DD kích hoạt chuyển sang SELL).
@@ -474,55 +486,55 @@ config = HybridConfig(v2_config=NASDAQ_PRESET, ...)
 
 ---
 
-## XIV. BO LOC QE FLOOR - THANH KHOAN TOAN CAU (v5.0)
+## XIV. BỘ LỌC QE FLOOR - THANH KHOẢN TOÀN CẦU (v5.0)
 
-### 1. Tong quan
+### 1. Tổng quan
 
-Bo loc QE Floor su dung du lieu thanh khoan toan cau (Fed + ECB + BOJ balance sheet) de suppress tin hieu SELL khi thanh khoan dang mo rong. Dua tren insight tu webinar 2013 cua Dr. K: khi cac ngan hang trung uong dang bom thanh khoan (QE), thi truong co "san" va kho giam manh -- do do tin hieu SELL it tin cay hon.
+Bộ lọc QE Floor sử dụng dữ liệu thanh khoản toàn cầu (Fed + ECB + BOJ balance sheet) để suppress tín hiệu SELL khi thanh khoản đang mở rộng. Dựa trên insight từ webinar 2013 của Dr. K: khi các ngân hàng trung ương đang bơm thanh khoản (QE), thị trường có "sàn" và khó giảm mạnh -- do đó tín hiệu SELL ít tin cậy hơn.
 
-**Nguyen tac co ban:** Khi thanh khoan toan cau dang tang (qe_floor=1), cac chuyen doi CASH->SELL bi suppress. Tat ca cac chuyen doi khac (BUY->CASH, SELL->BUY, CASH->BUY) KHONG bi anh huong.
+**Nguyên tắc cơ bản:** Khi thanh khoản toàn cầu đang tăng (qe_floor=1), các chuyển đổi CASH->SELL bị suppress. Tất cả các chuyển đổi khác (BUY->CASH, SELL->BUY, CASH->BUY) KHÔNG bị ảnh hưởng.
 
-### 2. Nguon du lieu
+### 2. Nguồn dữ liệu
 
-File CSV tuan: `data/global_liquidity.csv`
+File CSV tuần: `data/global_liquidity.csv`
 
-| Cot | Mo ta |
+| Cột | Mô tả |
 | :--- | :--- |
-| `date` | Ngay (Wednesday hang tuan) |
-| `WALCL` | Fed balance sheet (triu USD) |
+| `date` | Ngày (Wednesday hàng tuần) |
+| `WALCL` | Fed balance sheet (triệu USD) |
 | `fed_net` | Fed net liquidity |
-| `ECB_USD` | ECB balance sheet (quy doi USD) |
-| `BOJ_USD` | BOJ balance sheet (quy doi USD) |
-| `global_liquidity` | Tong thanh khoan = WALCL + ECB_USD + BOJ_USD |
-| `liquidity_roc_20w` | Rate of change 20 tuan cua global_liquidity |
-| `qe_floor` | 1 neu liquidity_roc_20w > 0 (dang mo rong), 0 neu khong |
+| `ECB_USD` | ECB balance sheet (quy đổi USD) |
+| `BOJ_USD` | BOJ balance sheet (quy đổi USD) |
+| `global_liquidity` | Tổng thanh khoản = WALCL + ECB_USD + BOJ_USD |
+| `liquidity_roc_20w` | Rate of change 20 tuần của global_liquidity |
+| `qe_floor` | 1 nếu liquidity_roc_20w > 0 (đang mở rộng), 0 nếu không |
 
-Du lieu: 987 hang, tu 2007-05-02 den hien tai.
+Dữ liệu: 987 hàng, từ 2007-05-02 đến hiện tại.
 
-### 3. Publication lag (chong look-ahead bias)
+### 3. Publication lag (chống look-ahead bias)
 
-Du lieu thanh khoan tuan duoc cong bo voi do tre. De tranh look-ahead bias, ngay thanh khoan duoc dich ve phia truoc `publication_lag_days` ngay (mac dinh 7 ngay = 1 tuan).
+Dữ liệu thanh khoản tuần được công bố với độ trễ. Để tránh look-ahead bias, ngày thanh khoản được dịch về phía trước `publication_lag_days` ngày (mặc định 7 ngày = 1 tuần).
 
-**Co che merge:** Su dung `pd.merge_asof(direction='backward')` de gan gia tri thanh khoan gan nhat da co cho moi ngay giao dich. Nhu vay, mot trader vao thu Hai se chi thay du lieu cua tuan truoc (hoac cu hon).
+**Cơ chế merge:** Sử dụng `pd.merge_asof(direction='backward')` để gán giá trị thanh khoản gần nhất đã có cho mỗi ngày giao dịch. Như vậy, một trader vào thứ Hai sẽ chỉ thấy dữ liệu của tuần trước (hoặc cũ hơn).
 
-### 4. Hanh vi suppress SELL
+### 4. Hành vi suppress SELL
 
-Khi `qe_floor_enabled=True` va `qe_floor=1` (thanh khoan dang mo rong):
+Khi `qe_floor_enabled=True` và `qe_floor=1` (thanh khoản đang mở rộng):
 
-| Chuyen doi | Hanh vi | Ghi chu |
+| Chuyển đổi | Hành vi | Ghi chú |
 | :--- | :--- | :--- |
-| CASH -> SELL (MA50 breakdown) | **SUPPRESS** | Giu trang thai CASH, ghi action "SELL suppressed: QE floor (MA50 breakdown)" |
-| CASH -> SELL (cash deterioration) | **SUPPRESS** | Giu trang thai CASH, ghi action "SELL suppressed: QE floor (cash deterioration)" |
-| BUY -> CASH (stop loss) | Khong anh huong | Tat ca exit rule van hoat dong binh thuong |
-| BUY -> CASH (DD threshold) | Khong anh huong | |
-| BUY -> CASH (MA10 exit) | Khong anh huong | |
-| SELL -> BUY (FTD) | Khong anh huong | |
-| CASH -> BUY (FTD) | Khong anh huong | |
+| CASH -> SELL (MA50 breakdown) | **SUPPRESS** | Giữ trạng thái CASH, ghi action "SELL suppressed: QE floor (MA50 breakdown)" |
+| CASH -> SELL (cash deterioration) | **SUPPRESS** | Giữ trạng thái CASH, ghi action "SELL suppressed: QE floor (cash deterioration)" |
+| BUY -> CASH (stop loss) | Không ảnh hưởng | Tất cả exit rule vẫn hoạt động bình thường |
+| BUY -> CASH (DD threshold) | Không ảnh hưởng | |
+| BUY -> CASH (MA10 exit) | Không ảnh hưởng | |
+| SELL -> BUY (FTD) | Không ảnh hưởng | |
+| CASH -> BUY (FTD) | Không ảnh hưởng | |
 
 **Implementation trong `position_manager.py`:**
 
 ```python
-# Trong nhanh CASH state:
+# Trong nhánh CASH state:
 elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
     if not suppress_sell:
         self.enter_sell(date, f"MA50 breakdown ...")
@@ -530,41 +542,41 @@ elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
         action = "SELL suppressed: QE floor (MA50 breakdown)"
 ```
 
-### 5. Xu ly du lieu truoc 2007 (pre-data period)
+### 5. Xử lý dữ liệu trước 2007 (pre-data period)
 
-Cac ngay truoc khi du lieu thanh khoan bat dau (truoc 2007-05-02) nhan `qe_floor=0` (NaN duoc fill thanh 0). Dieu nay dam bao:
-- Khong co false SELL suppression cho du lieu lich su (NASDAQ tu 1974)
-- He thong chay binh thuong ma khong can dieu kien dac biet
+Các ngày trước khi dữ liệu thanh khoản bắt đầu (trước 2007-05-02) nhận `qe_floor=0` (NaN được fill thành 0). Điều này đảm bảo:
+- Không có false SELL suppression cho dữ liệu lịch sử (NASDAQ từ 1974)
+- Hệ thống chạy bình thường mà không cần điều kiện đặc biệt
 
-### 6. Thong so cau hinh
+### 6. Thông số cấu hình
 
-| Thong so | Kieu | Mac dinh | Mo ta |
+| Thông số | Kiểu | Mặc định | Mô tả |
 | :--- | :--- | :---: | :--- |
-| `qe_floor_enabled` | bool | `False` | Cong tac chinh, mac dinh TAT de dam bao backward compatibility |
-| `publication_lag_days` | int | `7` | So ngay dich du lieu thanh khoan ve phia truoc |
-| `liquidity_csv_path` | str | `"data/global_liquidity.csv"` | Duong dan den file CSV thanh khoan tuan |
+| `qe_floor_enabled` | bool | `False` | Công tắc chính, mặc định TẮT để đảm bảo backward compatibility |
+| `publication_lag_days` | int | `7` | Số ngày dịch dữ liệu thanh khoản về phía trước |
+| `liquidity_csv_path` | str | `"data/global_liquidity.csv"` | Đường dẫn đến file CSV thanh khoản tuần |
 
-**Luu y:** Khi `qe_floor_enabled=False` (mac dinh), engine hoat dong hoan toan giong nhu truoc khi them QE floor -- khong co bat ky thay doi nao ve ket qua backtest.
+**Lưu ý:** Khi `qe_floor_enabled=False` (mặc định), engine hoạt động hoàn toàn giống như trước khi thêm QE floor -- không có bất kỳ thay đổi nào về kết quả backtest.
 
-### 7. Ghi chu ve so do chuyen trang thai (Section VII)
+### 7. Ghi chú về sơ đồ chuyển trạng thái (Section VII)
 
-So do chuyen trang thai o Section VII can them annotation cho QE floor gate:
+Sơ đồ chuyển trạng thái ở Section VII cần thêm annotation cho QE floor gate:
 
 ```
 CASH -> SELL transitions:
   - MA50 breakdown     [QE Floor Gate: suppress khi qe_floor=1]
   - Cash deterioration  [QE Floor Gate: suppress khi qe_floor=1]
 
-Tat ca cac chuyen doi khac: KHONG bi anh huong boi QE floor.
+Tất cả các chuyển đổi khác: KHÔNG bị ảnh hưởng bởi QE floor.
 ```
 
-### 8. Su dung trong code
+### 8. Sử dụng trong code
 
 ```python
 from strategies.mdm_v2.config import MDMV2Config
 from strategies.mdm_v2.mdm_v2_engine import MDMV2Engine
 
-# Bat QE floor filter
+# Bật QE floor filter
 config = MDMV2Config(
     qe_floor_enabled=True,
     publication_lag_days=7,
@@ -573,181 +585,181 @@ config = MDMV2Config(
 engine = MDMV2Engine(config)
 results = engine.run(df)
 
-# Kiem tra suppress actions
+# Kiểm tra suppress actions
 suppressed = results[results['action'].str.contains('SELL suppressed', na=False)]
-print(f"So SELL bi suppress: {len(suppressed)}")
+print(f"Số SELL bị suppress: {len(suppressed)}")
 ```
 
 ---
 
-## Co che Fail-Safe (SAFE-01, SAFE-02)
+## Cơ chế Fail-Safe (SAFE-01, SAFE-02)
 
-Co che fail-safe giam lo tu false SELL signal bang cach tu dong thoat SELL khi thi truong phuc hoi nhanh, theo dinh nghia cua Dr. K trong VOSI FAQ.
+Cơ chế fail-safe giảm lỗ từ false SELL signal bằng cách tự động thoát SELL khi thị trường phục hồi nhanh, theo định nghĩa của Dr. K trong VOSI FAQ.
 
-### 1. Nguyen ly hoat dong
+### 1. Nguyên lý hoạt động
 
-Khi V2 engine phat SELL signal (tu MA50 breakdown hoac cash deterioration), he thong ghi nhan HIGH cua **standby-sell day** (ngay truoc sell signal day) lam `fail_safe_threshold`. Day la muc gia tham chieu de xac dinh thi truong da phuc hoi hay chua.
+Khi V2 engine phát SELL signal (từ MA50 breakdown hoặc cash deterioration), hệ thống ghi nhận HIGH của **standby-sell day** (ngày trước sell signal day) làm `fail_safe_threshold`. Đây là mức giá tham chiếu để xác định thị trường đã phục hồi hay chưa.
 
-### 2. Quy tac chuyen trang thai (SAFE-02)
+### 2. Quy tắc chuyển trạng thái (SAFE-02)
 
-Trong trang thai SELL, moi ngay he thong kiem tra:
-- Neu `close > fail_safe_threshold` -> tu dong chuyen ve **CASH** (fail-safe triggered)
-- Neu `close <= fail_safe_threshold` -> giu nguyen trang thai SELL
+Trong trạng thái SELL, mỗi ngày hệ thống kiểm tra:
+- Nếu `close > fail_safe_threshold` -> tự động chuyển về **CASH** (fail-safe triggered)
+- Nếu `close <= fail_safe_threshold` -> giữ nguyên trạng thái SELL
 
-**Thu tu uu tien:** Fail-safe check co uu tien **cao hon** FTD check trong trang thai SELL. Neu ca hai dieu kien deu thoa man (close > threshold VA co FTD), fail-safe se kich hoat truoc va chuyen ve CASH thay vi BUY.
+**Thứ tự ưu tiên:** Fail-safe check có ưu tiên **cao hơn** FTD check trong trạng thái SELL. Nếu cả hai điều kiện đều thỏa mãn (close > threshold VÀ có FTD), fail-safe sẽ kích hoạt trước và chuyển về CASH thay vì BUY.
 
-### 3. Ghi nhan threshold (SAFE-01)
+### 3. Ghi nhận threshold (SAFE-01)
 
-- `fail_safe_threshold` duoc ghi tu `prev_high` (HIGH cua ngay truoc khi SELL signal phat)
-- Gia tri nay luu trong `V2Position.fail_safe_threshold`
-- Duoc truyen qua `enter_sell(date, reason, fail_safe_threshold=prev_high)`
+- `fail_safe_threshold` được ghi từ `prev_high` (HIGH của ngày trước khi SELL signal phát)
+- Giá trị này lưu trong `V2Position.fail_safe_threshold`
+- Được truyền qua `enter_sell(date, reason, fail_safe_threshold=prev_high)`
 
 ### 4. Trade record
 
-Khi fail-safe trigger, he thong ghi trade voi:
+Khi fail-safe trigger, hệ thống ghi trade với:
 - `type`: `FAIL_SAFE_EXIT`
 - `reason`: `"Fail-safe: close {close} > standby-sell HIGH {threshold}"`
-- `price`: gia close tai thoi diem trigger
+- `price`: giá close tại thời điểm trigger
 
-### 5. Thong so cau hinh
+### 5. Thông số cấu hình
 
-| Thong so | Kieu | Mac dinh | Mo ta |
+| Thông số | Kiểu | Mặc định | Mô tả |
 | :--- | :--- | :---: | :--- |
-| `fail_safe_enabled` | bool | `True` | Cong tac bat/tat co che fail-safe |
+| `fail_safe_enabled` | bool | `True` | Công tắc bật/tắt cơ chế fail-safe |
 
-Co the tat bang `fail_safe_enabled=False` trong config. Khi tat, SELL state hoat dong nhu truoc (chi FTD moi chuyen ve BUY).
+Có thể tắt bằng `fail_safe_enabled=False` trong config. Khi tắt, SELL state hoạt động như trước (chỉ FTD mới chuyển về BUY).
 
-### 6. Muc dich
+### 6. Mục đích
 
-- Giam lo tu false SELL signal khi thi truong phuc hoi nhanh
-- Tranh giu SELL qua lau khi thi truong da reclaim muc gia truoc khi sell
-- Dua tren dinh nghia "fail-safe" cua Dr. K: "standby-sell day HIGH" la nguong tham chieu
+- Giảm lỗ từ false SELL signal khi thị trường phục hồi nhanh
+- Tránh giữ SELL quá lâu khi thị trường đã reclaim mức giá trước khi sell
+- Dựa trên định nghĩa "fail-safe" của Dr. K: "standby-sell day HIGH" là ngưỡng tham chiếu
 
 ---
 
 ## XV. BUY ENTRY REFINEMENT (v6.0)
 
-*Cap nhat v6.0: Hai co che loc tin hieu mua (buy entry filter) tu webinar Dr. K.*
+*Cập nhật v6.0: Hai cơ chế lọc tín hiệu mua (buy entry filter) từ webinar Dr. K.*
 
 ### 1. Gap-Up Invalidation (GAP-01)
 
-**Muc dich:** Loai bo tin hieu FTD gia khi gap-up bi pha (intraday low xuong duoi previous close).
+**Mục đích:** Loại bỏ tín hiệu FTD giả khi gap-up bị phá (intraday low xuống dưới previous close).
 
-**Dieu kien kich hoat:** `gap_filter_enabled = True` (mac dinh: True)
-
-**Logic:**
-* Chi ap dung cho tin hieu FTD classic. MA50 breakout va 52-week breakout **BYPASS** filter nay (per D-01).
-* Gap-up bi pha khi: `signal_day_low < previous_day_close` (per D-02)
-* Khong co margin/buffer -- so sanh truc tiep.
-
-**Hanh dong:**
-* Neu gap-up bi pha: `is_ftd = False`, `buy_rejected = True`
-* Neu gap-up con nguyen (low >= prev_close): cho phep tin hieu FTD di tiep qua cac gate khac
-
-**Thu tu gate:** Gate 0 (Gap filter) -> Gate 1 (MA10/MA50 filter) -> Gate 2 (Confirmation window)
-
-### 2. Rally Threshold - Do Sau Dieu Chinh (RALLY-01, RALLY-02)
-
-**Muc dich:** Cho phep FTD som hon khi thi truong chi giam nhe (< 6%), giu nguyen yeu cau day-3+ khi giam sau (>= 6%).
-
-**Dieu kien kich hoat:** `rally_threshold_enabled = True` (mac dinh: True)
+**Điều kiện kích hoạt:** `gap_filter_enabled = True` (mặc định: True)
 
 **Logic:**
-* Su dung `drawdown_pct` (tinh tu `Indicators.drawdown_from_peak(close, rolling_high)`) -- KHONG thay doi `correction_threshold` (per D-03)
-* Rally tracker van yeu cau `in_correction = True` (per D-05) -- 6% rule khong bypass correction detection
-* `rally_threshold_pct = -0.06` (mac dinh)
+* Chỉ áp dụng cho tín hiệu FTD classic. MA50 breakout và 52-week breakout **BYPASS** filter này (per D-01).
+* Gap-up bị phá khi: `signal_day_low < previous_day_close` (per D-02)
+* Không có margin/buffer -- so sánh trực tiếp.
 
-**Hai truong hop:**
+**Hành động:**
+* Nếu gap-up bị phá: `is_ftd = False`, `buy_rejected = True`
+* Nếu gap-up còn nguyên (low >= prev_close): cho phép tín hiệu FTD đi tiếp qua các gate khác
 
-| Drawdown | Dieu kien | Hanh dong |
+**Thứ tự gate:** Gate 0 (Gap filter) -> Gate 1 (MA10/MA50 filter) -> Gate 2 (Confirmation window)
+
+### 2. Rally Threshold - Độ Sâu Điều Chỉnh (RALLY-01, RALLY-02)
+
+**Mục đích:** Cho phép FTD sớm hơn khi thị trường chỉ giảm nhẹ (< 6%), giữ nguyên yêu cầu day-3+ khi giảm sâu (>= 6%).
+
+**Điều kiện kích hoạt:** `rally_threshold_enabled = True` (mặc định: True)
+
+**Logic:**
+* Sử dụng `drawdown_pct` (tính từ `Indicators.drawdown_from_peak(close, rolling_high)`) -- KHÔNG thay đổi `correction_threshold` (per D-03)
+* Rally tracker vẫn yêu cầu `in_correction = True` (per D-05) -- 6% rule không bypass correction detection
+* `rally_threshold_pct = -0.06` (mặc định)
+
+**Hai trường hợp:**
+
+| Drawdown | Điều kiện | Hành động |
 |----------|-----------|-----------|
-| 0% den -6% (shallow pullback) | `drawdown_pct > rally_threshold_pct` | FTD co the trigger bat ky ngay nao (khong can rally_day >= 4) |
-| >= -6% (deep correction) | `drawdown_pct <= rally_threshold_pct` | FTD yeu cau rally_day >= 4 (classic timing) |
+| 0% đến -6% (shallow pullback) | `drawdown_pct > rally_threshold_pct` | FTD có thể trigger bất kỳ ngày nào (không cần rally_day >= 4) |
+| >= -6% (deep correction) | `drawdown_pct <= rally_threshold_pct` | FTD yêu cầu rally_day >= 4 (classic timing) |
 
-**Xu ly Pitfall 2 (FTD Detector day-count):**
-* Khi early FTD duoc cho phep va `rally_day < ftd_min_rally_day`: truyen `max(rally_day, ftd_min_rally_day)` vao `check_ftd()` de bypass internal min check, giu nguyen upper bound check.
+**Xử lý Pitfall 2 (FTD Detector day-count):**
+* Khi early FTD được cho phép và `rally_day < ftd_min_rally_day`: truyền `max(rally_day, ftd_min_rally_day)` vào `check_ftd()` để bypass internal min check, giữ nguyên upper bound check.
 
-### 3. Config Parameters
+### 3. Thông số cấu hình
 
-| Parameter | Type | Default | Mo ta |
+| Thông số | Kiểu | Mặc định | Mô tả |
 |-----------|------|---------|-------|
-| `gap_filter_enabled` | bool | True | Bat/tat gap-up invalidation |
-| `rally_threshold_enabled` | bool | True | Bat/tat 6% rally threshold |
-| `rally_threshold_pct` | float | -0.06 | Nguong phan biet shallow vs deep pullback |
+| `gap_filter_enabled` | bool | True | Bật/tắt gap-up invalidation |
+| `rally_threshold_enabled` | bool | True | Bật/tắt 6% rally threshold |
+| `rally_threshold_pct` | float | -0.06 | Ngưỡng phân biệt shallow vs deep pullback |
 
 ---
 
 ## XVI. MA50/200DMA REVIEW (v6.0, MAREVIEW-01, MAREVIEW-02)
 
-*Cap nhat v6.0: Them co che A/B test de danh gia vai tro cua MA50 va 200dma.*
+*Cập nhật v6.0: Thêm cơ chế A/B test để đánh giá vai trò của MA50 và 200dma.*
 
-### 1. Muc dich
+### 1. Mục đích
 
-Dr. K noi MA50/200dma co "little value" trong model hien tai. Phase nay A/B test cac ket hop:
-- Tat MA50 SELL trigger
-- Tat MA50 breakout BUY filter
-- Thay the bang 200dma (SMA200)
+Dr. K nói MA50/200dma có "little value" trong model hiện tại. Phase này A/B test các kết hợp:
+- Tắt MA50 SELL trigger
+- Tắt MA50 breakout BUY filter
+- Thay thế bằng 200dma (SMA200)
 
-### 2. Config Parameters
+### 2. Thông số cấu hình
 
-| Parameter | Type | Default | Mo ta |
+| Thông số | Kiểu | Mặc định | Mô tả |
 |-----------|------|---------|-------|
-| `ma50_breakout_enabled` | bool | True | Bat/tat MA50 breakout buy signal (True = hanh vi hien tai) |
-| `ma200_enabled` | bool | False | Che do thay the 200dma (False = tat, mac dinh per v5.0) |
+| `ma50_breakout_enabled` | bool | True | Bật/tắt MA50 breakout buy signal (True = hành vi hiện tại) |
+| `ma200_enabled` | bool | False | Chế độ thay thế 200dma (False = tắt, mặc định per v5.0) |
 
-### 3. Chi bao SMA200
+### 3. Chỉ báo SMA200
 
-Phuong thuc `Indicators.add_sma200_column(df)` tinh trung binh dong 200 phien:
+Phương thức `Indicators.add_sma200_column(df)` tính trung bình động 200 phiên:
 
 ```python
 df['sma200'] = df['close'].rolling(window=200, min_periods=1).mean()
 ```
 
-Su dung `min_periods=1` de tranh NaN (tuong tu add_ma50_column). WARMUP_DAYS=300 trong validation scripts da du de warm up SMA200.
+Sử dụng `min_periods=1` để tránh NaN (tương tự add_ma50_column). WARMUP_DAYS=300 trong validation scripts đã đủ để warm up SMA200.
 
 ### 4. Wiring Logic (Plan 02)
 
 **MA50 Breakout gating:**
-- Khi `ma50_breakout_enabled=False`: engine khong goi `check_ma50_breakout()` -> tat hoan toan tin hieu MA50 breakout BUY.
-- Khi `ma50_breakout_enabled=True` (mac dinh): hanh vi giu nguyen nhu truoc.
+- Khi `ma50_breakout_enabled=False`: engine không gọi `check_ma50_breakout()` -> tắt hoàn toàn tín hiệu MA50 breakout BUY.
+- Khi `ma50_breakout_enabled=True` (mặc định): hành vi giữ nguyên như trước.
 
 **200dma BUY signal (khi `ma200_enabled=True`):**
-- Engine tinh `sma200` va `prev_sma200` columns.
+- Engine tính `sma200` và `prev_sma200` columns.
 - Check `check_200dma_breakout()`: C crosses above SMA200, volume up, drawdown >= 6%.
 - Signal type: `"200DMA"`.
-- Uu tien: FTD -> MA50 breakout (neu bat) -> 200dma breakout -> 52-week breakout.
+- Ưu tiên: FTD -> MA50 breakout (nếu bật) -> 200dma breakout -> 52-week breakout.
 
 **200dma SELL trigger (khi `ma200_enabled=True`):**
-- CASH state: khi `close < sma200` (thay vi `close < ma50`).
-- QE floor suppression va acceleration gate ap dung tuong tu MA50 SELL.
-- Chi fires khi `ma50_sell_enabled=False` (vi logic elif chain).
+- CASH state: khi `close < sma200` (thay vì `close < ma50`).
+- QE floor suppression và acceleration gate áp dụng tương tự MA50 SELL.
+- Chỉ fires khi `ma50_sell_enabled=False` (vì logic elif chain).
 
-**Backward compatibility:** Voi config mac dinh (`ma50_breakout_enabled=True, ma200_enabled=False`), tat ca hanh vi giu nguyen 100%.
+**Backward compatibility:** Với config mặc định (`ma50_breakout_enabled=True, ma200_enabled=False`), tất cả hành vi giữ nguyên 100%.
 
-**Thu tu uu tien SELL:** MA50 SELL (neu bat) -> 200dma SELL (neu bat) -> Cash Deterioration.
+**Thứ tự ưu tiên SELL:** MA50 SELL (nếu bật) -> 200dma SELL (nếu bật) -> Cash Deterioration.
 
 ### 5. A/B validation (Plan 03)
 
-- Script so sanh 5 scenarios: baseline, no-MA50-sell, no-MA50-breakout, no-MA50-all, 200dma-replace
+- Script so sánh 5 scenarios: baseline, no-MA50-sell, no-MA50-breakout, no-MA50-all, 200dma-replace
 - Metrics: total return, CAGR, MaxDD, Sharpe, win rate
 
-### MA50/200dma Review (Phase 25)
+### Kết quả MA50/200dma Review (Phase 25)
 
-*Ket qua thuc te tu `analysis/validate_ma50_review.py` tren VN30 2018-2026.*
+*Kết quả thực tế từ `analysis/validate_ma50_review.py` trên VN30 2018-2026.*
 
-#### 5 scenarios duoc test
+#### 5 scenarios được test
 
-| Scenario | Mo ta |
+| Scenario | Mô tả |
 |----------|-------|
-| 1_baseline | Tat ca MA50 bat: ma50_sell=True, buy_filter=True, ma50_breakout=True, ma200=False |
-| 2_no_ma50_sell | Chi tat MA50 SELL trigger (ma50_sell=False), giu buy_filter va breakout |
-| 3_no_buy_filter | Chi tat MA10<MA50 buy filter, giu MA50 SELL va breakout |
-| 4_no_ma50_all | Tat toan bo MA50: sell=False, buy_filter=False, breakout=False, ma200=False |
-| 5_200dma_replace | Tat toan bo MA50 + bat 200dma thay the (ma200=True) |
+| 1_baseline | Tất cả MA50 bật: ma50_sell=True, buy_filter=True, ma50_breakout=True, ma200=False |
+| 2_no_ma50_sell | Chỉ tắt MA50 SELL trigger (ma50_sell=False), giữ buy_filter và breakout |
+| 3_no_buy_filter | Chỉ tắt MA10<MA50 buy filter, giữ MA50 SELL và breakout |
+| 4_no_ma50_all | Tắt toàn bộ MA50: sell=False, buy_filter=False, breakout=False, ma200=False |
+| 5_200dma_replace | Tắt toàn bộ MA50 + bật 200dma thay thế (ma200=True) |
 
-Tat ca scenarios giu nguyen: sell_acceleration=True, buy_confirmation=True, fail_safe=True, gap_filter=True, rally_threshold=True, rally_threshold_pct=-0.06.
+Tất cả scenarios giữ nguyên: sell_acceleration=True, buy_confirmation=True, fail_safe=True, gap_filter=True, rally_threshold=True, rally_threshold_pct=-0.06.
 
-#### Ket qua so sanh (VN30 2018-2026)
+#### Kết quả so sánh (VN30 2018-2026)
 
 ```
 Scenario                   Return      MaxDD   Sharpe   Trades    WinRate
@@ -759,28 +771,28 @@ Scenario                   Return      MaxDD   Sharpe   Trades    WinRate
 5_200dma_replace            37.7%     -34.8%    0.29       76      30.3%
 ```
 
-#### MAREVIEW-03: Recommendation
+#### MAREVIEW-03: Khuyến nghị
 
-**RECOMMENDATION: REMOVE MA50 from signal logic.**
+**KHUYẾN NGHỊ: LOẠI BỎ MA50 khỏi logic tín hiệu.**
 
-Evidence:
+Bằng chứng:
 - `4_no_ma50_all` (Sharpe=0.35) > `1_baseline` (Sharpe=0.34) > `5_200dma_replace` (Sharpe=0.29)
-- Removing all MA50 uses improves risk-adjusted returns: Sharpe 0.34 -> 0.35, MaxDD -47.9% -> -34.2%
-- `2_no_ma50_sell` has the highest Sharpe (0.50) and return (+91.2%), indicating MA50 SELL trigger is the main drag
-- SELL falls back to cash_deterioration_days only (per D-04)
+- Loại bỏ toàn bộ MA50 cải thiện risk-adjusted returns: Sharpe 0.34 -> 0.35, MaxDD -47.9% -> -34.2%
+- `2_no_ma50_sell` có Sharpe cao nhất (0.50) và return (+91.2%), cho thấy MA50 SELL trigger là nguyên nhân chính kéo giảm hiệu suất
+- SELL fallback về cash_deterioration_days (per D-04)
 
-**Chi tiet theo tung MA50 role:**
-- MA50 SELL trigger: loai bo cai thien manh (Sharpe 0.34->0.50, return +38.4%)
-- MA10<MA50 buy filter: giu nguyen co loi (loai bo lam giam return -23.2%, Sharpe xuong 0.25)
-- MA50 breakout buy signal: neutral (loai bo kem anh huong, included in 4_no_ma50_all)
+**Chi tiết theo từng vai trò MA50:**
+- MA50 SELL trigger: loại bỏ cải thiện mạnh (Sharpe 0.34->0.50, return +38.4%)
+- MA10<MA50 buy filter: giữ nguyên có lợi (loại bỏ làm giảm return -23.2%, Sharpe xuống 0.25)
+- MA50 breakout buy signal: neutral (loại bỏ ít ảnh hưởng, included in 4_no_ma50_all)
 
-**Dieu chinh trong Phase 27 (combined validation):**
-- Thay doi nay chua duoc ap dung vao default config
-- Khi tich hop, can xem xet: tat ma50_sell_enabled=False, giu buy_filter_enabled=True (buy filter co gia tri)
-- 4_no_ma50_all Sharpe cao hon baseline nhung 2_no_ma50_sell (Sharpe=0.50) cho thay tat MA50 SELL la quan trong nhat
+**Điều chỉnh trong Phase 27 (combined validation):**
+- Thay đổi này chưa được áp dụng vào default config
+- Khi tích hợp, cần xem xét: tắt ma50_sell_enabled=False, giữ buy_filter_enabled=True (buy filter có giá trị)
+- 4_no_ma50_all Sharpe cao hơn baseline nhưng 2_no_ma50_sell (Sharpe=0.50) cho thấy tắt MA50 SELL là quan trọng nhất
 
-**Luu y pham vi:** Stop loss Rule 3 va sell acceleration gate van su dung MA50 bat ke scenario.
-Day la dung per phase scope -- day la cac concern rieng biet.
+**Lưu ý phạm vi:** Stop loss Rule 3 và sell acceleration gate vẫn sử dụng MA50 bất kể scenario.
+Đây là đúng per phase scope -- đây là các concern riêng biệt.
 
 ---
 

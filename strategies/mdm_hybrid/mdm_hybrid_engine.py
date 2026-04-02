@@ -245,6 +245,7 @@ class HybridEngine:
                     )
                     if is_ftd and signal:
                         ftd_price = signal.price
+                        signal_type = "FTD"
                         self.dd_counter.reset()
 
                 # Check MA50 breakout signal (alternative buy signal)
@@ -331,6 +332,9 @@ class HybridEngine:
                 ma10 = row['ma10'] if 'ma10' in row else None
                 ma50_val = row['ma50'] if 'ma50' in row else None
 
+                # prev_high for fail-safe threshold (SAFE-01)
+                prev_high = df.iloc[idx - 1]['high'] if idx > 0 else 0.0
+
                 new_state, action = self.position_manager.process_day(
                     date=date,
                     high=high,
@@ -345,6 +349,7 @@ class HybridEngine:
                     signal_type=signal_type,
                     ma10=ma10,
                     ma50=ma50_val,
+                    prev_high=prev_high,
                 )
 
                 # If FTD triggered, reset rally tracker

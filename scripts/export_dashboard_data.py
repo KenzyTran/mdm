@@ -31,7 +31,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DASHBOARD_DATA_DIR = os.path.join(PROJECT_ROOT, 'dashboard', 'data')
 
 START_DATE = '2015-01-01'
-END_DATE = '2026-03-27'
+END_DATE = '2026-04-01'
 
 MODELS = {
     'mdm_v2': {
@@ -245,6 +245,114 @@ def build_signal_history(results: pd.DataFrame) -> list:
     return history
 
 
+def build_signal_stats(results: pd.DataFrame, trades: list) -> dict:
+    """Build signal statistics for dashboard."""
+    from itertools import groupby as igroupby
+
+    states = results['state'].values
+    total_days = len(results)
+
+    # State time
+    buy_days = int((results['state'] == 'BUY').sum())
+    sell_days = int((results['state'] == 'SELL').sum())
+    cash_days = int((results['state'] == 'CASH').sum())
+
+    # Transitions
+    transitions = sum(1 for i in range(1, len(states)) if states[i] != states[i-1])
+
+    # Trade type counts
+    trade_types = {}
+    for t in trades:
+        tt = t.get('type', 'unknown')
+        trade_types[tt] = trade_types.get(tt, 0) + 1
+
+    # BUY signal breakdown
+    buy_signals = [t for t in trades if t.get('type') == 'BUY']
+    buy_breakdown = {
+        'FTD': sum(1 for t in buy_signals if t.get('signal_type', '') in ('FTD', '')),
+        'MA50': sum(1 for t in buy_signals if 'MA50' in str(t.get('signal_type', ''))),
+        '52WEEK': sum(1 for t in buy_signals if '52' in str(t.get('signal_type', ''))),
+    }
+    buy_breakdown['other'] = len(buy_signals) - sum(buy_breakdown.values())
+
+    # SELL trigger breakdown
+    sell_trades = [t for t in trades if t.get('type') == 'SELL_SIGNAL']
+    sell_breakdown = {
+        'MA50_breakdown': sum(1 for t in sell_trades if 'MA50' in t.get('reason', '')),
+        'cash_deterioration': sum(1 for t in sell_trades if 'deterioration' in t.get('reason', '')),
+    }
+
+    # EXIT breakdown
+    exit_trades = [t for t in trades if t.get('type') in ('CASH_EXIT', 'EXIT_TO_CASH')]
+    exit_breakdown = {
+        'stop_loss': sum(1 for t in exit_trades if 'stop' in t.get('reason', '').lower()),
+        'dd_threshold': sum(1 for t in exit_trades if 'DD' in t.get('reason', '')),
+        'ma10_below': sum(1 for t in exit_trades if 'MA10' in t.get('reason', '')),
+    }
+    exit_breakdown['other'] = len(exit_trades) - sum(exit_breakdown.values())
+
+    # SELL exit breakdown
+    cover_trades = [t for t in trades if t.get('type') in ('SHORT_COVER', 'FAIL_SAFE_EXIT')]
+    sell_exit_breakdown = {
+        'fail_safe': sum(1 for t in cover_trades if t.get('type') == 'FAIL_SAFE_EXIT'),
+        'ftd_cover': sum(1 for t in cover_trades if 'FTD' in t.get('reason', '')),
+        'ma50_cover': sum(1 for t in cover_trades if 'MA50' in t.get('reason', '')),
+        'dd5_short_stop': sum(1 for t in cover_trades if 'short stop' in t.get('reason', '').lower()),
+    }
+
+    # Avg duration
+    state_runs = [(k, sum(1 for _ in g)) for k, g in igroupby(states)]
+    def avg_runs(s):
+        runs = [d for st, d in state_runs if st == s]
+        return {'avg': round(np.mean(runs), 1), 'min': min(runs), 'max': max(runs)} if runs else {}
+
+    # Yearly breakdown
+    results_copy = results.copy()
+    results_copy['year'] = results_copy['date'].dt.year
+    yearly = []
+    for year in sorted(results_copy['year'].unique()):
+        ry = results_copy[results_copy['year'] == year]
+        cy = ry['close'].values
+        sy = ry['state'].values
+        eqy = np.ones(len(cy))
+        for i in range(1, len(cy)):
+            if sy[i-1] == 'BUY': eqy[i] = eqy[i-1] * (cy[i]/cy[i-1])
+            elif sy[i-1] == 'SELL': eqy[i] = eqy[i-1] * (cy[i-1]/cy[i])
+            else: eqy[i] = eqy[i-1]
+        bh = (cy[-1]/cy[0]-1)*100
+        strat = (eqy[-1]-1)*100
+        dd = ((eqy - np.maximum.accumulate(eqy))/np.maximum.accumulate(eqy)).min()*100
+        trans_y = sum(1 for i in range(1,len(sy)) if sy[i]!=sy[i-1])
+        yearly.append({
+            'year': int(year),
+            'strategy_return': round(strat, 1),
+            'buy_hold_return': round(bh, 1),
+            'max_dd': round(dd, 1),
+            'transitions': trans_y,
+            'buy_pct': round((ry['state']=='BUY').mean()*100, 1),
+            'sell_pct': round((ry['state']=='SELL').mean()*100, 1),
+            'cash_pct': round((ry['state']=='CASH').mean()*100, 1),
+        })
+
+    return {
+        'total_days': total_days,
+        'transitions': transitions,
+        'state_time': {'BUY': buy_days, 'SELL': sell_days, 'CASH': cash_days},
+        'state_pct': {
+            'BUY': round(buy_days/total_days*100, 1),
+            'SELL': round(sell_days/total_days*100, 1),
+            'CASH': round(cash_days/total_days*100, 1),
+        },
+        'avg_duration': {'BUY': avg_runs('BUY'), 'SELL': avg_runs('SELL'), 'CASH': avg_runs('CASH')},
+        'trade_types': trade_types,
+        'buy_breakdown': buy_breakdown,
+        'sell_breakdown': sell_breakdown,
+        'exit_breakdown': exit_breakdown,
+        'sell_exit_breakdown': sell_exit_breakdown,
+        'yearly': yearly,
+    }
+
+
 def load_doc(filename: str) -> str:
     """Load strategy markdown doc."""
     path = os.path.join(PROJECT_ROOT, 'docs', filename)
@@ -258,6 +366,7 @@ def export_model(key: str, info: dict, df: pd.DataFrame) -> dict:
     """Run one model and build export dict."""
     engine = HybridEngine(info['config']())
     results = engine.run(df.copy())
+    raw_trades = engine.get_trades()
 
     return {
         'name': info['name'],
@@ -269,6 +378,7 @@ def export_model(key: str, info: dict, df: pd.DataFrame) -> dict:
         'trades': format_trades(engine),
         'signal_history': build_signal_history(results),
         'price_data': build_price_data(df),
+        'signal_stats': build_signal_stats(results, raw_trades),
     }
 
 
@@ -395,6 +505,40 @@ def main():
         json.dump(v2_filtered_data['models']['mdm_v2_filtered'], f, ensure_ascii=False)
     print(f"    -> {v2f_path} ({os.path.getsize(v2f_path) // 1024} KB)")
     all_model_keys.append('mdm_v2_filtered')
+
+    print("\n[3.5/5] Running VNINDEX model...")
+    vnindex_loader = DataLoader('vnindex')
+    vnindex_df = vnindex_loader.load(start_date=START_DATE, end_date=END_DATE)
+    vnindex_df = build_indicator_dataframe(vnindex_df)
+    print(f"  VNINDEX data: {len(vnindex_df)} rows ({vnindex_df['date'].min().date()} to {vnindex_df['date'].max().date()})")
+
+    vnindex_config = HybridConfig(
+        v2_config=VN30_PRESET,
+        two_phase_enabled=True,
+        filter_enabled=False,
+    )
+    vnindex_engine = HybridEngine(vnindex_config)
+    vnindex_results = vnindex_engine.run(vnindex_df.copy())
+    vnindex_raw_trades = vnindex_engine.get_trades()
+
+    vnindex_data = {
+        'name': 'MDM V2 (VNINDEX)',
+        'description_md': load_doc('rules_mdm_v2.md'),
+        'metrics': compute_metrics(vnindex_results),
+        'benchmark': compute_benchmark(vnindex_df),
+        'equity_curve': build_equity_curve(vnindex_results),
+        'signals': detect_signals(vnindex_results),
+        'trades': format_trades(vnindex_engine),
+        'signal_history': build_signal_history(vnindex_results),
+        'price_data': build_price_data(vnindex_df),
+        'signal_stats': build_signal_stats(vnindex_results, vnindex_raw_trades),
+    }
+    vnindex_path = os.path.join(DASHBOARD_DATA_DIR, 'mdm_vnindex.json')
+    with open(vnindex_path, 'w', encoding='utf-8') as f:
+        json.dump(vnindex_data, f, ensure_ascii=False)
+    print(f"    VNINDEX: {vnindex_data['metrics']}")
+    print(f"    -> {vnindex_path} ({os.path.getsize(vnindex_path) // 1024} KB)")
+    all_model_keys.append('mdm_vnindex')
 
     print("\n[4/5] Exporting Global Liquidity overlay...")
     liquidity_data = {}

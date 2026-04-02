@@ -94,7 +94,7 @@ Khi `filter_enabled=False`, two-phase commit vẫn chạy nhưng luôn CONFIRM (
 | :--- | :--- |
 | **CONFIRM** | Giữ nguyên các thay đổi từ V2 state machine (commit) |
 | **VETO** | Khôi phục snapshot, hủy tất cả thay đổi (rollback). Trạng thái giữ nguyên như trước |
-| **OVERRIDE** | Khôi phục snapshot rồi ép chuyển về CASH. Nếu trước đó là BUY: `exit_to_cash` (ghi nhận P&L). Nếu trước đó là SELL: `degrade_to_cash` (không P&L). Nếu đề xuất CASH: giữ nguyên (đã đúng hướng) |
+| **OVERRIDE** | Khôi phục snapshot rồi ép chuyển về CASH. Nếu trước đó là BUY: `exit_to_cash` (ghi nhận P&L). Nếu trước đó là SELL: `cover_short()` (ghi nhận P&L short). Nếu đề xuất CASH: giữ nguyên (đã đúng hướng) |
 
 ### Trường hợp 2: Trạng thái KHÔNG ĐỔI (V2 không đề xuất thay đổi)
 
@@ -104,7 +104,7 @@ Bộ lọc vẫn đánh giá tình hình chỉ báo:
 | :--- | :--- |
 | **CONFIRM** | Không làm gì (giữ nguyên trạng thái) |
 | **VETO hoặc OVERRIDE** (khi ở BUY) | Thoát vị thế: `exit_to_cash` với lý do "indicator degradation" (ghi P&L) |
-| **VETO hoặc OVERRIDE** (khi ở SELL) | Xuống cấp: `degrade_to_cash` với lý do "indicator degradation from SELL" |
+| **VETO hoặc OVERRIDE** (khi ở SELL) | Cover short: `cover_short()` với lý do "indicator degradation from SELL" (ghi nhận P&L) |
 | **VETO hoặc OVERRIDE** (khi ở CASH) | Bỏ qua -- đã ở CASH rồi, không cần làm gì |
 
 **Điểm quan trọng:** Bộ lọc có thể *ép bán* (exit BUY) hoặc *làm dịu* (degrade SELL về CASH) ngay cả khi V2 state machine không đề xuất thay đổi nào.
@@ -256,7 +256,7 @@ Bắt đầu phiên
 * Khi hybrid engine chuyển sang **SELL** (sau khi qua two-phase commit và indicator filter), vị thế short được mở.
 * **Quan trọng:** Trong hybrid, SELL có thể bị **VETO** bởi indicator filter → short chỉ được mở khi filter **CONFIRM** hoặc khi `filter_enabled = False`.
 * Giá entry = Giá đóng cửa phiên chuyển sang SELL.
-* Config: `short_mode = True` (mặc định).
+* Config: `short_mode = 'direct'` (mặc định — VN30 short trực tiếp) hoặc `'inverse_etf'` (NASDAQ — dùng SQQQ/UVXY).
 
 ### 2. Tương tác giữa Short và Indicator Filter:
 
@@ -393,3 +393,41 @@ Dashboard VN30 sử dụng **VN30_PRESET** với các thông số đã calibrate
 | `cash_deterioration_days` | 10 | **20** | Giảm thời gian short (VN30 uptrend dài hạn) |
 
 Sử dụng: `from strategies.mdm_hybrid.config import VN30_PRESET, NASDAQ_PRESET`
+
+### Kết quả backtest VN30 (2015-2026):
+
+| Config | Tổng lợi nhuận | CAGR | MaxDD |
+| :--- | :---: | :---: | :---: |
+| **VN30 preset + fail-safe** | **+239%** | **11.5%** | **-28.2%** |
+| VN30 preset (không fail-safe) | +192% | 10.0% | -31.8% |
+| Mua & Nắm giữ | +205% | 10.4% | -48.1% |
+
+Walk-forward validation (train 2015-2021, test 2022-2026): CAGR degradation 40% (trong ngưỡng chấp nhận).
+
+---
+
+## XIV. CƠ CHẾ FAIL-SAFE (SAFE-01, SAFE-02)
+
+Cơ chế fail-safe giảm lỗ từ false SELL signal bằng cách tự động thoát SELL khi thị trường phục hồi nhanh, theo định nghĩa của Dr. K trong VOSI FAQ.
+
+### 1. Nguyên lý hoạt động
+
+Khi engine chuyển sang trạng thái SELL, hệ thống ghi nhận HIGH của **standby-sell day** (ngày trước sell signal day) làm `fail_safe_threshold`. Đây là mức giá tham chiếu để xác định thị trường đã phục hồi hay chưa.
+
+### 2. Quy tắc chuyển trạng thái
+
+Trong trạng thái SELL, mỗi ngày hệ thống kiểm tra:
+- Nếu `close > fail_safe_threshold` -> tự động cover short, chuyển về **CASH** (fail-safe triggered)
+- Nếu `close <= fail_safe_threshold` -> giữ nguyên trạng thái SELL
+
+**Thứ tự ưu tiên:** Fail-safe check có ưu tiên **cao nhất** trong trạng thái SELL (trước short stop loss, FTD cover, MA50 cover).
+
+### 3. Thông số cấu hình
+
+| Thông số | Kiểu | Mặc định | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `fail_safe_enabled` | bool | `True` | Công tắc bật/tắt cơ chế fail-safe |
+
+### 4. Kết quả
+
+Trên VN30 2015-2026: 35 lần fail-safe trigger, cải thiện return từ +192% lên +239% và giảm MaxDD từ -31.8% xuống -28.2%.

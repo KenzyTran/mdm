@@ -50,12 +50,21 @@ class DataLoader:
             'lowestindex': 'low',
             'totalvol': 'volume',
         },
+        'vnindex': {
+            'tradingdate': 'date',
+            'openindex': 'open',
+            'closeindex': 'close',
+            'highestindex': 'high',
+            'lowestindex': 'low',
+            'totalvol': 'volume',
+        },
     }
 
     FILE_PATHS = {
         'nasdaq': 'data/NASDAQ.csv',
         'sp500': 'data/s&p500.csv',
         'vn30': 'data/vn30.csv',
+        'vnindex': 'data/vnindex.csv',
     }
 
     US_MARKETS = {'nasdaq', 'sp500'}

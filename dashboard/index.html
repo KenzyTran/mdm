@@ -115,6 +115,11 @@ header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4p
   color: var(--accent);
   border-color: var(--accent);
 }
+.filter-btn.active {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+}
 
 /* Charts */
 .chart-section {
@@ -236,12 +241,16 @@ footer {
 <header>
   <div class="container">
     <h1>Hệ thống MDM Trading</h1>
-    <div class="subtitle">Market Direction Model - Backtest trên chỉ số VN30</div>
+    <div class="subtitle">Market Direction Model - Backtest trên VN30 & VNINDEX</div>
   </div>
 </header>
 
 <main class="container">
-  <div id="content-mdm_v2" class="tab-content active"><div class="loading">Loading...</div></div>
+  <div style="display:flex; gap:8px; margin:16px 0; flex-wrap:wrap;" id="model-tabs">
+    <button class="nav-btn" style="padding:8px 16px; cursor:pointer;" onclick="switchModel('mdm_v2')" id="tab-mdm_v2">VN30</button>
+    <button class="nav-btn" style="padding:8px 16px; cursor:pointer;" onclick="switchModel('mdm_vnindex')" id="tab-mdm_vnindex">VNINDEX</button>
+  </div>
+  <div id="model-content"><div class="loading">Loading...</div></div>
 </main>
 
 <footer>
@@ -270,8 +279,25 @@ fetch(DATA_PATH + '/liquidity_overlay.json')
   .then(d => { liquidityData = d; })
   .catch(() => {});
 
+let currentModel = 'mdm_v2';
+
+function switchModel(key) {
+  currentModel = key;
+  // Update tab active state
+  document.querySelectorAll('#model-tabs button').forEach(btn => {
+    btn.style.background = btn.id === 'tab-' + key ? 'var(--accent)' : '';
+    btn.style.color = btn.id === 'tab-' + key ? '#fff' : '';
+  });
+  const container = document.getElementById('model-content');
+  container.innerHTML = '<div class="loading">Loading...</div>';
+  // Clear rendered flag and chart instances for this container
+  delete container.dataset.rendered;
+  Object.keys(chartInstances).forEach(k => { if (k.startsWith(key)) delete chartInstances[k]; });
+  loadModel(key);
+}
+
 // Load first tab
-loadModel('mdm_v2');
+switchModel('mdm_v2');
 
 async function loadModel(key) {
   if (modelCache[key]) {
@@ -284,14 +310,14 @@ async function loadModel(key) {
     modelCache[key] = data;
     renderModel(key, data);
   } catch (e) {
-    document.getElementById('content-' + key).innerHTML =
+    document.getElementById('model-content').innerHTML =
       `<div class="loading">Error loading data: ${e.message}</div>`;
   }
 }
 
 function renderModel(key, data) {
-  const container = document.getElementById('content-' + key);
-  if (container.dataset.rendered) return;
+  const container = document.getElementById('model-content');
+  container.innerHTML = '';
   container.dataset.rendered = '1';
 
   const m = data.metrics;
@@ -331,19 +357,49 @@ function renderModel(key, data) {
     <nav class="section-nav" id="section-nav-${key}">
       <a class="nav-btn" href="#sec-chart-${key}">Biểu đồ giá</a>
       <a class="nav-btn" href="#sec-equity-${key}">Đường vốn</a>
+      <a class="nav-btn" href="#sec-stats-${key}">Thống kê tín hiệu</a>
       <a class="nav-btn" href="#sec-signals-${key}">Lịch sử tín hiệu</a>
-      <a class="nav-btn" href="#sec-trades-${key}">Chi tiết giao dịch</a>
       <a class="nav-btn" href="#sec-docs-${key}">Quy tắc chiến lược</a>
     </nav>
 
-    <div class="chart-section" id="sec-chart-${key}">
-      <h3>Giá VN30 + Tín hiệu giao dịch</h3>
-      <div class="price-chart" id="price-chart-${key}"></div>
+    <div id="sec-chart-${key}" style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div class="chart-section" style="flex:1; min-width:0;">
+        <h3>Giá + Tín hiệu giao dịch</h3>
+        <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;" id="signal-filters-${key}">
+          <button class="nav-btn filter-btn active" style="padding:4px 12px; font-size:12px; cursor:pointer;" data-filter="ALL" onclick="filterSignals('${key}','ALL',this)">Tất cả</button>
+          <button class="nav-btn filter-btn" style="padding:4px 12px; font-size:12px; cursor:pointer; color:var(--green);" data-filter="BUY" onclick="filterSignals('${key}','BUY',this)">BUY</button>
+          <button class="nav-btn filter-btn" style="padding:4px 12px; font-size:12px; cursor:pointer; color:var(--red);" data-filter="SELL" onclick="filterSignals('${key}','SELL',this)">SELL</button>
+          <button class="nav-btn filter-btn" style="padding:4px 12px; font-size:12px; cursor:pointer; color:var(--yellow);" data-filter="CASH" onclick="filterSignals('${key}','CASH',this)">CASH</button>
+        </div>
+        <div class="price-chart" id="price-chart-${key}"></div>
+      </div>
+      <div class="trades-section" id="sec-trades-${key}" style="width:480px; flex-shrink:0;">
+        <h3>Chi tiết giao dịch (${data.trades.length})</h3>
+        <div style="max-height:560px; overflow-y:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Ngày</th>
+                <th>Loại</th>
+                <th>Giá</th>
+                <th>Lãi/Lỗ</th>
+                <th>Lý do</th>
+              </tr>
+            </thead>
+            <tbody id="trades-tbody-${key}"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="chart-section" id="sec-equity-${key}">
       <h3>Đường vốn: Chiến lược vs Mua & Nắm giữ</h3>
       <div class="equity-chart-wrap"><canvas class="equity-chart-canvas" id="equity-chart-${key}"></canvas></div>
+    </div>
+
+    <div class="trades-section" id="sec-stats-${key}">
+      <h3>Thống kê tín hiệu</h3>
+      <div id="signal-stats-${key}"></div>
     </div>
 
     <div class="trades-section" id="sec-signals-${key}">
@@ -366,26 +422,6 @@ function renderModel(key, data) {
       </div>
     </div>
 
-    <div class="trades-section" id="sec-trades-${key}">
-      <h3>Chi tiết giao dịch (${data.trades.length} bản ghi)</h3>
-      <div style="max-height:400px; overflow-y:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Ngày</th>
-              <th>Loại</th>
-              <th>Giá</th>
-              <th>Lãi/Lỗ</th>
-              <th>Tín hiệu</th>
-              <th>Lý do</th>
-            </tr>
-          </thead>
-          <tbody id="trades-tbody-${key}"></tbody>
-        </table>
-      </div>
-    </div>
-
     <div class="docs-section" id="sec-docs-${key}">
       <div class="docs-toggle" onclick="toggleDocs('${key}')">
         <h3>Logic & Quy tắc chiến lược</h3>
@@ -397,9 +433,65 @@ function renderModel(key, data) {
 
   renderPriceChart(key, data);
   renderEquityChart(key, data);
+  renderSignalStats(key, data);
   renderSignalHistory(key, data);
   renderTradesTable(key, data);
   renderDocs(key, data);
+}
+
+function filterSignals(key, filterType, btn) {
+  // Update button active state
+  const container = document.getElementById('signal-filters-' + key);
+  container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Filter chart markers
+  const allMarkers = chartInstances['markers-' + key] || [];
+  const candleSeries = chartInstances['candle-' + key];
+  if (candleSeries) {
+    const filtered = filterType === 'ALL'
+      ? allMarkers
+      : allMarkers.filter(m => m._type === filterType);
+    candleSeries.setMarkers(filtered);
+  }
+
+  // Filter trades table
+  const allTrades = chartInstances['trades-' + key] || [];
+  const tbody = document.getElementById('trades-tbody-' + key);
+  if (tbody) {
+    const filtered = filterType === 'ALL' ? allTrades : allTrades.filter(t => {
+      if (filterType === 'BUY') return t.type === 'BUY';
+      if (filterType === 'SELL') return t.type === 'SELL_SIGNAL';
+      if (filterType === 'CASH') return ['CASH_EXIT', 'EXIT_TO_CASH', 'SHORT_COVER', 'FAIL_SAFE_EXIT', 'STATE_DEGRADE'].includes(t.type);
+      return true;
+    });
+    const heading = document.querySelector('#sec-trades-' + key + ' h3');
+    if (heading) heading.textContent = `Chi tiết giao dịch (${filtered.length} / ${allTrades.length} bản ghi)`;
+
+    let rows = '';
+    [...filtered].reverse().forEach((t, i) => {
+      const typeClass = t.type === 'BUY' ? 'type-buy'
+        : t.type === 'CASH_EXIT' ? 'type-sell'
+        : 'type-cash';
+      const pnlClass = t.pnl > 0 ? 'pnl-positive' : t.pnl < 0 ? 'pnl-negative' : '';
+      const pnlText = t.pnl != null ? `${t.pnl > 0 ? '+' : ''}${t.pnl}%` : '-';
+      const price = t.price != null ? t.price.toLocaleString() : '-';
+      const label = t.type === 'BUY' ? 'BUY'
+        : t.type === 'SELL_SIGNAL' ? 'SELL'
+        : t.type === 'CASH_EXIT' ? 'EXIT'
+        : t.type === 'SHORT_COVER' ? 'COVER'
+        : t.type === 'FAIL_SAFE_EXIT' ? 'F-SAFE'
+        : t.type;
+      rows += `<tr>
+        <td>${t.date}</td>
+        <td class="${typeClass}">${label}</td>
+        <td>${price}</td>
+        <td class="${pnlClass}">${pnlText}</td>
+        <td style="font-size:11px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.reason || ''}">${t.reason || '-'}</td>
+      </tr>`;
+    });
+    tbody.innerHTML = rows;
+  }
 }
 
 function renderPriceChart(key, data) {
@@ -457,17 +549,22 @@ function renderPriceChart(key, data) {
   volumeSeries.setData(volumeData);
 
   // Signal markers on candlestick
-  const markers = data.signals.map(s => ({
+  const allMarkers = data.signals.map(s => ({
     time: s.date,
     position: s.type === 'BUY' ? 'belowBar' : 'aboveBar',
     color: s.type === 'BUY' ? '#17bf63' : s.type === 'SELL' ? '#e0245e' : '#ffad1f',
     shape: s.type === 'BUY' ? 'arrowUp' : 'arrowDown',
     text: s.type,
     size: 1.5,
+    _type: s.type,
   }));
-  candleSeries.setMarkers(markers);
+  candleSeries.setMarkers(allMarkers);
 
+  // Store for filtering
   chartInstances['price-' + key] = chart;
+  chartInstances['candle-' + key] = candleSeries;
+  chartInstances['markers-' + key] = allMarkers;
+  chartInstances['trades-' + key] = data.trades;
 
   new ResizeObserver(() => {
     chart.applyOptions({ width: el.clientWidth });
@@ -582,6 +679,106 @@ function formatVND(n) {
   return n.toLocaleString('vi-VN');
 }
 
+function renderSignalStats(key, data) {
+  const el = document.getElementById('signal-stats-' + key);
+  const s = data.signal_stats;
+  if (!s) { el.innerHTML = '<p style="color:var(--text-secondary)">Không có dữ liệu thống kê</p>'; return; }
+
+  const sp = s.state_pct;
+  const ad = s.avg_duration;
+  const bb = s.buy_breakdown;
+  const sb = s.sell_breakdown;
+  const eb = s.exit_breakdown;
+  const se = s.sell_exit_breakdown;
+  const totalBuy = (bb.FTD||0) + (bb.MA50||0) + (bb['52WEEK']||0) + (bb.other||0);
+  const totalSell = (sb.MA50_breakdown||0) + (sb.cash_deterioration||0);
+  const totalExit = (eb.stop_loss||0) + (eb.dd_threshold||0) + (eb.ma10_below||0) + (eb.other||0);
+  const totalCover = (se.fail_safe||0) + (se.ftd_cover||0) + (se.ma50_cover||0) + (se.dd5_short_stop||0);
+
+  let html = `
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-bottom:20px;">
+    <div style="background:var(--bg-secondary); border-radius:8px; padding:16px;">
+      <h4 style="color:var(--accent); margin-bottom:12px;">Thời gian ở mỗi trạng thái</h4>
+      <div style="display:flex; gap:4px; height:24px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
+        <div style="width:${sp.BUY}%; background:var(--green);" title="BUY ${sp.BUY}%"></div>
+        <div style="width:${sp.SELL}%; background:var(--red);" title="SELL ${sp.SELL}%"></div>
+        <div style="width:${sp.CASH}%; background:var(--text-secondary);" title="CASH ${sp.CASH}%"></div>
+      </div>
+      <div style="font-size:13px; color:var(--text-secondary);">
+        <span style="color:var(--green);">BUY ${sp.BUY}%</span> &middot;
+        <span style="color:var(--red);">SELL ${sp.SELL}%</span> &middot;
+        <span>CASH ${sp.CASH}%</span>
+      </div>
+      <div style="font-size:12px; color:var(--text-secondary); margin-top:8px;">
+        TB mỗi lần: BUY ${ad.BUY?.avg||'-'} ngày (${ad.BUY?.min||'-'}-${ad.BUY?.max||'-'}) &middot;
+        SELL ${ad.SELL?.avg||'-'} ngày &middot; CASH ${ad.CASH?.avg||'-'} ngày
+      </div>
+    </div>
+
+    <div style="background:var(--bg-secondary); border-radius:8px; padding:16px;">
+      <h4 style="color:var(--green); margin-bottom:12px;">Tín hiệu MUA (${totalBuy})</h4>
+      <table style="font-size:13px; width:100%;">
+        <tr><td>FTD classic</td><td style="text-align:right;">${bb.FTD||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalBuy ? Math.round((bb.FTD||0)/totalBuy*100) : 0}%</td></tr>
+        <tr><td>MA50 breakout</td><td style="text-align:right;">${bb.MA50||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalBuy ? Math.round((bb.MA50||0)/totalBuy*100) : 0}%</td></tr>
+        <tr><td>52-week breakout</td><td style="text-align:right;">${bb['52WEEK']||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalBuy ? Math.round((bb['52WEEK']||0)/totalBuy*100) : 0}%</td></tr>
+        ${bb.other ? `<tr><td>Khác</td><td style="text-align:right;">${bb.other}</td><td style="text-align:right; color:var(--text-secondary);">${Math.round(bb.other/totalBuy*100)}%</td></tr>` : ''}
+      </table>
+    </div>
+
+    <div style="background:var(--bg-secondary); border-radius:8px; padding:16px;">
+      <h4 style="color:var(--red); margin-bottom:12px;">Tín hiệu BÁN (${totalSell})</h4>
+      <table style="font-size:13px; width:100%;">
+        <tr><td>MA50 breakdown</td><td style="text-align:right;">${sb.MA50_breakdown||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalSell ? Math.round((sb.MA50_breakdown||0)/totalSell*100) : 0}%</td></tr>
+        <tr><td>Cash deterioration</td><td style="text-align:right;">${sb.cash_deterioration||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalSell ? Math.round((sb.cash_deterioration||0)/totalSell*100) : 0}%</td></tr>
+      </table>
+    </div>
+
+    <div style="background:var(--bg-secondary); border-radius:8px; padding:16px;">
+      <h4 style="color:var(--yellow); margin-bottom:12px;">Thoát BUY (${totalExit})</h4>
+      <table style="font-size:13px; width:100%;">
+        <tr><td>MA10 dưới ${data.metrics?.trades ? '' : ''}3 phiên</td><td style="text-align:right;">${eb.ma10_below||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalExit ? Math.round((eb.ma10_below||0)/totalExit*100) : 0}%</td></tr>
+        <tr><td>Stop loss</td><td style="text-align:right;">${eb.stop_loss||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalExit ? Math.round((eb.stop_loss||0)/totalExit*100) : 0}%</td></tr>
+        <tr><td>DD threshold</td><td style="text-align:right;">${eb.dd_threshold||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalExit ? Math.round((eb.dd_threshold||0)/totalExit*100) : 0}%</td></tr>
+      </table>
+    </div>
+
+    <div style="background:var(--bg-secondary); border-radius:8px; padding:16px;">
+      <h4 style="color:var(--accent); margin-bottom:12px;">Thoát SELL (${totalCover})</h4>
+      <table style="font-size:13px; width:100%;">
+        <tr><td>MA50 cover</td><td style="text-align:right;">${se.ma50_cover||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalCover ? Math.round((se.ma50_cover||0)/totalCover*100) : 0}%</td></tr>
+        <tr><td>Fail-safe</td><td style="text-align:right;">${se.fail_safe||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalCover ? Math.round((se.fail_safe||0)/totalCover*100) : 0}%</td></tr>
+        <tr><td>FTD cover</td><td style="text-align:right;">${se.ftd_cover||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalCover ? Math.round((se.ftd_cover||0)/totalCover*100) : 0}%</td></tr>
+        <tr><td>DD5 short stop</td><td style="text-align:right;">${se.dd5_short_stop||0}</td><td style="text-align:right; color:var(--text-secondary);">${totalCover ? Math.round((se.dd5_short_stop||0)/totalCover*100) : 0}%</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div style="background:var(--bg-secondary); border-radius:8px; padding:16px;">
+    <h4 style="color:var(--accent); margin-bottom:12px;">Hiệu suất theo năm</h4>
+    <table style="font-size:13px; width:100%;">
+      <thead><tr>
+        <th>Năm</th><th style="text-align:right;">Chiến lược</th><th style="text-align:right;">Mua & Giữ</th>
+        <th style="text-align:right;">Max DD</th><th style="text-align:right;">Chuyển</th>
+        <th style="text-align:right;">BUY%</th><th style="text-align:right;">SELL%</th><th style="text-align:right;">CASH%</th>
+      </tr></thead>
+      <tbody>
+        ${(s.yearly||[]).map(y => `<tr>
+          <td>${y.year}</td>
+          <td style="text-align:right; color:${y.strategy_return >= 0 ? 'var(--green)' : 'var(--red)'};">${y.strategy_return >= 0 ? '+' : ''}${y.strategy_return}%</td>
+          <td style="text-align:right; color:${y.buy_hold_return >= 0 ? 'var(--green)' : 'var(--red)'};">${y.buy_hold_return >= 0 ? '+' : ''}${y.buy_hold_return}%</td>
+          <td style="text-align:right; color:var(--red);">${y.max_dd}%</td>
+          <td style="text-align:right;">${y.transitions}</td>
+          <td style="text-align:right;">${y.buy_pct}%</td>
+          <td style="text-align:right;">${y.sell_pct}%</td>
+          <td style="text-align:right;">${y.cash_pct}%</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
 function renderSignalHistory(key, data) {
   const tbody = document.getElementById('signal-history-' + key);
   if (!data.signal_history || data.signal_history.length === 0) {
@@ -614,22 +811,26 @@ function renderSignalHistory(key, data) {
 function renderTradesTable(key, data) {
   const tbody = document.getElementById('trades-tbody-' + key);
   let rows = '';
-  data.trades.forEach((t, i) => {
+  [...data.trades].reverse().forEach((t, i) => {
     const typeClass = t.type === 'BUY' ? 'type-buy'
       : t.type === 'CASH_EXIT' ? 'type-sell'
       : 'type-cash';
     const pnlClass = t.pnl > 0 ? 'pnl-positive' : t.pnl < 0 ? 'pnl-negative' : '';
     const pnlText = t.pnl != null ? `${t.pnl > 0 ? '+' : ''}${t.pnl}%` : '-';
     const price = t.price != null ? t.price.toLocaleString() : '-';
+    const label = t.type === 'BUY' ? 'BUY'
+      : t.type === 'SELL_SIGNAL' ? 'SELL'
+      : t.type === 'CASH_EXIT' ? 'EXIT'
+      : t.type === 'SHORT_COVER' ? 'COVER'
+      : t.type === 'FAIL_SAFE_EXIT' ? 'F-SAFE'
+      : t.type;
 
     rows += `<tr>
-      <td>${i + 1}</td>
       <td>${t.date}</td>
-      <td class="${typeClass}">${t.type}</td>
+      <td class="${typeClass}">${label}</td>
       <td>${price}</td>
       <td class="${pnlClass}">${pnlText}</td>
-      <td>${t.signal_type || '-'}</td>
-      <td>${t.reason || '-'}</td>
+      <td style="font-size:11px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.reason || ''}">${t.reason || '-'}</td>
     </tr>`;
   });
   tbody.innerHTML = rows;

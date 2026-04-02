@@ -32,6 +32,7 @@ class V2Position:
     ma10_below_count: int = 0
     short_entry_price: float = 0.0
     short_entry_date: Optional[pd.Timestamp] = None
+    fail_safe_threshold: float = 0.0
 
 
 class V2PositionManager:
@@ -92,11 +93,18 @@ class V2PositionManager:
             days_in_cash=0,
             ma10_below_count=0,
         )
+        reason_map = {
+            'FTD': f'FTD classic (day 4+ rally, +1% vol up)',
+            'MA50': f'MA50 breakout (close > MA50, vol up)',
+            '52WEEK': f'52-week breakout (new high)',
+            '200DMA': f'200dma breakout (close > SMA200)',
+        }
         self.trades.append({
             'type': 'BUY',
             'date': buy_date,
             'price': buy_price,
             'signal_type': signal_type,
+            'reason': reason_map.get(signal_type, signal_type),
         })
 
     def exit_to_cash(
@@ -123,13 +131,15 @@ class V2PositionManager:
             ma10_below_count=0,
         )
 
-    def enter_sell(self, date: pd.Timestamp, reason: str, price: float = 0.0):
+    def enter_sell(self, date: pd.Timestamp, reason: str, price: float = 0.0,
+                   fail_safe_threshold: float = 0.0):
         """Enter SELL state and open short position.
 
         Args:
             date: Date of sell signal.
             reason: Reason for entering sell.
             price: Entry price for short position (0.0 if not tracking).
+            fail_safe_threshold: HIGH of standby-sell day for fail-safe exit.
         """
         self.trades.append({
             'type': 'SELL_SIGNAL',
@@ -143,6 +153,25 @@ class V2PositionManager:
             ma10_below_count=0,
             short_entry_price=price,
             short_entry_date=date,
+            fail_safe_threshold=fail_safe_threshold,
+        )
+
+    def fail_safe_exit(self, date: pd.Timestamp, close: float):
+        """Exit SELL state to CASH via fail-safe (SAFE-02)."""
+        entry = self.position.short_entry_price
+        pnl = (entry - close) / entry if entry > 0 else 0
+
+        self.trades.append({
+            'type': 'FAIL_SAFE_EXIT',
+            'date': date,
+            'price': close,
+            'pnl': pnl,
+            'reason': f"Fail-safe: close {close:.2f} > standby-sell HIGH {self.position.fail_safe_threshold:.2f}",
+        })
+        self.position = V2Position(
+            state=V2MarketState.CASH,
+            days_in_cash=0,
+            ma10_below_count=0,
         )
 
     def cover_short(self, cover_price: float, cover_date: pd.Timestamp, reason: str):
@@ -210,6 +239,7 @@ class V2PositionManager:
         signal_type: str = "FTD",
         ma10: float = None,
         ma50: float = None,
+        prev_high: float = 0.0,
     ) -> Tuple[V2MarketState, str]:
         """
         Process a trading day and update state.
@@ -228,6 +258,7 @@ class V2PositionManager:
             signal_type: Type of buy signal
             ma10: Current 10-day MA
             ma50: Current 50-day MA
+            prev_high: High of previous day (for fail-safe threshold)
 
         Returns:
             Tuple of (new_state, action_taken)
@@ -245,11 +276,11 @@ class V2PositionManager:
                 action = f"BUY at {ftd_price:.2f} ({signal_type})"
             # Check for CASH -> SELL: MA50 breakdown
             elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
-                self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})", price=close)
+                self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})", price=close, fail_safe_threshold=prev_high)
                 action = f"SELL signal: MA50 breakdown"
             # Check for CASH -> SELL: deterioration
             elif self.position.days_in_cash >= self.config.cash_deterioration_days:
-                self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)", price=close)
+                self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)", price=close, fail_safe_threshold=prev_high)
                 action = f"SELL signal: cash deterioration"
 
         elif current_state == V2MarketState.BUY:
@@ -274,8 +305,15 @@ class V2PositionManager:
                 action = f"CASH exit: MA10 below count {self.position.ma10_below_count}"
 
         elif current_state == V2MarketState.SELL:
+            # Fail-safe check: highest priority in SELL state (SAFE-02)
+            if (hasattr(self.config, 'fail_safe_enabled')
+                and self.config.fail_safe_enabled
+                and self.position.fail_safe_threshold > 0
+                and close > self.position.fail_safe_threshold):
+                self.fail_safe_exit(date, close)
+                action = f"CASH: fail-safe triggered (close {close:.2f} > threshold {self.position.fail_safe_threshold:.2f})"
             # Phase 16: cover short first, then buy (SELL->CASH->BUY per D-09)
-            if is_ftd:
+            elif is_ftd:
                 self.cover_short(close, date, f"FTD detected ({signal_type})")
                 self.enter_buy(ftd_price, date, low, signal_type)
                 action = f"SHORT_COVER + BUY at {ftd_price:.2f} ({signal_type})"

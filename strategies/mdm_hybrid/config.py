@@ -56,6 +56,9 @@ class MDMV2Config:
     stop_loss_min_multiplier: float = 0.5
     stop_loss_max_multiplier: float = 2.5
 
+    # Fail-Safe Mechanism (SAFE-01, SAFE-02)
+    fail_safe_enabled: bool = True        # Auto-exit SELL when close > standby-sell HIGH
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -118,6 +121,7 @@ VN30_PRESET = MDMV2Config(
     volatility_adaptive=True,
     stop_loss_min_multiplier=0.5,
     stop_loss_max_multiplier=2.5,
+    fail_safe_enabled=True,
     name="vn30",
 )
 
@@ -143,5 +147,6 @@ NASDAQ_PRESET = MDMV2Config(
     volatility_adaptive=True,
     stop_loss_min_multiplier=0.5,
     stop_loss_max_multiplier=2.5,
+    fail_safe_enabled=True,
     name="nasdaq",
 )

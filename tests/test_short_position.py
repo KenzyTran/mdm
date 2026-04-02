@@ -328,7 +328,7 @@ class TestNasdaqShortValidation:
         for i, ttype in enumerate(trade_types):
             if ttype == 'BUY' and i > 0:
                 prev_type = trade_types[i - 1]
-                assert prev_type in ('SHORT_COVER', 'CASH_EXIT', 'STATE_DEGRADE'), (
+                assert prev_type in ('SHORT_COVER', 'CASH_EXIT', 'STATE_DEGRADE', 'FAIL_SAFE_EXIT'), (
                     f"Trade {i}: BUY preceded by {prev_type} (expected cover/exit). "
                     f"Date: {trades[i]['date']}"
                 )
