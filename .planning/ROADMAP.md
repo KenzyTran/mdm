@@ -415,7 +415,7 @@ Plans:
  (completed 2026-03-31)
 - [x] **Phase 25: MA50/200dma Review** - A/B research testing whether MA50 should be removed from SELL trigger and BUY filter logic (completed 2026-04-01)
 - [x] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods (completed 2026-04-01)
-- [ ] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features
+- [x] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features (completed 2026-04-02)
 
 ## Phase Details
 
@@ -525,4 +525,4 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 24. Buy Entry Refinement | v6.0 | 2/2 | Complete    | 2026-03-31 |
 | 25. MA50/200dma Review | v6.0 | 3/3 | Complete    | 2026-04-01 |
 | 26. Banding/Volatility Filter | v6.0 | 2/2 | Complete    | 2026-04-01 |
-| 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Not started | - |
+| 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Complete    | 2026-04-02 |

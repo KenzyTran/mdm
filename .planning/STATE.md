@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: verifying
+status: executing
 stopped_at: Completed 26-02-PLAN.md
-last_updated: "2026-04-01T08:47:25.689Z"
-last_activity: 2026-04-01
+last_updated: "2026-04-02T03:53:46.697Z"
+last_activity: 2026-04-02
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Discover the actual indicator-based rules driving Dr. K's MDM signals -- optimized for VN30
-**Current focus:** Phase 26 — banding-volatility-filter
+**Current focus:** Phase 27 — combined-v6-validation
 
 ## Current Position
 
-Phase: 26
+Phase: 27
 Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-01
+Status: Executing Phase 27
+Last activity: 2026-04-02
 
 Progress: [████████░░] 81% (22/27 phases, 46/46 plans from v1.0-v5.0)
 
