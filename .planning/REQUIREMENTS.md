@@ -50,7 +50,7 @@
 - [x] **DATA-01**: Postgres connector module (env-driven, connection pooling) + integration test
 - [x] **DATA-02**: MySQL connector module (env-driven) + integration test
 - [ ] **DATA-03**: Audit `stock_eod` for delisted ticker coverage; report distinct stockcodes whose `max(tradingdate)` is pre-2024 (decide whether to backfill)
-- [ ] **DATA-04**: Verify `stock_eod` price adjustment for splits/dividends/rights; document convention; if unadjusted, build adjustment helper
+- [x] **DATA-04**: Verify `stock_eod` price adjustment for splits/dividends/rights; document convention; if unadjusted, build adjustment helper
 - [ ] **DATA-05**: Resolve EPS publish_date — find or estimate (default `period_end + 45d` Q1-Q3, `+90d` Q4/annual); document per-table source
 - [ ] **DATA-06**: Per-stock fundamental coverage report for VN100 universe back to 2014 (which stocks have full quarterly EPS history)
 - [ ] **DATA-07**: Verify `stock_foreign_eod` daily VN100 coverage 2014-2026
