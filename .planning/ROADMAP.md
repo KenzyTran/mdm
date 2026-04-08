@@ -516,13 +516,13 @@ Plans:
   4. EPS publish_date sourced or imputed (`+45d` Q1-Q3, `+90d` Q4/annual) with documented assumption
   5. Per-stock fundamental coverage report for current VN100 back to 2014: which tickers have full quarterly EPS history vs gaps
   6. `stock_foreign_eod` daily VN100 coverage 2014-2026 confirmed
-**Plans:** 4/6 plans executed
+**Plans:** 5/6 plans executed
 
 Plans:
 - [x] 28-00-SETUP-PLAN.md -- Wave 0 scaffolding: deps, connectors package, tests, docs/audits dir
 - [x] 28-01-POSTGRES-CONNECTOR-PLAN.md -- connectors/postgres.py with get_engine/query/load_stock_eod/load_ratios + tests (DATA-01)
 - [x] 28-02-MYSQL-CONNECTOR-PLAN.md -- connectors/mysql.py mirror + sector router + tests (DATA-02)
-- [ ] 28-03-PRICE-ADJUSTMENT-PLAN.md -- adjust_ohlc helper + spot-check script + convention doc (DATA-03)
+- [x] 28-03-PRICE-ADJUSTMENT-PLAN.md -- adjust_ohlc helper + spot-check script + convention doc (DATA-03)
 - [x] 28-04-EPS-PUBLISH-DATE-PLAN.md -- resolve_eps_publish_date helper + 10 unit tests (DATA-04)
 - [ ] 28-05-DATA-AUDIT-REPORT-PLAN.md -- run_phase28_audit.py + Markdown report + 4 CSVs (DATA-05/06/07)
 **UI hint**: no
@@ -646,7 +646,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 25. MA50/200dma Review | v6.0 | 3/3 | Complete    | 2026-04-01 |
 | 26. Banding/Volatility Filter | v6.0 | 2/2 | Complete    | 2026-04-01 |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Complete    | 2026-04-02 |
-| 28. Data Audit & Connectors | v7.0 | 4/6 | In Progress|  |
+| 28. Data Audit & Connectors | v7.0 | 5/6 | In Progress|  |
 | 29. VN100 Universe + CANSLIM Scorer | v7.0 | 0/0 | Pending | — |
 | 30. Stock-Level Entry Confirmation | v7.0 | 0/0 | Pending | — |
 | 31. Multi-Stock Portfolio Engine | v7.0 | 0/0 | Pending | — |
