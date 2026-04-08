@@ -22,7 +22,8 @@ def _build_url() -> str:
     host = os.getenv("POSTGRES_HOST")
     user = os.getenv("POSTGRES_USER")
     pw = os.getenv("POSTGRES_PASSWORD")
-    db = os.getenv("POSTGRES_DB")
+    # Accept both POSTGRES_DB (plan spec) and POSTGRES_DATABASE (legacy .env key)
+    db = os.getenv("POSTGRES_DB") or os.getenv("POSTGRES_DATABASE")
     port = os.getenv("POSTGRES_PORT", "5432")
     missing = [
         k for k, v in {

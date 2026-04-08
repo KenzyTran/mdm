@@ -36,11 +36,15 @@ def fake_ohlc_df():
 
 
 def _has_pg_creds() -> bool:
-    return all(os.getenv(k) for k in ("POSTGRES_HOST", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB"))
+    base = all(os.getenv(k) for k in ("POSTGRES_HOST", "POSTGRES_USER", "POSTGRES_PASSWORD"))
+    db = os.getenv("POSTGRES_DB") or os.getenv("POSTGRES_DATABASE")
+    return bool(base and db)
 
 
 def _has_mysql_creds() -> bool:
-    return all(os.getenv(k) for k in ("MYSQL_HOST", "MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DB"))
+    base = all(os.getenv(k) for k in ("MYSQL_HOST", "MYSQL_USER", "MYSQL_PASSWORD"))
+    db = os.getenv("MYSQL_DB") or os.getenv("MYSQL_DATABASE")
+    return bool(base and db)
 
 
 skip_if_no_pg = pytest.mark.skipif(not _has_pg_creds(), reason="Postgres creds not in .env")
