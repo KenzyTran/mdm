@@ -8,6 +8,28 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
+## Current Milestone: v7.0 CANSLIM Stock Picking + MDM Capital Allocation on VN100
+
+**Goal:** Long-only CANSLIM stock picking trên rổ VN100, dùng MDM (HybridEngine + fail-safe) làm gate phân bổ tỷ lệ tiền/hàng, event-driven, max 8 vị thế, backtest qua nhiều năm.
+
+**Target features:**
+- Research papers học thuật về CANSLIM (rules C/A/N/S/L/I/M, biến thể định lượng, entry confirmation)
+- Data layer: Postgres connector (TA), MySQL connector (fundamentals), Redis connector (live, phase sau)
+- VN100 universe loader (static)
+- CANSLIM scorer module (per-stock score 0-100, daily)
+- Event-driven signal engine (FTD, base breakout, RS new high, EPS surprise)
+- Stock-level entry confirmation (MDM BUY là cần, không đủ — phải chờ pivot buy point per stock)
+- MDM-driven capital allocation policy (BUY/CASH/SELL → exposure %)
+- Multi-stock long-only portfolio engine (max 8 vị thế, O'Neil stop 7-8%, T+2.5, 7% limit)
+- Backtest + performance reporting (CAGR, Sharpe, MaxDD, win rate vs benchmark)
+- Validation vs `rank_top_stocks.diem_canslim` baseline
+
+**Key context:**
+- Universe VN100 static (không có point-in-time data)
+- Data sources: Postgres `stock_eod` (5.9M rows, 2936 mã, đến 2026-04-08), Postgres `stock_rs`/`nganh_rs`/`nhnl_indicator`, MySQL `ratios_stock`/`is_quarter_*`/`rank_top_stocks`
+- Long-only, max 8 vị thế, event-driven
+- MDM signal source: HybridEngine + fail-safe (best v6.0)
+
 ## Completed: v6.0 MDM Fail-Safe & Signal Refinement (shipped 2026-04-02)
 
 **Kết quả:**
@@ -31,10 +53,17 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - ✓ Data loaders for VN30, NASDAQ, S&P500 — CSV format with OHLCV
 - ✓ Kelly Criterion position management — existing implementation
 
-### Active
+### Active (v7.0)
 
-- [ ] Adapt MDM v2 parameters for VN30 market characteristics (partially done — V2 runs on VN30 but QE Floor needs VN30-specific data)
-- [ ] Backtest MDM v2 on VN30 with performance reporting (done — 190.8% return on VN30)
+- [ ] Research CANSLIM academic literature (rules, quantitative variants, Vietnam adaptation, entry confirmation)
+- [ ] Database connectors (Postgres TA, MySQL fundamentals, Redis live)
+- [ ] VN100 universe loader (static)
+- [ ] CANSLIM scorer (C/A/N/S/L/I/M components)
+- [ ] Event-driven signal engine + stock-level entry confirmation
+- [ ] MDM capital allocation policy
+- [ ] Multi-stock long-only portfolio engine (max 8 positions)
+- [ ] Backtest + performance reporting on VN100
+- [ ] Validation vs `rank_top_stocks.diem_canslim` baseline
 
 ### Validated (v1.0-v5.0)
 
@@ -157,4 +186,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 — v6.0 milestone shipped. Best model: HybridEngine + fail-safe = +239%, CAGR 11.5%, MaxDD -28.2% on VN30 (beats Buy & Hold +205%). Key discovery: fail-safe is the only v6.0 feature that improves HybridEngine — other features (gap filter, buy selectivity, sell acceleration, volatility filter) only benefit MDMV2Engine.*
+*Last updated: 2026-04-08 — v7.0 milestone started: CANSLIM stock picking on VN100 with MDM as capital allocation gate. Data sources confirmed: Postgres TA (stock_eod 5.9M rows), MySQL fundamentals (ratios_stock, is_quarter_*, rank_top_stocks with existing diem_canslim baseline), Redis live cache.*
