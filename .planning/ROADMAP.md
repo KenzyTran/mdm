@@ -406,7 +406,7 @@ Plans:
 
 </details>
 
-### v6.0 MDM Fail-Safe & Signal Refinement (Phases 23-27)
+#### v6.0 MDM Fail-Safe & Signal Refinement (Phases 23-27)
 
 **Milestone Goal:** Implement Dr. K's specific signal rules (fail-safe, gap-up neutralization, 6% threshold) and review MA50/volatility filter role to reduce whipsaw on VN30.
 
@@ -418,7 +418,7 @@ Plans:
 - [x] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods (completed 2026-04-01)
 - [x] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features (completed 2026-04-02)
 
-### v7.0 CANSLIM + MDM on VN100 (Phases 28-34)
+#### v7.0 CANSLIM + MDM on VN100 (Phases 28-34)
 
 **Milestone Goal:** Long-only CANSLIM stock picking on VN100 with MDM as capital allocation gate, max 8 positions, event-driven, stock-level entry confirmation, validated in-sample (2014-2018) and out-of-sample (2019-2025).
 
@@ -516,7 +516,15 @@ Plans:
   4. EPS publish_date sourced or imputed (`+45d` Q1-Q3, `+90d` Q4/annual) with documented assumption
   5. Per-stock fundamental coverage report for current VN100 back to 2014: which tickers have full quarterly EPS history vs gaps
   6. `stock_foreign_eod` daily VN100 coverage 2014-2026 confirmed
-**Plans**: TBD
+**Plans:** 6 plans
+
+Plans:
+- [ ] 28-00-SETUP-PLAN.md -- Wave 0 scaffolding: deps, connectors package, tests, docs/audits dir
+- [ ] 28-01-POSTGRES-CONNECTOR-PLAN.md -- connectors/postgres.py with get_engine/query/load_stock_eod/load_ratios + tests (DATA-01)
+- [ ] 28-02-MYSQL-CONNECTOR-PLAN.md -- connectors/mysql.py mirror + sector router + tests (DATA-02)
+- [ ] 28-03-PRICE-ADJUSTMENT-PLAN.md -- adjust_ohlc helper + spot-check script + convention doc (DATA-03)
+- [ ] 28-04-EPS-PUBLISH-DATE-PLAN.md -- resolve_eps_publish_date helper + 10 unit tests (DATA-04)
+- [ ] 28-05-DATA-AUDIT-REPORT-PLAN.md -- run_phase28_audit.py + Markdown report + 4 CSVs (DATA-05/06/07)
 **UI hint**: no
 
 ### Phase 29: VN100 Universe + CANSLIM Scorer
