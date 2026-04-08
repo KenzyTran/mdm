@@ -7,7 +7,8 @@
 - ✅ **v3.0 Hybrid MDM Engine** - Phases 11-15 (shipped 2026-03-29)
 - ✅ **v4.0 MDM Short Signal & Dr. K Alignment** - Phases 16-18 (shipped 2026-03-30)
 - ✅ **v5.0 Signal Quality & Macro Filter** - Phases 19-22 (shipped 2026-03-31)
-- 📋 **v6.0 MDM Fail-Safe & Signal Refinement** - Phases 23-27
+- ✅ **v6.0 MDM Fail-Safe & Signal Refinement** - Phases 23-27 (shipped 2026-04-02)
+- 📋 **v7.0 CANSLIM + MDM on VN100** - Phases 28-34
 
 ## Phases
 
@@ -417,6 +418,18 @@ Plans:
 - [x] **Phase 26: Banding/Volatility Filter** - ATR-based volatility regime detection to suppress signals during low-volatility sideways periods (completed 2026-04-01)
 - [x] **Phase 27: Combined v6.0 Validation & Dashboard** - End-to-end A/B, walk-forward validation, and S3 dashboard update with all v6.0 features (completed 2026-04-02)
 
+### v7.0 CANSLIM + MDM on VN100 (Phases 28-34)
+
+**Milestone Goal:** Long-only CANSLIM stock picking on VN100 with MDM as capital allocation gate, max 8 positions, event-driven, stock-level entry confirmation, validated in-sample (2014-2018) and out-of-sample (2019-2025).
+
+- [ ] **Phase 28: Data Audit & Connectors** — Postgres/MySQL connectors, audit delisted/adjusted/EPS publish_date, fundamental coverage report
+- [ ] **Phase 29: VN100 Universe + CANSLIM Scorer** — universe loader with semi-annual rebalance, C/A/N/S/L/I rules, sector handling, baseline cross-check
+- [ ] **Phase 30: Entry Confirmation** — Option A (52wk high + vol) + Option C (Pocket Pivot), 20-day window from MDM BUY, A/B comparison
+- [ ] **Phase 31: Multi-Stock Portfolio Engine** — 8-slot equal-weight engine, stops, exits, cooldowns, costs, T+2 + ceiling/floor lock handling, `state[i-1]` discipline
+- [ ] **Phase 32: VN100 Backtest + In-Sample Sweep** — wire engine to data, run 2014-2018 sweep across CANSLIM/entry/stop params
+- [ ] **Phase 33: Out-of-Sample + Sensitivity** — locked-param 2019-2025 run, sensitivity across (current VN100, liquidity-reconstructed, VN30-only), comparison vs `diem_canslim` baseline
+- [ ] **Phase 34: Reporting + Documentation** — performance dashboard (CAGR/Sharpe/MaxDD/cost drag/benchmarks/real CAGR), `docs/rules_canslim_mdm.md`, milestone retrospective
+
 ## Phase Details
 
 ### Phase 23: Fail-Safe Mechanism
@@ -492,6 +505,105 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
+### Phase 28: Data Audit & Connectors
+**Goal**: Postgres + MySQL connectors are usable from Python; data quality risks for VN100 backtest are quantified
+**Depends on**: Phase 27
+**Requirements**: DATA-01..DATA-07
+**Success Criteria:**
+  1. `connectors/postgres.py` and `connectors/mysql.py` modules load credentials from `.env`, expose typed query helpers, integration test queries `stock_eod` and `ratios_stock` successfully
+  2. Audit report enumerates: count of distinct stockcodes in `stock_eod`, count whose `max(tradingdate) < 2024-01-01` (delisted candidates), confirmed list of known delistings (FLC, ROS, HVN, …) present or absent
+  3. Price-adjustment convention documented (whether `closeprice` reflects splits/divs/rights); if unadjusted, helper produces adjusted series
+  4. EPS publish_date sourced or imputed (`+45d` Q1-Q3, `+90d` Q4/annual) with documented assumption
+  5. Per-stock fundamental coverage report for current VN100 back to 2014: which tickers have full quarterly EPS history vs gaps
+  6. `stock_foreign_eod` daily VN100 coverage 2014-2026 confirmed
+**Plans**: TBD
+**UI hint**: no
+
+### Phase 29: VN100 Universe + CANSLIM Scorer
+**Goal**: Daily CANSLIM rank for the VN100 universe is computable, configurable, and validated against project's existing baseline
+**Depends on**: Phase 28
+**Requirements**: UNIV-01..UNIV-03, CANS-01..CANS-12
+**Success Criteria:**
+  1. VN100 universe loader returns ticker set per date with semi-annual rebalance (Jan/Jul); proxy fallback documented if HOSE membership unavailable
+  2. Three universe modes selectable: current-VN100, liquidity-reconstructed (top-100 by 60d ADV), VN30-only
+  3. CANSLIM scorer computes C/C+/A/A+/N/S/L/I/Liquidity per stock per day; respects EPS publish_date guard (no look-ahead)
+  4. Sector handling — non-financials use C/A directly; banks substitute PPOP growth; CTCK/Insurance excluded
+  5. `CanslimConfig` dataclass with all thresholds (defaults: C≥0.20, A≥0.15, N within 15%, S≥1.5×, L≥80, I 20d>0)
+  6. Spot-check: top-10 CANSLIM stocks on N recent dates qualitatively overlap with `rank_top_stocks.diem_canslim` top-10 (≥4/10 overlap acceptable; document discrepancies)
+  7. RS rating uses formula `0.4*ROC(63)+0.2*ROC(126)+0.2*ROC(189)+0.2*ROC(252)`, percentile-ranked within active universe
+**Plans**: TBD
+**UI hint**: no
+
+### Phase 30: Stock-Level Entry Confirmation
+**Goal**: A candidate stock is bought only after a stock-level confirmation signal fires within 20 trading days of an MDM BUY event
+**Depends on**: Phase 29
+**Requirements**: ENTRY-01..ENTRY-05
+**Success Criteria:**
+  1. Option A detector — `close > max(close,252) AND vol ≥1.5*avgvol50 AND close>open AND close in upper half of day's range`
+  2. Option C (Pocket Pivot) detector — `close>open AND close≥MA50 AND vol > max(down-day vols last 10d) AND within 15% of 50d high`
+  3. Entry timing window — confirmation only counts if MDM is in BUY state AND it's been ≤20 trading days since most recent CASH/SELL→BUY transition
+  4. Entry execution model — fill price = next-day open (ATO), not signal-bar close
+  5. A/B helper produces side-by-side fill counts for Option A vs Option C on VN100 over 2014-2025
+**Plans**: TBD
+**UI hint**: no
+
+### Phase 31: Multi-Stock Portfolio Engine
+**Goal**: A long-only multi-stock state machine with stops, exits, costs, and Vietnam microstructure correctly processes a daily bar sequence without look-ahead
+**Depends on**: Phase 30
+**Requirements**: GATE-01..GATE-04, PORT-01..PORT-10
+**Success Criteria:**
+  1. Engine holds up to 8 concurrent positions; equal-weight (12.5%/slot); 100-share lot rounding (down)
+  2. MDM gate Policy A enforced: BUY allows new entries up to 8; CASH holds existing, no new; SELL liquidates all next open
+  3. Exit priority chain firing in order: MDM SELL > 8% hard stop > MA50 trailing break (vol confirm 1.25×) > RS<70 for 5 sessions
+  4. Vietnam microstructure handled: T+2 settlement (no sell <2d after buy), 7% ceiling lock blocks new fills, 7% floor lock defers exit to next open
+  5. Re-entry cooldown 5 days per ticker after stop
+  6. Costs applied both sides: 0.25% commission + 0.10% sell tax + 0.10% slippage
+  7. Liquidity gate: refuse entry if 20d ADV < 10× position size
+  8. Equity curve uses `state[i-1]` discipline; unit test asserts no `state[i]` look-ahead in NAV computation
+**Plans**: TBD
+**UI hint**: no
+
+### Phase 32: VN100 Backtest + In-Sample Sweep
+**Goal**: A wired pipeline (universe→CANSLIM→entry→portfolio→costs) runs end-to-end on VN100 2014-2018 and an in-sample sweep selects parameters
+**Depends on**: Phase 31
+**Requirements**: BT-01, BT-02
+**Success Criteria:**
+  1. Single-run backtest over VN100 2014-2018 produces trade log, position log, daily NAV without errors
+  2. Sweep grid run over: c_yoy ∈ {0.10,0.15,0.20,0.25}, a_cagr ∈ {0.10,0.15,0.20,0.25}, n_proximity ∈ {0.05,0.10,0.15,0.20}, hard_stop ∈ {0.06,0.07,0.08,0.10}, slots ∈ {5,8,10}, entry_option ∈ {A,C}
+  3. Sweep results CSV with per-config (CAGR, Sharpe, MaxDD, hit rate, turnover, total cost drag)
+  4. Top-3 configs identified by Sharpe and locked for OOS
+  5. Sanity: no config produces >300% CAGR (sign of look-ahead); equity curves visually plausible
+**Plans**: TBD
+**UI hint**: no
+
+### Phase 33: Out-of-Sample + Sensitivity
+**Goal**: Locked-parameter strategy is validated on untouched 2019-2025 data and across universe/period sensitivities
+**Depends on**: Phase 32
+**Requirements**: BT-03, BT-04, BT-08
+**Success Criteria:**
+  1. OOS run 2019-2025 with locked parameters from Phase 32; performance metrics computed
+  2. Sensitivity matrix: 3 universes × 1 locked config + 1 baseline (CANSLIM-only no MDM gate) + 1 baseline (MDM-only-on-index)
+  3. Comparison vs `rank_top_stocks.diem_canslim` baseline ranking strategy on same period
+  4. Pass/fail vs targets: Sharpe uplift > 0.20 vs VN-Index B&H, MaxDD reduction > 30% vs VN-Index B&H
+  5. If targets fail, written analysis identifies which component (CANSLIM/entry/MDM/costs) is responsible
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 34: Reporting + Documentation + Retrospective
+**Goal**: v7.0 milestone is shippable: dashboard updated, rules documented, retrospective filed
+**Depends on**: Phase 33
+**Requirements**: BT-05, BT-06, BT-07, DOC-01, DOC-02
+**Success Criteria:**
+  1. Performance report: nominal CAGR, Sharpe (rf=10Y VN govt 3%), MaxDD + duration, hit rate, profit factor, hold time, turnover, cost drag
+  2. Benchmark table: vs VN-Index B&H, VN30 B&H, MDM-only-on-index, 12M deposit, SJC gold
+  3. Real (CPI-adjusted) CAGR alongside nominal
+  4. `docs/rules_canslim_mdm.md` documents locked CANSLIM rules, entry options, portfolio policies, MDM gate, costs — kept in sync with code
+  5. Data dictionary for connectors and CANSLIM scorer
+  6. Retrospective entry added in `.planning/RETROSPECTIVE.md`
+  7. PROJECT.md, MILESTONES.md, STATE.md updated for v7.0 ship
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
@@ -526,3 +638,10 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 25. MA50/200dma Review | v6.0 | 3/3 | Complete    | 2026-04-01 |
 | 26. Banding/Volatility Filter | v6.0 | 2/2 | Complete    | 2026-04-01 |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Complete    | 2026-04-02 |
+| 28. Data Audit & Connectors | v7.0 | 0/0 | Pending | — |
+| 29. VN100 Universe + CANSLIM Scorer | v7.0 | 0/0 | Pending | — |
+| 30. Stock-Level Entry Confirmation | v7.0 | 0/0 | Pending | — |
+| 31. Multi-Stock Portfolio Engine | v7.0 | 0/0 | Pending | — |
+| 32. VN100 Backtest + In-Sample Sweep | v7.0 | 0/0 | Pending | — |
+| 33. Out-of-Sample + Sensitivity | v7.0 | 0/0 | Pending | — |
+| 34. Reporting + Documentation | v7.0 | 0/0 | Pending | — |
