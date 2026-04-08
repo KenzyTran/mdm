@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 from typing import Any, Iterable, Literal, Mapping, Optional
+from urllib.parse import quote_plus
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -37,7 +38,10 @@ def _build_url() -> str:
     ]
     if missing:
         raise RuntimeError(f"Missing MySQL env vars: {missing}")
-    return f"mysql+pymysql://{user}:{pw}@{host}:{port}/{db}?charset=utf8mb4"
+    return (
+        f"mysql+pymysql://{quote_plus(user)}:{quote_plus(pw)}"
+        f"@{host}:{port}/{db}?charset=utf8mb4"
+    )
 
 
 def get_engine() -> Engine:
