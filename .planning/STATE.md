@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v7.0
-milestone_name: CANSLIM Stock Picking + MDM Capital Allocation on VN100
-status: research
-stopped_at: New milestone initiated
-last_updated: "2026-04-08T00:00:00.000Z"
+milestone: v6.0
+milestone_name: MDM Fail-Safe & Signal Refinement
+status: executing
+stopped_at: STATE.md reset for v7.0
+last_updated: "2026-04-08T12:44:45.227Z"
 last_activity: 2026-04-08
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 12
+  completed_phases: 5
+  total_plans: 16
+  completed_plans: 11
 ---
 
 # Project State
@@ -21,22 +20,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Long-only CANSLIM stock picking trên VN100, dùng MDM làm capital allocation gate.
-**Current focus:** Research phase — CANSLIM academic literature + Vietnam adaptation + entry confirmation timing.
+**Current focus:** Phase 28 — data-audit-connectors
 
 ## Current Position
 
-Phase: (pre-roadmap)
-Plan: None
-Status: Research → Requirements → Roadmap
+Phase: 28 (data-audit-connectors) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
 Last activity: 2026-04-08
 
 ## Data Sources (verified 2026-04-08)
 
 **Postgres (vpt_wong_stock_v1, TA):**
+
 - stock_eod: 5.9M rows, 2936 stocks, through 2026-04-08
 - stock_rs, nganh_rs, nhnl_indicator, index_eod, stock_list, stock_signals
 
 **MySQL (stocks_backend, Fundamentals):**
+
 - ratios_stock (EPS, growth, P/E, ROE, market cap)
 - is_quarter_nonbank/bank/insurance/stock (income statement quarterly)
 - tm_quarter_* (balance sheet)
