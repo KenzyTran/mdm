@@ -580,7 +580,15 @@ Plans:
   6. Costs applied both sides: 0.25% commission + 0.10% sell tax + 0.10% slippage
   7. Liquidity gate: refuse entry if 20d ADV < 10× position size
   8. Equity curve uses `state[i-1]` discipline; unit test asserts no `state[i]` look-ahead in NAV computation
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 31-01-wave0-scaffold-PLAN.md — PortfolioConfig + state dataclasses + load_stock_rs reader + fixtures (GATE-01, PORT-01, PORT-06, PORT-10)
+- [ ] 31-02-primitives-PLAN.md — microstructure (T+2, ceiling/floor lock) + costs + cooldown (GATE-03, GATE-04, PORT-05, PORT-07, PORT-08)
+- [ ] 31-03-exits-sizing-PLAN.md — exit priority chain + sizing + liquidity gate (GATE-02, PORT-01..06, PORT-09)
+- [ ] 31-04-engine-PLAN.md — PortfolioEngine bar loop + SC8 no-lookahead + integration tests (GATE-01..04, PORT-01..10)
+- [ ] 31-05-audit-report-PLAN.md — ab_report writers + audit md + rules_canslim_mdm.md section (PORT-10)
+
 **UI hint**: no
 
 ### Phase 32: VN100 Backtest + In-Sample Sweep
