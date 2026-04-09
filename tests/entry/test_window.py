@@ -6,14 +6,8 @@ Pins D-07..D-09 semantics plus the locked decision in 30-01-NOTES.md §3
 from __future__ import annotations
 
 import pandas as pd
-import pytest
 
-pytest.importorskip(
-    "strategies.entry.window",
-    reason="30-02 Task 3 not yet implemented",
-)
-
-from strategies.entry.window import compute_buy_windows, is_in_any_window  # noqa: E402
+from strategies.entry.window import compute_buy_windows, is_in_any_window
 
 
 def _dates(n: int, start: str = "2020-01-01") -> pd.DatetimeIndex:
