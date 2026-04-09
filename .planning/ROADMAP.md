@@ -540,7 +540,7 @@ Plans:
   5. `CanslimConfig` dataclass with all thresholds (defaults: C≥0.20, A≥0.15, N within 15%, S≥1.5×, L≥80, I 20d>0)
   6. Spot-check: top-10 CANSLIM stocks on N recent dates qualitatively overlap with `rank_top_stocks.diem_canslim` top-10 (≥4/10 overlap acceptable; document discrepancies)
   7. RS rating uses formula `0.4*ROC(63)+0.2*ROC(126)+0.2*ROC(189)+0.2*ROC(252)`, percentile-ranked within active universe
-**Plans:** 7/9 plans executed
+**Plans:** 8/9 plans executed
 
 Plans:
 - [x] 29-01-PLAN.md -- Wave 0 scaffold: package skeleton, test stubs, live-schema introspection, docs stub
@@ -550,7 +550,7 @@ Plans:
 - [x] 29-05-PLAN.md -- Fundamental rules C/C+/A/A+ with sector branching + publish_date guard (CANS-01..04)
 - [x] 29-06-PLAN.md -- Technical N rule + RS rating with universe percentile (CANS-05, CANS-07)
 - [x] 29-07-PLAN.md -- Flow I (pre-2022 fallback) + Liquidity 20d median turnover (CANS-06, CANS-08, CANS-09)
-- [ ] 29-08-PLAN.md -- CanslimScorer end-to-end wiring with locked composite formula (CANS-11)
+- [x] 29-08-PLAN.md -- CanslimScorer end-to-end wiring with locked composite formula (CANS-11)
 - [ ] 29-09-PLAN.md -- Baseline comparison vs rank_top_stocks.diem_canslim + validation report (CANS-12)
 **UI hint**: no
 
@@ -659,7 +659,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 26. Banding/Volatility Filter | v6.0 | 2/2 | Complete    | 2026-04-01 |
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Complete    | 2026-04-02 |
 | 28. Data Audit & Connectors | v7.0 | 6/6 | Complete    | 2026-04-09 |
-| 29. VN100 Universe + CANSLIM Scorer | v7.0 | 7/9 | In Progress|  |
+| 29. VN100 Universe + CANSLIM Scorer | v7.0 | 8/9 | In Progress|  |
 | 30. Stock-Level Entry Confirmation | v7.0 | 0/0 | Pending | — |
 | 31. Multi-Stock Portfolio Engine | v7.0 | 0/0 | Pending | — |
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 0/0 | Pending | — |
