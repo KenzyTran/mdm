@@ -106,8 +106,8 @@
 
 ### Backtest & Reporting
 
-- [ ] **BT-01**: VN100 backtest engine wiring all layers (universe → CANSLIM → entry → portfolio → costs)
-- [ ] **BT-02**: In-sample run 2014-2018 + parameter sweep (CANSLIM thresholds, entry option, stop, slots)
+- [x] **BT-01**: VN100 backtest engine wiring all layers (universe → CANSLIM → entry → portfolio → costs)
+- [x] **BT-02**: In-sample run 2014-2018 + parameter sweep (CANSLIM thresholds, entry option, stop, slots)
 - [ ] **BT-03**: Out-of-sample run 2019-2025 with locked parameters
 - [ ] **BT-04**: Sensitivity runs across (a) current VN100 (b) liquidity-reconstructed (c) VN30-only
 - [ ] **BT-05**: Performance report — CAGR, Sharpe (risk-free = 10Y VN govt ~3%), MaxDD, hit rate, profit factor, hold time, turnover, cost drag
