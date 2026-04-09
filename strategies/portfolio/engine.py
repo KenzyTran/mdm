@@ -352,7 +352,7 @@ class PortfolioEngine:
             if row is not None:
                 ceil = row.get("ceiling_px", float("nan"))
                 if not math.isnan(ceil) and is_ceiling_locked(
-                    row["open"], row["high"], row["low"], ceil
+                    row["open"], row["high"], row["low"], ceil, tol=0.02
                 ):
                     self._log_unfilled(
                         se.candidate, "ceiling_lock", bar_idx
@@ -534,6 +534,7 @@ class PortfolioEngine:
                                 next_row["high"],
                                 next_row["low"],
                                 ceil,
+                                tol=0.02,
                             ):
                                 self._log_unfilled(cand, "ceiling_lock", bar_idx)
                                 continue
