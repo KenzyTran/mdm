@@ -195,7 +195,31 @@ LIMIT :n
 **Why median, not mean:** a single fat-finger print or crossing trade can drag an otherwise illiquid name above the threshold if averaged. Median is robust to that tail. Fewer than 20 bars of history → False (insufficient data, no silent pass).
 
 ## 7. Composite Score
-_TBD — plan 29-08_
+
+**Locked by plan 29-08 (CANS-11).** The composite score blends the boolean CANSLIM rule pass-count with the RS rating so that a stock can't earn a top score on fundamentals alone — it must also be a relative-strength leader.
+
+**Boolean rules counted (9 total):** `c`, `c+`, `a`, `a+`, `n`, `s`, `l`, `i`, `liq`.
+
+**Formula:**
+
+```
+bool_component = 100 * sum(booleans) / 9
+rs_component   = rs_rating   # already in [0, 100]; NaN → 0
+score          = 0.70 * bool_component + 0.30 * rs_component
+```
+
+**Properties (tested in `tests/canslim/test_scorer.py`):**
+
+- Range: `[0, 100]`. All booleans False and `rs_rating == 0` → `score == 0`. All booleans True and `rs_rating == 100` → `score == 100`.
+- Monotone in pass-count for fixed RS.
+- Monotone in `rs_rating` for fixed pass-count.
+- Sensitive to RS even when all booleans pass: a stock with 9/9 passes but RS=0 scores `70.0`, while one with 9/9 passes and RS=100 scores `100.0`.
+
+**Weights rationale:** 0.70 boolean / 0.30 RS was chosen so that the boolean gates dominate (you must actually pass CANSLIM), but RS breaks ties between stocks with identical pass-counts — consistent with O'Neil's "leaders among leaders" doctrine. Tuned in plan 29-09 via spot-check against `rank_top_stocks.diem_canslim`.
+
+**Look-ahead guard:** composite only reads values already computed under the D-11 `publish_date` guard (fundamentals) and `tradingdate <= as_of_date` cutoff (technical/flow/liq/RS). No extra guard needed at composite time.
+
+**Excluded sectors (D-07):** `ctck` and `insurance` tickers are filtered by the scorer BEFORE rules run and are not returned in the output DataFrame at all.
 
 ## 8. Validation vs rank_top_stocks.diem_canslim
 _TBD — plan 29-09_
