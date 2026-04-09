@@ -155,7 +155,44 @@ Returns a `pd.Series` indexed by ticker in `[0, 100]` ∪ {NaN}.
 **Tests:** `tests/canslim/test_rules_technical.py` (7 tests — N true/false/insufficient, S true/false/insufficient, module imports) and `tests/canslim/test_rules_rs.py` (7 tests — single-ticker percentile 100, two-ticker ranking, insufficient history NaN, l_pass threshold, panel filtering, formula numeric check, module imports).
 
 ## 6. Flow (I) + Liquidity (Liq)
-_TBD — plan 29-07_
+
+Implemented by `strategies/canslim/rules/flow.py` and `strategies/canslim/rules/liquidity.py` (plan 29-07). Closes CANS-06, CANS-08, CANS-09.
+
+### 6.1 I — Foreign net-buy flow (CANS-08)
+
+`compute_i(ticker, as_of_date, config, pg_engine) -> bool`
+
+Sums `fbvalue - fsvalue` from Postgres `stock_foreign_eod` over the last `config.i_lookback_days` trading rows (default **20**) strictly **before** `as_of_date`. Rule passes iff the sum is strictly greater than zero.
+
+```sql
+SELECT (fbvalue - fsvalue) AS net_buy
+FROM stock_foreign_eod
+WHERE stockcode = :t AND tradingdate < :d
+ORDER BY tradingdate DESC
+LIMIT :n
+```
+
+**Pre-2022 fallback (critical):** `stock_foreign_eod` has no rows before **2022-04-07** (locked by research in 29-RESEARCH.md). Any `as_of_date < 2022-04-07` returns `i_pass=True` automatically, without querying. This prevents starving historical backtests of signal while keeping the fallback explicit and grep-able via the `FOREIGN_DATA_START` constant in `flow.py`.
+
+| Case                         | Behavior             |
+| ---------------------------- | -------------------- |
+| `as_of_date < 2022-04-07`    | **True** (fallback)  |
+| Post-2022, sum > 0           | True                 |
+| Post-2022, sum == 0          | False (strict `> 0`) |
+| Post-2022, sum < 0           | False                |
+| Post-2022, no rows in table  | False                |
+
+### 6.2 S — Volume surge wrapper (CANS-06)
+
+`flow.compute_s(ohlcv, as_of_date, config)` is a thin wrapper delegating to `strategies.canslim.rules.technical.compute_s` (implemented in plan 29-06). The wrapper exists so the scorer imports all "per-signal" rules from a single surface (`flow.compute_i`, `flow.compute_s`) while the numeric logic stays in `technical.py`.
+
+### 6.3 Liq — Liquidity gate (CANS-09)
+
+`compute_liq(ohlcv, as_of_date, config) -> bool`
+
+20-day rolling **median** of turnover (`closeindex * totalvol`) must meet or exceed `config.liquidity_min_turnover_vnd` (default **5_000_000_000** VND = 5B VND).
+
+**Why median, not mean:** a single fat-finger print or crossing trade can drag an otherwise illiquid name above the threshold if averaged. Median is robust to that tail. Fewer than 20 bars of history → False (insufficient data, no silent pass).
 
 ## 7. Composite Score
 _TBD — plan 29-08_
