@@ -4,7 +4,7 @@ milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
 status: verifying
 stopped_at: Completed 31-05-PLAN.md (audit report + CSV writers)
-last_updated: "2026-04-09T08:24:38.170Z"
+last_updated: "2026-04-09T09:07:51.318Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 12
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 ## Current Position
 
-Phase: 31 (multi-stock-portfolio-engine) — EXECUTING
-Plan: 5 of 5
+Phase: 32
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-09
 
