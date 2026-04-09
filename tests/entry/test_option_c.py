@@ -1,15 +1,8 @@
 """ENTRY-02 Option C (Pocket Pivot) detector tests — RED stubs (Wave 0)."""
 from __future__ import annotations
 
-import pytest
-
-pytest.importorskip(
-    "strategies.entry.option_c",
-    reason="30-02 Task 2 not yet implemented",
-)
-
-from strategies.entry.config import EntryConfig  # noqa: E402
-from strategies.entry.option_c import detect_option_c  # noqa: E402
+from strategies.entry.config import EntryConfig
+from strategies.entry.option_c import detect_option_c
 
 
 def test_option_c_fires_pocket_pivot(make_ohlcv):
