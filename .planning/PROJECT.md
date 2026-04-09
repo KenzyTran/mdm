@@ -61,7 +61,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - [ ] CANSLIM scorer (C/A/N/S/L/I/M components)
 - [ ] Event-driven signal engine + stock-level entry confirmation
 - [ ] MDM capital allocation policy
-- [ ] Multi-stock long-only portfolio engine (max 8 positions)
+- [x] Multi-stock long-only portfolio engine (max 8 positions) — Phase 31
 - [ ] Backtest + performance reporting on VN100
 - [ ] Validation vs `rank_top_stocks.diem_canslim` baseline
 
@@ -186,4 +186,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-08 — v7.0 milestone started: CANSLIM stock picking on VN100 with MDM as capital allocation gate. Data sources confirmed: Postgres TA (stock_eod 5.9M rows), MySQL fundamentals (ratios_stock, is_quarter_*, rank_top_stocks with existing diem_canslim baseline), Redis live cache.*
+*Last updated: 2026-04-09 — Phase 31 complete: multi-stock PortfolioEngine shipped (strategies/portfolio/ package, 64 tests, verification passed 14/14 requirements). Next: Phase 32 VN100 backtest + in-sample sweep.*
