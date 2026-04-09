@@ -580,12 +580,12 @@ Plans:
   6. Costs applied both sides: 0.25% commission + 0.10% sell tax + 0.10% slippage
   7. Liquidity gate: refuse entry if 20d ADV < 10× position size
   8. Equity curve uses `state[i-1]` discipline; unit test asserts no `state[i]` look-ahead in NAV computation
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 - [x] 31-01-wave0-scaffold-PLAN.md — PortfolioConfig + state dataclasses + load_stock_rs reader + fixtures (GATE-01, PORT-01, PORT-06, PORT-10)
 - [x] 31-02-primitives-PLAN.md — microstructure (T+2, ceiling/floor lock) + costs + cooldown (GATE-03, GATE-04, PORT-05, PORT-07, PORT-08)
-- [ ] 31-03-exits-sizing-PLAN.md — exit priority chain + sizing + liquidity gate (GATE-02, PORT-01..06, PORT-09)
+- [x] 31-03-exits-sizing-PLAN.md — exit priority chain + sizing + liquidity gate (GATE-02, PORT-01..06, PORT-09)
 - [ ] 31-04-engine-PLAN.md — PortfolioEngine bar loop + SC8 no-lookahead + integration tests (GATE-01..04, PORT-01..10)
 - [ ] 31-05-audit-report-PLAN.md — ab_report writers + audit md + rules_canslim_mdm.md section (PORT-10)
 
@@ -669,7 +669,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 28. Data Audit & Connectors | v7.0 | 6/6 | Complete    | 2026-04-09 |
 | 29. VN100 Universe + CANSLIM Scorer | v7.0 | 9/9 | Complete    | 2026-04-09 |
 | 30. Stock-Level Entry Confirmation | v7.0 | 3/3 | Complete    | 2026-04-09 |
-| 31. Multi-Stock Portfolio Engine | v7.0 | 2/5 | In Progress|  |
+| 31. Multi-Stock Portfolio Engine | v7.0 | 3/5 | In Progress|  |
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 0/0 | Pending | — |
 | 33. Out-of-Sample + Sensitivity | v7.0 | 0/0 | Pending | — |
 | 34. Reporting + Documentation | v7.0 | 0/0 | Pending | — |
