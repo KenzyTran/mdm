@@ -6,15 +6,8 @@ first-fire dedup.
 """
 from __future__ import annotations
 
-import pytest
-
-pytest.importorskip(
-    "strategies.entry.engine",
-    reason="30-03 not yet implemented",
-)
-
-from strategies.entry.config import EntryConfig  # noqa: E402
-from strategies.entry.engine import EntryEngine  # noqa: E402
+from strategies.entry.config import EntryConfig
+from strategies.entry.engine import EntryEngine
 
 
 def test_fill_next_open(make_ohlcv, make_buy_breakout_bar, make_mdm_state):

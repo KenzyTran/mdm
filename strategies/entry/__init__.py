@@ -14,6 +14,7 @@ Exposes the Phase 30 entry building blocks:
 from __future__ import annotations
 
 from strategies.entry.config import EntryConfig
+from strategies.entry.engine import EntryEngine, Fill, FillList, Unfilled
 from strategies.entry.option_a import detect_option_a
 from strategies.entry.option_c import detect_option_c
 from strategies.entry.window import (
@@ -24,6 +25,10 @@ from strategies.entry.window import (
 
 __all__ = [
     "EntryConfig",
+    "EntryEngine",
+    "Fill",
+    "FillList",
+    "Unfilled",
     "detect_option_a",
     "detect_option_c",
     "compute_buy_windows",
