@@ -564,7 +564,7 @@ Plans:
   3. Entry timing window — confirmation only counts if MDM is in BUY state AND it's been ≤20 trading days since most recent CASH/SELL→BUY transition
   4. Entry execution model — fill price = next-day open (ATO), not signal-bar close
   5. A/B helper produces side-by-side fill counts for Option A vs Option C on VN100 over 2014-2025
-**Plans**: TBD
+**Plans**: 30-01, 30-02, 30-03
 **UI hint**: no
 
 ### Phase 31: Multi-Stock Portfolio Engine
