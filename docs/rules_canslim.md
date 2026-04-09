@@ -77,7 +77,49 @@ Dataclass `strategies.canslim.config.CanslimConfig` centralizes every threshold 
 _TBD — plan 29-05_
 
 ## 5. Technical Rule (N) + RS (L)
-_TBD — plan 29-06_
+
+Implemented by `strategies/canslim/rules/technical.py` (N + S helper) and
+`strategies/canslim/rules/rs.py` (L). Closes CANS-05 and CANS-07.
+
+### N rule — close near 252-day high (CANS-05)
+
+`compute_n(ohlcv, as_of_date, config)` returns True iff
+
+    close >= (1 - config.n_within_high) * rolling_max(high, 252)
+
+using the ``config.min_history_days`` (default 252) bars at or before
+``as_of_date``. Tickers with insufficient history return False. Default
+``n_within_high = 0.15`` → close must be within 15% of the 52-week high.
+
+### S helper — breakout volume (CANS-06 helper)
+
+`compute_s(ohlcv, as_of_date, config)` returns True iff
+
+    today_volume >= config.s_vol_mult * avgvol50
+
+where ``avgvol50`` is the mean of the 50 bars preceding ``as_of_date``.
+Default ``s_vol_mult = 1.5``. Returns False if fewer than 51 bars are
+available. The full S rule (breakout price action) lives alongside the flow
+rules in plan 29-07; this helper is the volume gate.
+
+### L rule — RS rating (CANS-07)
+
+`compute_rs_ratings(panel, as_of_date, universe, config)` computes the
+**locked RS formula**:
+
+    raw_rs = 0.4*ROC(63) + 0.2*ROC(126) + 0.2*ROC(189) + 0.2*ROC(252)
+
+then **percentile-ranks within the active universe** at ``as_of_date``
+(higher = stronger, 100 = universe leader). Lookbacks and weights come
+from `config.rs_roc_days` and `config.rs_weights` so sweep scripts can
+tune them without editing source. Tickers with fewer than
+`config.min_history_days` bars get `rs_rating = NaN` and fail the L rule.
+
+**L pass:** `rs_rating >= config.l_rs_threshold` (default 80).
+
+Returns a `pd.Series` indexed by ticker in `[0, 100]` ∪ {NaN}.
+
+**Tests:** `tests/canslim/test_rules_technical.py` (7 tests — N true/false/insufficient, S true/false/insufficient, module imports) and `tests/canslim/test_rules_rs.py` (7 tests — single-ticker percentile 100, two-ticker ranking, insufficient history NaN, l_pass threshold, panel filtering, formula numeric check, module imports).
 
 ## 6. Flow (I) + Liquidity (Liq)
 _TBD — plan 29-07_
