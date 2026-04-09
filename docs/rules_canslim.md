@@ -4,7 +4,27 @@
 > Code-Docs Sync Rule: any edit to strategies/canslim/ MUST update this file in the same commit (CLAUDE.md).
 
 ## 1. Universe
-_TBD — plan 29-03_
+
+Implemented by `strategies/canslim/universe.py::UniverseLoader` (plan 29-03).
+
+**Three modes** (select at construction time):
+
+1. **`current-vn100`** — reads `stock_list` where `nhomtop IN ('VN30','VN100')`. Simple and fast, but survivorship-biased (uses today's membership for historical dates).
+2. **`liquidity-reconstructed`** — top-100 tickers by 60-day average dollar turnover (`AVG(closeindex * totalvol)`) ending at the most recent **Jan 1 / Jul 1 rebalance date** `<= as_of_date`. Between two rebalance dates the set is **frozen** (no intra-period churn). Approximates point-in-time VN100 without index-committee data.
+3. **`vn30-only`** — `stock_list.nhomtop = 'VN30'` only. Narrow sanity baseline.
+
+**Rebalance policy (liquidity-reconstructed):** semi-annual, `_last_rebalance_date(d)` returns `date(y, 7, 1)` if `d >= Jul 1`, else `date(y, 1, 1)` if `d >= Jan 1`, else `date(y-1, 7, 1)`.
+
+**D-05 history-length filter:** after mode selection, every candidate must have at least `min_history_days` (default **252**) rows in `stock_eod` at or before `as_of_date`. Shorter histories are dropped so downstream indicators (200d MA, 52w RS, etc.) have enough data.
+
+**Usage:**
+
+```python
+loader = UniverseLoader(mode="current-vn100", pg_engine=pg)
+tickers = loader.get(as_of_date=date(2025, 6, 1))  # → Set[str]
+```
+
+Closes requirements UNIV-01, UNIV-02, UNIV-03.
 
 ## 2. Sector Routing
 
