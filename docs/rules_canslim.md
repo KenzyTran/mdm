@@ -7,7 +7,31 @@
 _TBD — plan 29-03_
 
 ## 2. Sector Routing
-_TBD — plan 29-04_
+
+Owned by `strategies/canslim/sectors.py` (`SectorRouter`). Closes CANS-10.
+
+Each VN100 ticker is classified into one of four buckets using the
+`stock_list.sector` column (locked as `nhom` in `schema_lock.json`, plan 29-01):
+
+| Bucket      | Trigger (case-insensitive substring) | Downstream table       | Score branch          |
+| ----------- | ------------------------------------ | ---------------------- | --------------------- |
+| `bank`      | `ngân hàng` / `ngan hang` / `bank`   | `is_quarter_bank`      | PPOP growth (D-06)    |
+| `ctck`      | `chứng khoán` / `securities`         | `is_quarter_stock`     | **EXCLUDED** (D-07)   |
+| `insurance` | `bảo hiểm` / `insurance`             | `is_quarter_insurance` | **EXCLUDED** (D-07)   |
+| `other`     | anything else                        | `is_quarter_nonbank`   | EPS growth (default)  |
+
+**Exclusion policy (D-07):** Securities firms and insurance companies use
+bespoke income-statement schemas that CANSLIM's C/A rules don't support. They
+are filtered out of the universe before scoring via
+`SectorRouter.is_excluded(ticker)`.
+
+**Fail-loud rule (D-08):** `SectorRouter.from_postgres` raises `RuntimeError`
+if the locked sector column is NULL for >50% of tickers — this means
+`schema_lock.json` is stale and `scripts/introspect_canslim_schema.py` must
+be re-run. Silent fallback to "other" across the whole universe would corrupt
+the scorer. Individual unknown tickers emit a warning and default to `other`.
+
+**Tests:** `tests/canslim/test_sectors.py` (9 tests — bank / ctck / insurance / other routing, unknown-ticker warn, `is_excluded`, `from_postgres` happy path, fail-loud on >50% missing).
 
 ## 3. CanslimConfig
 
