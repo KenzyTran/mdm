@@ -57,24 +57,24 @@
 
 ### VN100 Universe
 
-- [ ] **UNIV-01**: VN100 universe loader from `stock_list.nhomtop` (or proxy: top-100 by free-float mcap + 20d ADV ≥10B + listed ≥180d)
-- [ ] **UNIV-02**: Semi-annual rebalance step-changes (Jan/Jul) — universe stable between rebalance dates
-- [ ] **UNIV-03**: Sensitivity-run support: current-VN100, liquidity-reconstructed, VN30-only
+- [x] **UNIV-01**: VN100 universe loader from `stock_list.nhomtop` (or proxy: top-100 by free-float mcap + 20d ADV ≥10B + listed ≥180d)
+- [x] **UNIV-02**: Semi-annual rebalance step-changes (Jan/Jul) — universe stable between rebalance dates
+- [x] **UNIV-03**: Sensitivity-run support: current-VN100, liquidity-reconstructed, VN30-only
 
 ### CANSLIM Scorer
 
-- [ ] **CANS-01**: C rule — quarterly EPS YoY ≥20% configurable, with publish_date guard
-- [ ] **CANS-02**: C+ rule — EPS acceleration vs prior 2 quarters
-- [ ] **CANS-03**: A rule — 3yr EPS CAGR ≥15% configurable
-- [ ] **CANS-04**: A+ rule — annual EPS positive each of last 3 years
-- [ ] **CANS-05**: N rule — close within 15% of 252-day high (configurable)
-- [ ] **CANS-06**: S rule — breakout volume ≥1.5× avgvol50 (configurable)
-- [ ] **CANS-07**: L rule — IBD-style RS rating (`0.4*ROC63 + 0.2*ROC126 + 0.2*ROC189 + 0.2*ROC252`), percentile-rank within VN100, threshold ≥80
-- [ ] **CANS-08**: I rule — `sum(foreign_net_buy[T-20..T-1]) > 0`, fallback 13W A/D rating
-- [ ] **CANS-09**: Liquidity filter — 20d median turnover ≥5B VND
-- [ ] **CANS-10**: Sector handling — non-financials use C/A directly; banks substitute PPOP growth; CTCK/Insurance excluded V1
-- [ ] **CANS-11**: `CanslimConfig` dataclass with all thresholds + per-day score function returning per-stock pass/fail + composite score
-- [ ] **CANS-12**: Validation: spot-check CANSLIM ranks vs MySQL `rank_top_stocks.diem_canslim` baseline
+- [x] **CANS-01**: C rule — quarterly EPS YoY ≥20% configurable, with publish_date guard
+- [x] **CANS-02**: C+ rule — EPS acceleration vs prior 2 quarters
+- [x] **CANS-03**: A rule — 3yr EPS CAGR ≥15% configurable
+- [x] **CANS-04**: A+ rule — annual EPS positive each of last 3 years
+- [x] **CANS-05**: N rule — close within 15% of 252-day high (configurable)
+- [x] **CANS-06**: S rule — breakout volume ≥1.5× avgvol50 (configurable)
+- [x] **CANS-07**: L rule — IBD-style RS rating (`0.4*ROC63 + 0.2*ROC126 + 0.2*ROC189 + 0.2*ROC252`), percentile-rank within VN100, threshold ≥80
+- [x] **CANS-08**: I rule — `sum(foreign_net_buy[T-20..T-1]) > 0`, fallback 13W A/D rating
+- [x] **CANS-09**: Liquidity filter — 20d median turnover ≥5B VND
+- [x] **CANS-10**: Sector handling — non-financials use C/A directly; banks substitute PPOP growth; CTCK/Insurance excluded V1
+- [x] **CANS-11**: `CanslimConfig` dataclass with all thresholds + per-day score function returning per-stock pass/fail + composite score
+- [x] **CANS-12**: Validation: spot-check CANSLIM ranks vs MySQL `rank_top_stocks.diem_canslim` baseline
 
 ### Entry Confirmation
 
