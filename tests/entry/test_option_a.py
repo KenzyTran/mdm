@@ -6,15 +6,8 @@ test below becomes a real RED/GREEN gate.
 """
 from __future__ import annotations
 
-import pytest
-
-pytest.importorskip(
-    "strategies.entry.option_a",
-    reason="30-02 Task 1 not yet implemented",
-)
-
-from strategies.entry.config import EntryConfig  # noqa: E402
-from strategies.entry.option_a import detect_option_a  # noqa: E402
+from strategies.entry.config import EntryConfig
+from strategies.entry.option_a import detect_option_a
 
 
 def test_option_a_fires_on_full_breakout(make_ohlcv, make_buy_breakout_bar):
