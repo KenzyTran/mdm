@@ -64,11 +64,14 @@ def _fake_panel(tickers, price_map: Dict[str, float]) -> pd.DataFrame:
 def _fake_quarters(eps_series):
     """Build a fake is_quarter_nonbank result for one ticker.
 
-    ``eps_series`` is oldest-first list of (year, length, eps) tuples.
+    ``eps_series`` is oldest-first list of (year, length, eps) tuples where
+    length ∈ {3,6,9,12} encodes month-of-quarter-end. Post-29-09 the loader
+    reads ``thoigian`` (text "Q<n> YYYY"); we still accept the old (year, L, eps)
+    shape and synthesize ``thoigian`` from ``L``.
     """
     return pd.DataFrame(
         [
-            {"stockcode": "X", "yearreport": y, "lengthreport": L, "value": e}
+            {"stockcode": "X", "thoigian": f"Q{L // 3} {y}", "value": e}
             for (y, L, e) in eps_series
         ]
     )
@@ -123,13 +126,10 @@ def _make_dispatcher(world: Dict[str, Any]):
             t = params["t"]
             df = world["eps"].get(t)
             if df is None:
-                return pd.DataFrame(
-                    columns=["stockcode", "yearreport", "lengthreport", "value"]
-                )
-            # Loader orders desc by (yearreport, lengthreport).
-            return df.sort_values(
-                ["yearreport", "lengthreport"], ascending=False
-            ).reset_index(drop=True)
+                return pd.DataFrame(columns=["stockcode", "thoigian", "value"])
+            # Loader derives year/quarter from thoigian and sorts internally,
+            # so we just return the frame as-is.
+            return df.reset_index(drop=True)
         # Foreign flow
         if "stock_foreign_eod" in s:
             t = params["t"]

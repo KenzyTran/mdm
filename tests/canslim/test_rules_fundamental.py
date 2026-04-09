@@ -59,15 +59,19 @@ def _router(mapping):
 
 
 def _quarterly_frame(values: List[float], newest_year=2025, newest_quarter=1):
-    """Build a newest-first quarterly frame: ``values[0]`` is the newest row."""
+    """Build a newest-first quarterly frame matching live ``is_quarter_*`` schema.
+
+    Post-29-09, the loader reads ``thoigian`` (text "Q<n> YYYY") and derives
+    yearreport/lengthreport from it. The SELECT aliases ``mack AS stockcode``,
+    so the fake frame keeps ``stockcode`` + ``thoigian`` + ``value``.
+    """
     rows = []
     y, q = newest_year, newest_quarter
     for v in values:
         rows.append(
             {
                 "stockcode": "AAA",
-                "yearreport": y,
-                "lengthreport": q * 3,
+                "thoigian": f"Q{q} {y}",
                 "value": v,
             }
         )
