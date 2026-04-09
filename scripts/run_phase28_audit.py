@@ -152,11 +152,20 @@ def section_c_eps_coverage(vn100: dict, out_dir: Path) -> dict:
     from sqlalchemy import bindparam, text
     from connectors.mysql import get_engine as my_engine
 
-    sql = text(
-        "SELECT mack AS stockcode, thoigian "
-        "FROM is_quarter_nonbank "
-        "WHERE mack IN :tickers"
-    ).bindparams(bindparam("tickers", expanding=True))
+    # Fundamentals are sector-partitioned across 4 tables with identical
+    # (mack, thoigian) schema. Union all four so banks / securities /
+    # insurance are not falsely reported as zero-coverage.
+    union_sql = " UNION ALL ".join(
+        f"SELECT mack AS stockcode, thoigian, '{tbl}' AS src_table "
+        f"FROM {tbl} WHERE mack IN :tickers"
+        for tbl in (
+            "is_quarter_nonbank",
+            "is_quarter_bank",
+            "is_quarter_stock",
+            "is_quarter_insurance",
+        )
+    )
+    sql = text(union_sql).bindparams(bindparam("tickers", expanding=True))
     with my_engine().connect() as conn:
         df = pd.read_sql(sql, conn, params={"tickers": tickers})
 
