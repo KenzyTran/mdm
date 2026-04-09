@@ -14,6 +14,12 @@ Exposes the Phase 30 entry building blocks:
 from __future__ import annotations
 
 from strategies.entry.config import EntryConfig
+from strategies.entry.ab_report import (
+    ABReport,
+    build_ab_report,
+    run_ab_report,
+    summarize_fills,
+)
 from strategies.entry.engine import EntryEngine, Fill, FillList, Unfilled
 from strategies.entry.option_a import detect_option_a
 from strategies.entry.option_c import detect_option_c
@@ -24,11 +30,15 @@ from strategies.entry.window import (
 )
 
 __all__ = [
+    "ABReport",
     "EntryConfig",
     "EntryEngine",
     "Fill",
     "FillList",
     "Unfilled",
+    "build_ab_report",
+    "run_ab_report",
+    "summarize_fills",
     "detect_option_a",
     "detect_option_c",
     "compute_buy_windows",

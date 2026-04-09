@@ -5,15 +5,8 @@ mean_fills_per_window, days_since_buy_histogram, ab_overlap_count.
 """
 from __future__ import annotations
 
-import pytest
-
-pytest.importorskip(
-    "strategies.entry.ab_report",
-    reason="30-03 not yet implemented",
-)
-
-from strategies.entry.ab_report import build_ab_report  # noqa: E402
-from strategies.entry.config import EntryConfig  # noqa: E402
+from strategies.entry.ab_report import build_ab_report
+from strategies.entry.config import EntryConfig
 
 
 REQUIRED_METRICS = {
