@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
 status: executing
-stopped_at: Completed 31-05-PLAN.md (audit report + CSV writers)
-last_updated: "2026-04-09T09:40:18.109Z"
+stopped_at: Completed 32-01-PLAN.md (BT-01 pipeline + baseline)
+last_updated: "2026-04-09T09:44:39.273Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 12
   completed_phases: 9
   total_plans: 37
-  completed_plans: 34
+  completed_plans: 35
 ---
 
 # Project State
@@ -72,6 +72,6 @@ Last activity: 2026-04-09
 
 ## Session Continuity
 
-Last session: 2026-04-09T08:24:38.161Z
-Stopped at: Completed 31-05-PLAN.md (audit report + CSV writers)
+Last session: 2026-04-09T09:44:39.269Z
+Stopped at: Completed 32-01-PLAN.md (BT-01 pipeline + baseline)
 Resume: Spawn 4 research agents
