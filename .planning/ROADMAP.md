@@ -425,7 +425,7 @@ Plans:
 - [x] **Phase 28: Data Audit & Connectors** — Postgres/MySQL connectors, audit delisted/adjusted/EPS publish_date, fundamental coverage report
  (completed 2026-04-09)
 - [x] **Phase 29: VN100 Universe + CANSLIM Scorer** — universe loader with semi-annual rebalance, C/A/N/S/L/I rules, sector handling, baseline cross-check (completed 2026-04-09)
-- [ ] **Phase 30: Entry Confirmation** — Option A (52wk high + vol) + Option C (Pocket Pivot), 20-day window from MDM BUY, A/B comparison
+- [x] **Phase 30: Entry Confirmation** — Option A (52wk high + vol) + Option C (Pocket Pivot), 20-day window from MDM BUY, A/B comparison (completed 2026-04-09)
 - [ ] **Phase 31: Multi-Stock Portfolio Engine** — 8-slot equal-weight engine, stops, exits, cooldowns, costs, T+2 + ceiling/floor lock handling, `state[i-1]` discipline
 - [ ] **Phase 32: VN100 Backtest + In-Sample Sweep** — wire engine to data, run 2014-2018 sweep across CANSLIM/entry/stop params
 - [ ] **Phase 33: Out-of-Sample + Sensitivity** — locked-param 2019-2025 run, sensitivity across (current VN100, liquidity-reconstructed, VN30-only), comparison vs `diem_canslim` baseline
@@ -660,7 +660,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 27. Combined v6.0 Validation & Dashboard | v6.0 | 0/0 | Complete    | 2026-04-02 |
 | 28. Data Audit & Connectors | v7.0 | 6/6 | Complete    | 2026-04-09 |
 | 29. VN100 Universe + CANSLIM Scorer | v7.0 | 9/9 | Complete    | 2026-04-09 |
-| 30. Stock-Level Entry Confirmation | v7.0 | 2/3 | In Progress|  |
+| 30. Stock-Level Entry Confirmation | v7.0 | 3/3 | Complete   | 2026-04-09 |
 | 31. Multi-Stock Portfolio Engine | v7.0 | 0/0 | Pending | — |
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 0/0 | Pending | — |
 | 33. Out-of-Sample + Sensitivity | v7.0 | 0/0 | Pending | — |

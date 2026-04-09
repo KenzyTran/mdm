@@ -81,8 +81,8 @@
 - [x] **ENTRY-01**: Option A — 52-week high + volume surge + close>open + upper-half close
 - [x] **ENTRY-02**: Option C — Pocket Pivot (vol > max down-day vols last 10d, close ≥ MA50, in/near base)
 - [x] **ENTRY-03**: Entry timing window — fire only within 20 trading days after MDM BUY event; expire after
-- [ ] **ENTRY-04**: Entry execution model — fill at next-day open (ATO), not signal-bar close
-- [ ] **ENTRY-05**: A/B comparison Option A vs Option C on VN100 backtest
+- [x] **ENTRY-04**: Entry execution model — fill at next-day open (ATO), not signal-bar close
+- [x] **ENTRY-05**: A/B comparison Option A vs Option C on VN100 backtest
 
 ### MDM Capital Allocation Gate
 
