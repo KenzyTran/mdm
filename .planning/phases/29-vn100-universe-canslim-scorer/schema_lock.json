@@ -1,0 +1,1453 @@
+{
+  "generated_at": "2026-04-09T02:49:05.054460Z",
+  "postgres": {
+    "stock_list": [
+      {
+        "name": "stockcode",
+        "type": "text"
+      },
+      {
+        "name": "nhom",
+        "type": "text"
+      },
+      {
+        "name": "nganh",
+        "type": "text"
+      },
+      {
+        "name": "nganh_hep",
+        "type": "text"
+      },
+      {
+        "name": "san",
+        "type": "text"
+      },
+      {
+        "name": "nhomtop",
+        "type": "text"
+      },
+      {
+        "name": "san_ta",
+        "type": "text"
+      },
+      {
+        "name": "bang_ta",
+        "type": "text"
+      },
+      {
+        "name": "loai",
+        "type": "text"
+      },
+      {
+        "name": "ten",
+        "type": "text"
+      }
+    ],
+    "stock_eod": [
+      {
+        "name": "stockcode",
+        "type": "character varying"
+      },
+      {
+        "name": "tradingdate",
+        "type": "date"
+      },
+      {
+        "name": "openprice",
+        "type": "numeric"
+      },
+      {
+        "name": "closeprice",
+        "type": "numeric"
+      },
+      {
+        "name": "highestprice",
+        "type": "numeric"
+      },
+      {
+        "name": "lowestprice",
+        "type": "numeric"
+      },
+      {
+        "name": "totalvol",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval",
+        "type": "numeric"
+      },
+      {
+        "name": "totaladjustrate",
+        "type": "numeric"
+      },
+      {
+        "name": "basicprice",
+        "type": "numeric"
+      },
+      {
+        "name": "ceilingprice",
+        "type": "numeric"
+      },
+      {
+        "name": "floorprice",
+        "type": "numeric"
+      },
+      {
+        "name": "lastprice",
+        "type": "numeric"
+      },
+      {
+        "name": "avrprice",
+        "type": "numeric"
+      },
+      {
+        "name": "totaltrade",
+        "type": "numeric"
+      },
+      {
+        "name": "price1",
+        "type": "numeric"
+      },
+      {
+        "name": "totalvol1",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval1",
+        "type": "numeric"
+      },
+      {
+        "name": "price2",
+        "type": "numeric"
+      },
+      {
+        "name": "totalvol2",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval2",
+        "type": "numeric"
+      },
+      {
+        "name": "price3",
+        "type": "numeric"
+      },
+      {
+        "name": "totalvol3",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval3",
+        "type": "numeric"
+      },
+      {
+        "name": "klcplh",
+        "type": "numeric"
+      },
+      {
+        "name": "klcpny",
+        "type": "numeric"
+      },
+      {
+        "name": "totalbuytrade",
+        "type": "numeric"
+      },
+      {
+        "name": "totalbuyvol",
+        "type": "numeric"
+      },
+      {
+        "name": "outstandingbuy",
+        "type": "numeric"
+      },
+      {
+        "name": "totalselltrade",
+        "type": "numeric"
+      },
+      {
+        "name": "totalsellvol",
+        "type": "numeric"
+      },
+      {
+        "name": "outstandingsell",
+        "type": "numeric"
+      },
+      {
+        "name": "correctdiff",
+        "type": "numeric"
+      },
+      {
+        "name": "pttotalvol",
+        "type": "numeric"
+      },
+      {
+        "name": "pttotalval",
+        "type": "numeric"
+      },
+      {
+        "name": "change",
+        "type": "numeric"
+      },
+      {
+        "name": "perchange",
+        "type": "numeric"
+      },
+      {
+        "name": "marketstate",
+        "type": "character varying"
+      },
+      {
+        "name": "avgvol50",
+        "type": "numeric"
+      }
+    ],
+    "stock_foreign_eod": [
+      {
+        "name": "stockcode",
+        "type": "character varying"
+      },
+      {
+        "name": "tradingdate",
+        "type": "date"
+      },
+      {
+        "name": "fbvol",
+        "type": "numeric"
+      },
+      {
+        "name": "fbvalue",
+        "type": "numeric"
+      },
+      {
+        "name": "fsvol",
+        "type": "numeric"
+      },
+      {
+        "name": "fsvalue",
+        "type": "numeric"
+      },
+      {
+        "name": "froom",
+        "type": "numeric"
+      }
+    ],
+    "index_eod": [
+      {
+        "name": "stockcode",
+        "type": "character varying"
+      },
+      {
+        "name": "tradingdate",
+        "type": "date"
+      },
+      {
+        "name": "openindex",
+        "type": "numeric"
+      },
+      {
+        "name": "closeindex",
+        "type": "numeric"
+      },
+      {
+        "name": "highestindex",
+        "type": "numeric"
+      },
+      {
+        "name": "lowestindex",
+        "type": "numeric"
+      },
+      {
+        "name": "totalvol",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval",
+        "type": "numeric"
+      },
+      {
+        "name": "priorindex",
+        "type": "numeric"
+      },
+      {
+        "name": "change",
+        "type": "numeric"
+      },
+      {
+        "name": "perchange",
+        "type": "numeric"
+      },
+      {
+        "name": "index1",
+        "type": "numeric"
+      },
+      {
+        "name": "index2",
+        "type": "numeric"
+      },
+      {
+        "name": "index3",
+        "type": "numeric"
+      },
+      {
+        "name": "totaltrade",
+        "type": "integer"
+      },
+      {
+        "name": "upvol",
+        "type": "integer"
+      },
+      {
+        "name": "nochangevol",
+        "type": "integer"
+      },
+      {
+        "name": "downvol",
+        "type": "integer"
+      },
+      {
+        "name": "advances",
+        "type": "integer"
+      },
+      {
+        "name": "declines",
+        "type": "integer"
+      },
+      {
+        "name": "nochange",
+        "type": "integer"
+      },
+      {
+        "name": "totalvol1",
+        "type": "numeric"
+      },
+      {
+        "name": "totalvol2",
+        "type": "numeric"
+      },
+      {
+        "name": "totalvol3",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval1",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval2",
+        "type": "numeric"
+      },
+      {
+        "name": "totalval3",
+        "type": "numeric"
+      },
+      {
+        "name": "totalmatchvol",
+        "type": "numeric"
+      },
+      {
+        "name": "totalmatchval",
+        "type": "numeric"
+      },
+      {
+        "name": "totalputvol",
+        "type": "numeric"
+      },
+      {
+        "name": "totalputval",
+        "type": "numeric"
+      }
+    ],
+    "stock_rs": [
+      {
+        "name": "stockcode",
+        "type": "character"
+      },
+      {
+        "name": "tradingdate",
+        "type": "date"
+      },
+      {
+        "name": "rss",
+        "type": "numeric"
+      },
+      {
+        "name": "rsm",
+        "type": "numeric"
+      },
+      {
+        "name": "rsl",
+        "type": "numeric"
+      },
+      {
+        "name": "rs1xx",
+        "type": "numeric"
+      },
+      {
+        "name": "rs2xx",
+        "type": "numeric"
+      }
+    ]
+  },
+  "mysql": {
+    "is_quarter_nonbank": [
+      {
+        "name": "thoigian",
+        "type": "text"
+      },
+      {
+        "name": "mack",
+        "type": "text"
+      },
+      {
+        "name": "tong_doanh_thu",
+        "type": "double"
+      },
+      {
+        "name": "cac_khoan_giam_tru_doanh_thu",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_thuan",
+        "type": "double"
+      },
+      {
+        "name": "gia_von_ban_hang",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_gop",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_hoat_dong_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_lai_vay",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_trong_cong_ty_lien_ket",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_ban_hang",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_quan_ly_doanh_nghiep",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_tu_hoat_dong_kinh_doanh",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_khac",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_khac",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_khac",
+        "type": "double"
+      },
+      {
+        "name": "tong_loi_nhuan_ke_toan_truoc_thue",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn_hien_hanh",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn_hoan_lai",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_tndn",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_cua_co_dong_khong_kiem_soat",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_cua_co_dong_cua_cong_ty_me",
+        "type": "double"
+      }
+    ],
+    "is_quarter_bank": [
+      {
+        "name": "thoigian",
+        "type": "text"
+      },
+      {
+        "name": "mack",
+        "type": "text"
+      },
+      {
+        "name": "thu_nhap_lai_thuan",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_tu_lai_va_cac_khoan_thu_nhap_tuong_tu",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_lai_va_cac_chi_phi_tuong_tu",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_thuan_tu_hoat_dong_dich_vu",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_tu_hoat_dong_dich_vu",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong_dich_vu",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_thuan_tu_hoat_dong_kinh_doanh_ngoai_hoi",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_thuan_tu_mua_ban_chung_khoan_kinh_doanh",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_thuan_tu_mua_ban_chung_khoan_dau_tu",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_thuan_tu_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_tu_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_tu_hoat_dong_gop_von_mua_co_phan",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_tu_hdkd_truoc_chi_phi_du_phong_rui_ro_tin_dung",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_du_phong_rui_ro_tin_dung",
+        "type": "double"
+      },
+      {
+        "name": "tong_loi_nhuan_truoc_thue",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_thu_nhap_hien_hanh",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn_giu_lai",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_thu_nhap_doanh_nghiep",
+        "type": "double"
+      },
+      {
+        "name": "loi_ich_cua_co_dong_thieu_so_va_co_tuc_uu_dai",
+        "type": "double"
+      },
+      {
+        "name": "lnst_sau_khi_dieu_chinh_loi_ich_cua_cdts_va_co_tuc_uu_dai",
+        "type": "double"
+      }
+    ],
+    "is_quarter_insurance": [
+      {
+        "name": "thoigian",
+        "type": "text"
+      },
+      {
+        "name": "mack",
+        "type": "text"
+      },
+      {
+        "name": "thu_phi_bao_hiem_goc",
+        "type": "double"
+      },
+      {
+        "name": "thu_phi_nhan_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "cac_khoan_giam_tru_hoan",
+        "type": "double"
+      },
+      {
+        "name": "phi_nhuong_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "giam_phi_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "hoan_phi_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "hoan_phi_nhan_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "cac_khoan_giam_tru_khac",
+        "type": "double"
+      },
+      {
+        "name": "tang_giam_du_phong_phi_du_phong_toan_hoc",
+        "type": "double"
+      },
+      {
+        "name": "thu_hoa_hong_nhuong_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "thu_khac_hoat_dong_kinh_doanh_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhan_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhuong_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "thu_khac_giam_dinh_dai_ly_",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_thuan_hoat_dong_kinh_doanh_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "chi_boi_thuong_bao_hiem_goc_tra_tien_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "chi_boi_thuong_nhan_tai_bao_hiem_tra_tien_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "cac_khoan_giam_tru_thu",
+        "type": "double"
+      },
+      {
+        "name": "thu_boi_thuong_nhuong_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "thu_doi_nguoi_thu_ba_boi_hoan",
+        "type": "double"
+      },
+      {
+        "name": "thu_hang_da_xu_ly_boi_thuong_100",
+        "type": "double"
+      },
+      {
+        "name": "boi_thuong_thuoc_phan_trach_nhiem_giu_lai",
+        "type": "double"
+      },
+      {
+        "name": "chi_boi_thuong_tu_du_phong_dao_dong_lon",
+        "type": "double"
+      },
+      {
+        "name": "tang_giam_du_phong_boi_thuong",
+        "type": "double"
+      },
+      {
+        "name": "so_trich_du_phong_dao_dong_lon_trong_nam",
+        "type": "double"
+      },
+      {
+        "name": "chi_khac_hoat_dong_kinh_doanh_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "chi_khac_hoat_dong_kinh_doanh_bao_hiem_goc",
+        "type": "double"
+      },
+      {
+        "name": "chi_hoa_hong_bhg",
+        "type": "double"
+      },
+      {
+        "name": "chi_giam_dinh_ton_that_bhg",
+        "type": "double"
+      },
+      {
+        "name": "chi_doi_nguoi_thu_3_bhg",
+        "type": "double"
+      },
+      {
+        "name": "chi_xu_ly_hang_boi_thuong_100_bhg",
+        "type": "double"
+      },
+      {
+        "name": "chi_danh_gia_rui_ro_cua_doi_tuong_bao_hiem_bhg",
+        "type": "double"
+      },
+      {
+        "name": "chi_de_phong_han_che_rui_ro_ton_that_bhg",
+        "type": "double"
+      },
+      {
+        "name": "chi_khac_bhg",
+        "type": "double"
+      },
+      {
+        "name": "chi_khac_hoat_dong_kinh_doanh_nhan_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "chi_hoa_hong_tbh",
+        "type": "double"
+      },
+      {
+        "name": "chi_danh_gia_rui_ro_cua_doi_tuong_bao_hiem_tbh",
+        "type": "double"
+      },
+      {
+        "name": "chi_khac_tbh",
+        "type": "double"
+      },
+      {
+        "name": "chi_hoat_dong_nhuong_tai_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_truc_tiep_kinh_doanh_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "du_phong_thue_nha_thau_nuoc_ngoai",
+        "type": "double"
+      },
+      {
+        "name": "tong_chi_truc_tiep_hoat_dong_kinh_doanh_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_gop_hoat_dong_kinh_doanh_bao_hiem_",
+        "type": "double"
+      },
+      {
+        "name": "tang_giam_loi_nhuan_do_chenh_lech_ti_gia",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_ban_hang",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_quan_ly_doanh_nghiep_",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_thuan_hoat_dong_kinh_doanh_bao_hiem",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_hoat_dong_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "chi_hoat_dong_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_hoat_dong_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "tong_loi_nhuan_ke_toan",
+        "type": "double"
+      },
+      {
+        "name": "cac_khoan_dieu_chinh_tang_giam_loi_nhuan_de_xd_thue_tndn",
+        "type": "double"
+      },
+      {
+        "name": "tong_loi_nhuan_truoc_thue_thu_nhap_doanh_nghiep",
+        "type": "double"
+      },
+      {
+        "name": "du_phong_dam_bao_can_doi",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_chiu_thue_thu_nhap_doanh_nghiep",
+        "type": "double"
+      },
+      {
+        "name": "thue_thu_nhap_doanh_nghiep_phai_nop",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_thu_nhap_doanh_nghiep",
+        "type": "double"
+      },
+      {
+        "name": "loi_ich_co_dong_thieu_so",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_cua_co_dong_cong_ty_me",
+        "type": "double"
+      }
+    ],
+    "is_quarter_stock": [
+      {
+        "name": "thoigian",
+        "type": "text"
+      },
+      {
+        "name": "mack",
+        "type": "text"
+      },
+      {
+        "name": "lai_tu_cac_tai_san_tai_chinh_ghi_nhan_thong_qua_lai_lo_fvtpl",
+        "type": "double"
+      },
+      {
+        "name": "lai_ban_cac_tai_san_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "chenh_lech_tang_danh_gia_lai_cac_tstc_thong_qua_lai_lo",
+        "type": "double"
+      },
+      {
+        "name": "co_tuc_tien_lai_phat_sinh_tu_tai_san_tai_chinh_pvtpl",
+        "type": "double"
+      },
+      {
+        "name": "lai_tu_cac_khoan_dau_tu_nam_giu_den_ngay_dao_han_htm",
+        "type": "double"
+      },
+      {
+        "name": "lai_tu_cac_khoan_cho_vay_va_phai_thu",
+        "type": "double"
+      },
+      {
+        "name": "lai_tu_cac_tai_san_tai_chinh_san_sang_de_ban_afs",
+        "type": "double"
+      },
+      {
+        "name": "lai_tu_cac_cong_cu_phai_sinh_phong_ngua_rui_ro",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_moi_gioi_chung_khoan",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_bao_lanh_dai_ly_phat_hanh_chung_khoan",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_tu_van",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_hoat_dong_nhan_uy_thac_dau_gia",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_luu_ky_chung_khoan",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "cong_doanh_thu_hoat_dong",
+        "type": "double"
+      },
+      {
+        "name": "lo_cac_tai_san_tai_chinh_ghi_nhan_thong_qua_lai_lo_fvtpl",
+        "type": "double"
+      },
+      {
+        "name": "lo_ban_cac_tai_san_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "chenh_lech_giam_danh_gia_lai_cac_tstc_thong_qua_lai_lo",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_giao_dich_mua_cac_tai_san_tai_chinh_fvtpl",
+        "type": "double"
+      },
+      {
+        "name": "lo_cac_khoan_dau_tu_nam_giu_den_ngay_dao_han_htm_",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_lai_vay_lo_tu_cac_khoan_cho_vay_va_phai_thu",
+        "type": "double"
+      },
+      {
+        "name": "lo_ban_cac_tai_san_tai_chinh_san_sang_de_ban_afs",
+        "type": "double"
+      },
+      {
+        "name": "lo_tu_cac_tai_san_tai_chinh_phai_sinh_phong_ngua_rui_ro",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong_tu_doanh",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_moi_gioi_chung_khoan",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong_bao_lanh_dai_ly_phat_hanh_chung_khoan",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_tu_van",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong_dau_gia_uy_thac",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_luu_ky_chung_khoan",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "trong_do_chi_phi_sua_loi_giao_dich_chung_khoan_loi_khac",
+        "type": "double"
+      },
+      {
+        "name": "cong_chi_phi_hoat_dong",
+        "type": "double"
+      },
+      {
+        "name": "chenh_lech_lai_ty_gia_hoi_doai_da_va_chua_thuc_hien",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_du_thu_co_tuc_lai_tien_gui_khong_co_dinh",
+        "type": "double"
+      },
+      {
+        "name": "lai_ban_thanh_ly_cac_khoan_dau_tu_vao_cong_ty_con",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_khac_ve_dau_tu",
+        "type": "double"
+      },
+      {
+        "name": "cong_doanh_thu_hoat_dong_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "chenh_lech_lo_ty_gia_hoi_doai_da_va_chua_thuc_hien",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_lai_vay",
+        "type": "double"
+      },
+      {
+        "name": "lo_ban_thanh_ly_cac_khoan_dau_tu_vao_cong_ty_con",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_dau_tu_khac",
+        "type": "double"
+      },
+      {
+        "name": "cong_chi_phi_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "chi_ban_hang",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_quan_ly_cong_ty_chung_khoan",
+        "type": "double"
+      },
+      {
+        "name": "ket_qua_hoat_dong",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_khac",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_khac",
+        "type": "double"
+      },
+      {
+        "name": "cong_ket_qua_hoat_dong_khac",
+        "type": "double"
+      },
+      {
+        "name": "tong_loi_nhuan_ke_toan_truoc_thue",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_da_thuc_hien",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_chua_thuc_hien",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn_hien_hanh",
+        "type": "double"
+      },
+      {
+        "name": "chi_phi_thue_tndn_hoan_lai",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_ke_toan_sau_thue_tndn",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_phan_bo_cho_chu_so_huu",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue_trich_cac_quy_du_tru_dieu_le",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_thuan_phan_bo_cho_loi_ich_cua_co_dong_khong_kiem_soat",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_lo_toan_dien_khac_sau_thue_tndn",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_tu_danh_gia_lai_cac_cac_khoan_dau_tu_giu_den_ngay_dao_han",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_tu_danh_gia_lai_cac_tai_san_tai_chinh_san_sang_de_ban",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_toan_dien_khac_duoc_chia_tu_hoat_dong_dau_tu_con",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_tu_danh_gia_lai_cac_cong_cu_tai_chinh_phai_sinh",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_chenh_lech_ty_gia_cua_hoat_dong_tai_nuoc_ngoai",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_tu_cac_khoan_dau_tu_vao_cong_ty_con_chua_chia",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_danh_gia_cong_cu_phai_sinh",
+        "type": "double"
+      },
+      {
+        "name": "lai_lo_danh_gia_lai_tai_san_co_dinh_theo_mo_hinh_gia_tri_hop_ly",
+        "type": "double"
+      },
+      {
+        "name": "tong_thu_nhap_toan_dien",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_toan_dien_phan_bo_cho_chu_so_huu",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_toan_dien_phan_bo_cho_co_dong_khong_nam_quyen_kiem_soat",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_thuan_tren_co_phieu_pho_thong",
+        "type": "double"
+      },
+      {
+        "name": "lai_co_ban_tren_co_phieu_dong_1_co_phieu",
+        "type": "double"
+      },
+      {
+        "name": "thu_nhap_pha_loang_tren_co_phieu_dong_1_co_phieu",
+        "type": "double"
+      }
+    ],
+    "ratios_stock": [
+      {
+        "name": "id",
+        "type": "bigint"
+      },
+      {
+        "name": "thoigian",
+        "type": "text"
+      },
+      {
+        "name": "mack",
+        "type": "text"
+      },
+      {
+        "name": "type",
+        "type": "text"
+      },
+      {
+        "name": "dinh_gia",
+        "type": "varchar"
+      },
+      {
+        "name": "gia_thi_truong",
+        "type": "double"
+      },
+      {
+        "name": "von_hoa",
+        "type": "double"
+      },
+      {
+        "name": "gia_tri_doanh_nghiep",
+        "type": "double"
+      },
+      {
+        "name": "eps",
+        "type": "double"
+      },
+      {
+        "name": "tang_truong_eps",
+        "type": "double"
+      },
+      {
+        "name": "bvps",
+        "type": "double"
+      },
+      {
+        "name": "tang_truong_bvps",
+        "type": "double"
+      },
+      {
+        "name": "pe",
+        "type": "double"
+      },
+      {
+        "name": "pb",
+        "type": "double"
+      },
+      {
+        "name": "evebit",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_va_loi_nhuan",
+        "type": "varchar"
+      },
+      {
+        "name": "cong_doanh_thu_hoat_dong",
+        "type": "double"
+      },
+      {
+        "name": "tang_truong_cong_doanh_thu_hoat_dong",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_tu_hoat_dong_moi_gioi",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_tu_hoat_dong_moi_gioi",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_tu_hoat_dong_cho_vay",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_tu_hoat_dong_cho_vay",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_tu_hoat_dong_bao_lanh",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_tu_hoat_dong_bao_lanh",
+        "type": "double"
+      },
+      {
+        "name": "doanh_thu_tu_hoat_dong_tu_doanh",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_tu_hoat_dong_tu_doanh",
+        "type": "double"
+      },
+      {
+        "name": "cong_loi_nhuan_gop_hoat_dong",
+        "type": "double"
+      },
+      {
+        "name": "ebit",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_truoc_thue",
+        "type": "double"
+      },
+      {
+        "name": "loi_nhuan_sau_thue",
+        "type": "double"
+      },
+      {
+        "name": "tang_truong_loi_nhuan_sau_thue",
+        "type": "double"
+      },
+      {
+        "name": "chi_tieu_hieu_qua",
+        "type": "varchar"
+      },
+      {
+        "name": "bien_loi_nhuan_tu_hoat_dong_moi_gioi",
+        "type": "double"
+      },
+      {
+        "name": "bien_loi_nhuan_tu_hoat_dong_cho_vay",
+        "type": "double"
+      },
+      {
+        "name": "bien_loi_nhuan_tu_hoat_dong_bao_lanh",
+        "type": "double"
+      },
+      {
+        "name": "bien_loi_nhuan_tu_hoat_dong_tu_doanh",
+        "type": "double"
+      },
+      {
+        "name": "bien_loi_nhuan_gop",
+        "type": "double"
+      },
+      {
+        "name": "bien_ebit",
+        "type": "double"
+      },
+      {
+        "name": "bien_ebt",
+        "type": "double"
+      },
+      {
+        "name": "bien_loi_nhuan_sau_thue",
+        "type": "double"
+      },
+      {
+        "name": "roa",
+        "type": "double"
+      },
+      {
+        "name": "roe",
+        "type": "double"
+      },
+      {
+        "name": "chi_tieu_an_toan",
+        "type": "varchar"
+      },
+      {
+        "name": "ty_le_du_phong_suy_giam_gia_tri_tai_san_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "ty_le_du_phong_suy_giam_gia_tri_khoan_phai_thu",
+        "type": "double"
+      },
+      {
+        "name": "ty_le_du_no_margin_vcsh",
+        "type": "double"
+      },
+      {
+        "name": "chi_tieu_thanh_toan",
+        "type": "varchar"
+      },
+      {
+        "name": "ty_le_thanh_toan_hien_hanh",
+        "type": "double"
+      },
+      {
+        "name": "ty_le_de",
+        "type": "double"
+      },
+      {
+        "name": "phan_tich_chi_tiet_dupont",
+        "type": "varchar"
+      },
+      {
+        "name": "vong_quay_tai_san",
+        "type": "double"
+      },
+      {
+        "name": "ty_suat_loi_nhuan",
+        "type": "double"
+      },
+      {
+        "name": "don_bay_tai_chinh",
+        "type": "double"
+      },
+      {
+        "name": "ganh_nang_lai_suat",
+        "type": "double"
+      },
+      {
+        "name": "ganh_nang_thue",
+        "type": "double"
+      },
+      {
+        "name": "co_cau_tai_san",
+        "type": "varchar"
+      },
+      {
+        "name": "tsnh_tts",
+        "type": "double"
+      },
+      {
+        "name": "tsdh_tts",
+        "type": "double"
+      },
+      {
+        "name": "co_cau_nguon_von",
+        "type": "varchar"
+      },
+      {
+        "name": "no_phai_tra_tong_nguon_von",
+        "type": "double"
+      },
+      {
+        "name": "nguon_von_chu_so_huu_tong_nguon_von",
+        "type": "double"
+      }
+    ],
+    "rank_top_stocks": [
+      {
+        "name": "mack",
+        "type": "text"
+      },
+      {
+        "name": "thoigian",
+        "type": "text"
+      },
+      {
+        "name": "tong_gtgd",
+        "type": "double"
+      },
+      {
+        "name": "gtgd_chu_ky_truoc",
+        "type": "double"
+      },
+      {
+        "name": "delta",
+        "type": "double"
+      },
+      {
+        "name": "diem_4m",
+        "type": "double"
+      },
+      {
+        "name": "diem_canslim",
+        "type": "double"
+      },
+      {
+        "name": "diem_thanh_khoan",
+        "type": "double"
+      },
+      {
+        "name": "diem_xep_hang",
+        "type": "double"
+      },
+      {
+        "name": "xep_hang",
+        "type": "int"
+      }
+    ]
+  },
+  "locked": {
+    "stock_list_sector_column": "nhom",
+    "is_quarter_nonbank_eps_column": "loi_nhuan_gop",
+    "is_quarter_bank_ppop_column": null,
+    "publish_date_column": null
+  },
+  "notes": [
+    "AMBIGUOUS: stock_list sector candidates=['nhom', 'nganh', 'nganh_hep', 'nhomtop']; chose first.",
+    "is_quarter_nonbank EPS candidates=['loi_nhuan_gop', 'loi_nhuan_trong_cong_ty_lien_ket', 'loi_nhuan_tu_hoat_dong_kinh_doanh', 'loi_nhuan_khac', 'tong_loi_nhuan_ke_toan_truoc_thue', 'loi_nhuan_sau_thue_tndn', 'loi_nhuan_sau_thue_cua_co_dong_khong_kiem_soat', 'loi_nhuan_sau_thue_cua_co_dong_cua_cong_ty_me']; chose first",
+    "AMBIGUOUS: no PPOP-like column in is_quarter_bank",
+    "AMBIGUOUS: no publish/date column found"
+  ]
+}
