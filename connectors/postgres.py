@@ -89,3 +89,58 @@ def load_ratios(tickers: Iterable[str]) -> pd.DataFrame:
     tickers = list(tickers)
     sql = "SELECT * FROM ratios_stock WHERE stockcode = ANY(:tickers)"
     return query(sql, {"tickers": tickers})
+
+
+# stock_rs schema spike (Phase 31 plan 01, D-15/D-16):
+# Columns: stockcode (CHAR, space-padded), tradingdate (DATE),
+#   rss (NUMERIC, short-term RS 1..99 — used as canonical rs_value),
+#   rsm (NUMERIC, mid-term RS), rsl (NUMERIC, long-term RS),
+#   rs1xx (NUMERIC), rs2xx (NUMERIC). 222k+ rows in H1 2023 range verified.
+def load_stock_rs(
+    start: str,
+    end: str,
+    tickers: Optional[Iterable[str]] = None,
+) -> pd.DataFrame:
+    """Load short-term RS ratings from stock_rs for a date range.
+
+    Returns a frame with columns exactly ``["date", "ticker", "rs_value"]``
+    where ``rs_value`` is the ``rss`` (short-term) column. Per D-15/D-16
+    the reader is fail-loud: an empty frame with no ticker filter raises
+    ``ValueError`` to catch config drift.
+
+    Args:
+        start: inclusive start date (YYYY-MM-DD).
+        end: inclusive end date (YYYY-MM-DD).
+        tickers: optional iterable of ticker symbols to filter on.
+
+    Returns:
+        DataFrame with columns ``["date", "ticker", "rs_value"]``,
+        ``date`` as ``datetime64[ns]`` and ``rs_value`` numeric.
+    """
+    params: dict[str, Any] = {"start": start, "end": end}
+    if tickers is not None:
+        params["tickers"] = [t.strip() for t in tickers]
+        sql = """
+            SELECT TRIM(stockcode) AS ticker, tradingdate AS date, rss AS rs_value
+            FROM stock_rs
+            WHERE tradingdate BETWEEN :start AND :end
+              AND TRIM(stockcode) = ANY(:tickers)
+            ORDER BY tradingdate, ticker
+        """
+    else:
+        sql = """
+            SELECT TRIM(stockcode) AS ticker, tradingdate AS date, rss AS rs_value
+            FROM stock_rs
+            WHERE tradingdate BETWEEN :start AND :end
+            ORDER BY tradingdate, ticker
+        """
+    df = query(sql, params)
+    if df.empty and tickers is None:
+        raise ValueError(
+            f"load_stock_rs returned 0 rows for {start}..{end} with no ticker filter — "
+            "stock_rs table may be empty or date range invalid (config drift)."
+        )
+    if not df.empty:
+        df["date"] = pd.to_datetime(df["date"])
+        df["rs_value"] = pd.to_numeric(df["rs_value"])
+    return df[["date", "ticker", "rs_value"]]
