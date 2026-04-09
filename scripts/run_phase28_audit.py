@@ -126,6 +126,20 @@ def section_b_vn100() -> dict:
 # Section C — VN100 quarterly EPS coverage
 # ---------------------------------------------------------------------------
 def section_c_eps_coverage(vn100: dict, out_dir: Path) -> dict:
+    """VN100 quarterly fundamentals coverage 2014-2025.
+
+    Schema reality (discovered during phase 28 plan 05 live run):
+    - `is_quarter_nonbank` uses Vietnamese column names: `mack` (ticker),
+      `thoigian` (e.g. 'Q1 2014'). No `eps` / `yearreport` / `lengthreport`
+      columns. We use row presence as the fundamentals-coverage proxy and
+      derive (year, quarter) from `thoigian`.
+    - `ratios_stock` (which DOES carry `eps`) is securities-firms only
+      (~40 tickers) so it cannot back the VN100 EPS audit. Recorded as a
+      Phase 29 risk.
+    - To still exercise `resolve_eps_publish_date` (DATA-04), we synthesise
+      `yearreport` + `lengthreport` from the parsed `thoigian` and pipe a
+      sample through the helper.
+    """
     tickers = vn100["tickers"]
     if not tickers:
         empty = pd.DataFrame(
@@ -136,40 +150,47 @@ def section_c_eps_coverage(vn100: dict, out_dir: Path) -> dict:
         return {"n_tickers": 0, "top10": [], "bottom10": [],
                 "publish_date_ok": False}
 
-    # MySQL doesn't support ANY(); use expanding IN list.
-    from sqlalchemy import bindparam, text  # local import to avoid hard dep
-
+    from sqlalchemy import bindparam, text
     from connectors.mysql import get_engine as my_engine
+
     sql = text(
-        "SELECT stockcode, yearreport, lengthreport, eps "
+        "SELECT mack AS stockcode, thoigian "
         "FROM is_quarter_nonbank "
-        "WHERE stockcode IN :tickers "
-        "  AND yearreport BETWEEN :ymin AND :ymax"
+        "WHERE mack IN :tickers"
     ).bindparams(bindparam("tickers", expanding=True))
     with my_engine().connect() as conn:
-        df = pd.read_sql(
-            sql,
-            conn,
-            params={"tickers": tickers, "ymin": EPS_YEAR_MIN, "ymax": EPS_YEAR_MAX},
-        )
+        df = pd.read_sql(sql, conn, params={"tickers": tickers})
 
-    # Confirm the publish_date helper works on real data (DATA-04).
+    # Parse 'Q1 2014' -> quarter=1, yearreport=2014.
+    if not df.empty:
+        parsed = df["thoigian"].astype(str).str.extract(
+            r"Q(?P<q>[1-4])\s+(?P<y>\d{4})"
+        )
+        df["quarter"] = pd.to_numeric(parsed["q"], errors="coerce")
+        df["yearreport"] = pd.to_numeric(parsed["y"], errors="coerce")
+        df = df.dropna(subset=["quarter", "yearreport"])
+        df["quarter"] = df["quarter"].astype(int)
+        df["yearreport"] = df["yearreport"].astype(int)
+        df["lengthreport"] = df["quarter"].map({1: 3, 2: 6, 3: 9, 4: 12})
+
+    # Confirm `resolve_eps_publish_date` works on real-shaped data (DATA-04).
     publish_date_ok = True
     try:
-        _ = resolve_eps_publish_date(df)
+        sample = df.head(50).copy() if not df.empty else pd.DataFrame(
+            {"yearreport": [2024], "lengthreport": [3]}
+        )
+        _ = resolve_eps_publish_date(sample)
     except Exception:  # noqa: BLE001
         publish_date_ok = False
 
-    # Quarterly buckets: only lengthreport in {3,6,9,12} count.
-    df_q = df[df["lengthreport"].isin([3, 6, 9, 12])].copy()
-    length_to_q = {3: 1, 6: 2, 9: 3, 12: 4}
-    df_q["quarter"] = df_q["lengthreport"].map(length_to_q)
-    df_q["q_key"] = df_q["yearreport"].astype(int) * 10 + df_q["quarter"].astype(int)
+    df_q = df[df["yearreport"].between(EPS_YEAR_MIN, EPS_YEAR_MAX)].copy() if not df.empty else df
+    if not df_q.empty:
+        df_q["q_key"] = df_q["yearreport"] * 10 + df_q["quarter"]
 
     rows = []
     for t in tickers:
-        sub = df_q[df_q["stockcode"] == t]
-        n = int(sub["q_key"].nunique())
+        sub = df_q[df_q["stockcode"] == t] if not df_q.empty else df_q
+        n = int(sub["q_key"].nunique()) if not sub.empty else 0
         rows.append({
             "stockcode": t,
             "n_quarters_2014_2025": n,
@@ -373,7 +394,7 @@ def main(argv=None) -> int:
     print("[D] VN100 stock_foreign_eod coverage...")
     ctx["section_d"] = section_d_foreign_eod(ctx["vn100"], args.out_dir)
 
-    REPORT_PATH.write_text(render_markdown(ctx))
+    REPORT_PATH.write_text(render_markdown(ctx), encoding="utf-8")
     print(f"[done] report -> {REPORT_PATH}")
     return 0
 
