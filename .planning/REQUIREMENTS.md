@@ -86,23 +86,23 @@
 
 ### MDM Capital Allocation Gate
 
-- [ ] **GATE-01**: MDM signal source = HybridEngine + fail-safe on VNINDEX (existing v6.0)
+- [x] **GATE-01**: MDM signal source = HybridEngine + fail-safe on VNINDEX (existing v6.0)
 - [ ] **GATE-02**: Policy A (strict) — BUY: allow new entries up to 8 slots, target 100% exposure; CASH: hold existing, no new; SELL: liquidate all next open
 - [ ] **GATE-03**: Ceiling/floor lock handling — skip entry fill if `next_open == ceiling AND next_high == next_low`; defer exit if floor-locked, exit next open
 - [ ] **GATE-04**: T+2 settlement enforcement — bought day D not sellable until D+3
 
 ### Portfolio Engine
 
-- [ ] **PORT-01**: Multi-stock long-only state machine (max 8 concurrent positions)
+- [x] **PORT-01**: Multi-stock long-only state machine (max 8 concurrent positions)
 - [ ] **PORT-02**: Equal-weight position sizing (12.5%/slot), 100-share lot rounding (round down)
 - [ ] **PORT-03**: 8% hard stop loss
 - [ ] **PORT-04**: MA50 trailing stop (close break confirmed by volume ≥1.25× 20d avg)
 - [ ] **PORT-05**: Limit-down handling — if stop hit on limit-down day, exit next open
-- [ ] **PORT-06**: Exit priority chain — MDM SELL > hard stop > MA50 break > RS deterioration (RS<70 for 5 sessions)
+- [x] **PORT-06**: Exit priority chain — MDM SELL > hard stop > MA50 break > RS deterioration (RS<70 for 5 sessions)
 - [ ] **PORT-07**: Re-entry cooldown — 5 days per ticker after stop-out
 - [ ] **PORT-08**: Transaction costs — 0.25% commission both sides + 0.10% sell tax + 0.10% slippage
 - [ ] **PORT-09**: Liquidity gate — only enter if 20d ADV > 10× position size
-- [ ] **PORT-10**: Trade log + position log + daily NAV with `state[i-1]` discipline (avoid 707% bug pattern)
+- [x] **PORT-10**: Trade log + position log + daily NAV with `state[i-1]` discipline (avoid 707% bug pattern)
 
 ### Backtest & Reporting
 
