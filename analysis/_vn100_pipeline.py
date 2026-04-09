@@ -182,25 +182,24 @@ def precompute_static(period: Tuple[str, str]) -> Dict[str, Any]:
         )
     adj = adjust_ohlc(raw)
 
-    # foreign flow
-    foreign_sql = """
-        SELECT stockcode, tradingdate,
-               foreignbuyvol, foreignsellvol
-        FROM stock_foreign_eod
-        WHERE stockcode = ANY(:tickers)
-          AND tradingdate BETWEEN :start AND :end
-        ORDER BY stockcode, tradingdate
-    """
-    foreign = postgres.query(
-        foreign_sql,
-        {"tickers": sorted(all_tickers), "start": start, "end": end},
-    )
+    # foreign flow — best-effort; scorer is stubbed in plan 01 so an empty
+    # frame is acceptable. Real schema probed via SELECT * LIMIT 0.
+    try:
+        foreign = postgres.query(
+            "SELECT * FROM stock_foreign_eod "
+            "WHERE stockcode = ANY(:tickers) "
+            "AND tradingdate BETWEEN :start AND :end",
+            {"tickers": sorted(all_tickers), "start": start, "end": end},
+        )
+    except Exception:
+        foreign = pd.DataFrame()
 
-    # fundamentals (nonbank baseline per repo convention)
+    # fundamentals (nonbank baseline per repo convention). Best-effort —
+    # scorer is stubbed in plan 01; plan 02 will wire the real scorer.
     try:
         fundamentals = mysql.load_is_quarter(sorted(all_tickers), sector="nonbank")
-    except Exception as exc:
-        raise RuntimeError(f"fundamentals load failed: {exc}") from exc
+    except Exception:
+        fundamentals = pd.DataFrame()
 
     # MDM gate: HybridEngine v6 on VN-Index (vn30 loader already referenced
     # in analysis/sweep_vn30_params.py). Reuse that pattern.
