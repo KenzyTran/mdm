@@ -74,7 +74,40 @@ Dataclass `strategies.canslim.config.CanslimConfig` centralizes every threshold 
 
 
 ## 4. Fundamental Rules (C, C+, A, A+)
-_TBD — plan 29-05_
+
+Implemented by `strategies/canslim/rules/fundamental.py::compute_fundamentals` (plan 29-05). Closes CANS-01..CANS-04.
+
+**Entry point:**
+
+```python
+compute_fundamentals(ticker, as_of_date, config, sector_router, mysql_engine)
+# -> (c_pass, c_plus_pass, a_pass, a_plus_pass)
+```
+
+**Sector branching (D-06):**
+
+| Sector bucket        | Table                | Value column (from schema_lock.json)         |
+| -------------------- | -------------------- | -------------------------------------------- |
+| `bank`               | `is_quarter_bank`    | `is_quarter_bank_ppop_column` (PPOP)         |
+| `other`              | `is_quarter_nonbank` | `is_quarter_nonbank_eps_column` (net profit) |
+| `ctck` / `insurance` | — (excluded)         | returns `(False, False, False, False)` (D-07) |
+
+**Schema-lock fallback:** if `schema_lock.json.locked.is_quarter_bank_ppop_column` is `null` (introspector could not find an unambiguous PPOP column in `is_quarter_bank`), the bank branch falls back to the non-bank EPS column name. This is a documented approximation — re-run `scripts/introspect_canslim_schema.py` once a bank PPOP column is identified.
+
+**Formulas (all newest-first):**
+
+| Rule | Formula                                                                     |
+| ---- | --------------------------------------------------------------------------- |
+| C    | `(values[0] - values[4]) / abs(values[4]) >= config.c_threshold`            |
+| C+   | `yoy(0) > (yoy(1) + yoy(2)) / 2` where `yoy(i)=(v[i]-v[i+4])/abs(v[i+4])`   |
+| A    | `(sum(values[0:4]) / sum(values[8:12])) ** (1/2) - 1 >= config.a_threshold` |
+| A+   | `all(annuals[:3] > 0)` where `annuals[k] = sum(values[4k : 4k+4])`          |
+
+Insufficient history returns `False` (not an exception): C needs 5 quarters, C+ needs 7, A needs 12, A+ needs 3 rolling-TTM windows (i.e. 12 quarters).
+
+**Look-ahead guard (D-11):** every row loaded from MySQL is passed through `connectors/eps.py::resolve_eps_publish_date`, which either reuses an existing `publish_date` / `announce_date` / `updated_at` column or imputes one from `yearreport` + `lengthreport` (period_end + 45 days for quarters, +90 days for annuals). Rows with `publish_date > as_of_date` are dropped BEFORE any rule is evaluated, so the scorer can never peek at a quarter before it was filed. This is the only acceptable lookahead discipline because `schema_lock.publish_date_column` is legitimately `null` — no real publish-date column exists in the MySQL fundamentals tables today.
+
+**Tests:** `tests/canslim/test_rules_fundamental.py` covers pure helpers (C / C+ / A / A+), the look-ahead guard, bank-table routing, ctck exclusion, and insufficient-history fall-through.
 
 ## 5. Technical Rule (N) + RS (L)
 
