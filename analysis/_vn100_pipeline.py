@@ -46,6 +46,7 @@ from strategies.portfolio.config import PortfolioConfig
 from strategies.portfolio.engine import PortfolioEngine, PortfolioResult
 
 CACHE_DIR = Path("docs/audits/phase32/cache")
+CANSLIM_RAW_CACHE = CACHE_DIR / "canslim_raw.parquet"
 REQUIRED_METRIC_KEYS = (
     "CAGR",
     "Sharpe_rf3",
@@ -323,13 +324,19 @@ def run_vn100_backtest(
     gate.name = "mdm_state"
 
     # --- Scorer frame: one (date, ticker, canslim_score) row per bar -----
-    # For plan 01 we compute a simplified stub score = 100.0 for all
-    # (date, ticker) in the panel. The real scorer is DB-bound and its
-    # full per-day invocation is out-of-scope for the wiring skeleton —
-    # the sweep will inject a real scorer via `precomputed`. This keeps
-    # the single-run baseline executable and the API stable.
-    scorer_frame = panel[["date", "ticker"]].copy()
-    scorer_frame["canslim_score"] = 100.0
+    # Plan 02: real CANSLIM scoring driven by canslim_cfg thresholds.
+    # Raw per-(date,ticker) metrics are computed once via
+    # ``build_canslim_raw_frame`` (cached to parquet, reused by every sweep
+    # worker). Thresholds from canslim_cfg are applied here; a row passes
+    # iff  c_pass AND a_pass AND n_pass, otherwise canslim_score = NaN
+    # (which makes PortfolioEngine drop the candidate).
+    if "canslim_raw" in precomputed and isinstance(
+        precomputed["canslim_raw"], pd.DataFrame
+    ):
+        raw = precomputed["canslim_raw"]
+    else:
+        raw = build_canslim_raw_frame(panel, precomputed)
+    scorer_frame = _apply_canslim_thresholds(raw, canslim_cfg)
 
     # --- RS frame: use precomputed if present, else synthesize ----------
     if "rs" in precomputed and isinstance(precomputed["rs"], pd.DataFrame):
@@ -372,6 +379,200 @@ def run_vn100_backtest(
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# CANSLIM raw-metrics precompute (plan 02)
+# ---------------------------------------------------------------------------
+def build_canslim_raw_frame(
+    panel: pd.DataFrame,
+    precomputed: Mapping[str, Any],
+) -> pd.DataFrame:
+    """Compute raw CANSLIM metrics per (date, ticker) — threshold-free.
+
+    Returns a DataFrame with columns:
+        date, ticker, eps_yoy_q0, eps_cagr_3y, n_prox
+
+    - ``eps_yoy_q0``: current-quarter EPS YoY using the latest published
+      quarter whose ``publish_date`` (imputed per D-11) is <= the bar date.
+      Quarters are forward-filled between publish events.
+    - ``eps_cagr_3y``: 3-year TTM CAGR (sum of last 4 quarters / sum of
+      quarters 8..12 periods ago) ^ (1/2) - 1, computed per publish event
+      and forward-filled.
+    - ``n_prox``: 1 - close / rolling_max(highestprice, 252) — distance
+      below the 252-day high. ``n_pass`` is ``n_prox <= n_within_high``.
+
+    Cached to :data:`CANSLIM_RAW_CACHE` (parquet) and reused across sweep
+    workers. Cache key is (min_date, max_date, ticker set hash) — stored
+    implicitly by overwrite on rebuild.
+
+    NaN rows are acceptable — the threshold applier will score them NaN
+    (→ candidate dropped by PortfolioEngine).
+    """
+    if CANSLIM_RAW_CACHE.exists():
+        cached = pd.read_parquet(CANSLIM_RAW_CACHE)
+        # cheap shape check: tickers match precomputed panel?
+        want_tickers = set(panel["ticker"].unique())
+        have_tickers = set(cached["ticker"].unique())
+        if want_tickers.issubset(have_tickers) and not cached.empty:
+            return cached
+
+    tickers = sorted(panel["ticker"].unique())
+
+    # ---- load quarterly fundamentals in one SQL -------------------------
+    try:
+        from connectors import mysql
+        from connectors.eps import resolve_eps_publish_date
+    except Exception:  # pragma: no cover
+        mysql = None
+        resolve_eps_publish_date = None  # type: ignore
+
+    fund_lookup: Dict[str, pd.DataFrame] = {}
+    if mysql is not None and resolve_eps_publish_date is not None:
+        try:
+            sql = (
+                "SELECT mack, thoigian, loi_nhuan_gop AS value "
+                "FROM is_quarter_nonbank WHERE mack IN :ts"
+            )
+            from sqlalchemy import text, bindparam
+
+            stmt = text(sql).bindparams(bindparam("ts", expanding=True))
+            with mysql.get_engine().connect() as conn:
+                raw_fund = pd.read_sql(stmt, conn, params={"ts": tickers})
+        except Exception:
+            raw_fund = pd.DataFrame()
+
+        if not raw_fund.empty:
+            # parse thoigian → year/length and impute publish_date
+            def _parse(s: str) -> Tuple[Optional[int], Optional[int]]:
+                try:
+                    parts = str(s).strip().split()
+                    q = int(parts[0].lstrip("Qq"))
+                    y = int(parts[1])
+                    return y, q * 3
+                except Exception:
+                    return None, None
+
+            parsed = raw_fund["thoigian"].map(_parse)
+            raw_fund["yearreport"] = [p[0] for p in parsed]
+            raw_fund["lengthreport"] = [p[1] for p in parsed]
+            raw_fund = raw_fund.dropna(subset=["yearreport", "lengthreport"])
+            if not raw_fund.empty:
+                raw_fund["yearreport"] = raw_fund["yearreport"].astype(int)
+                raw_fund["lengthreport"] = raw_fund["lengthreport"].astype(int)
+                raw_fund["stockcode"] = raw_fund["mack"].astype(str).str.upper().str.strip()
+                raw_fund = resolve_eps_publish_date(raw_fund)
+                for tk, g in raw_fund.groupby("stockcode"):
+                    g2 = g.sort_values(
+                        ["yearreport", "lengthreport"], ascending=[False, False]
+                    ).reset_index(drop=True)
+                    fund_lookup[tk] = g2
+
+    # ---- compute per-ticker per-day raw frame ---------------------------
+    all_rows: List[pd.DataFrame] = []
+    for tk, g in panel.groupby("ticker"):
+        g = g.sort_values("date").reset_index(drop=True)
+        dates = pd.to_datetime(g["date"]).values
+        close = g["close"].astype(float).values
+        high = g["high"].astype(float).values
+
+        # N-rule raw: 1 - close / rolling 252d max high
+        high_series = pd.Series(high)
+        roll_max = high_series.rolling(252, min_periods=252).max().values
+        n_prox = np.where(
+            (roll_max > 0) & np.isfinite(roll_max),
+            1.0 - close / roll_max,
+            np.nan,
+        )
+
+        # fundamentals: build per-bar yoy_q0 and cagr_3y by walking publish dates
+        yoy_q0 = np.full(len(dates), np.nan, dtype=float)
+        cagr_3y = np.full(len(dates), np.nan, dtype=float)
+        fund_df = fund_lookup.get(tk.upper())
+        if fund_df is not None and not fund_df.empty:
+            # each row of fund_df has publish_date + descending value history
+            # iterate by publish events ordered ascending, at each publish
+            # "snapshot" compute yoy_q0 and cagr_3y from the quarters
+            # published up to that date.
+            fd = fund_df.sort_values("publish_date").reset_index(drop=True)
+            pub_dates = pd.to_datetime(fd["publish_date"]).values
+            values_all = fd["value"].astype(float).values
+            # At publish index i, available quarters = values_all[0..i]
+            # ordered newest-first relative to that snapshot requires reversing.
+            snap_yoy: List[float] = []
+            snap_cagr: List[float] = []
+            for i in range(len(fd)):
+                hist = list(values_all[: i + 1][::-1])  # newest first
+                # c: yoy_q0
+                if len(hist) >= 5 and hist[4] != 0:
+                    snap_yoy.append((hist[0] - hist[4]) / abs(hist[4]))
+                else:
+                    snap_yoy.append(float("nan"))
+                # a: 3y ttm cagr
+                if len(hist) >= 12:
+                    ttm_now = sum(hist[0:4])
+                    ttm_2y = sum(hist[8:12])
+                    if ttm_2y > 0 and ttm_now > 0:
+                        snap_cagr.append((ttm_now / ttm_2y) ** 0.5 - 1.0)
+                    else:
+                        snap_cagr.append(float("nan"))
+                else:
+                    snap_cagr.append(float("nan"))
+
+            # Map each bar date to the last publish_date <= bar date.
+            idx = np.searchsorted(pub_dates, dates, side="right") - 1
+            for j, ii in enumerate(idx):
+                if ii >= 0:
+                    yoy_q0[j] = snap_yoy[ii]
+                    cagr_3y[j] = snap_cagr[ii]
+
+        all_rows.append(
+            pd.DataFrame(
+                {
+                    "date": dates,
+                    "ticker": tk,
+                    "eps_yoy_q0": yoy_q0,
+                    "eps_cagr_3y": cagr_3y,
+                    "n_prox": n_prox,
+                }
+            )
+        )
+
+    raw = pd.concat(all_rows, ignore_index=True) if all_rows else pd.DataFrame(
+        columns=["date", "ticker", "eps_yoy_q0", "eps_cagr_3y", "n_prox"]
+    )
+    try:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        raw.to_parquet(CANSLIM_RAW_CACHE)
+    except Exception:
+        pass
+    return raw
+
+
+def _apply_canslim_thresholds(
+    raw: pd.DataFrame,
+    canslim_cfg: CanslimConfig,
+) -> pd.DataFrame:
+    """Convert raw frame + thresholds into a PortfolioEngine scorer_frame.
+
+    Rule: canslim_score = 100 iff eps_yoy_q0 >= c_threshold AND
+    eps_cagr_3y >= a_threshold AND n_prox <= n_within_high. NaN raw values
+    fail their rule (score → NaN → engine drops candidate).
+    """
+    if raw.empty:
+        return pd.DataFrame(columns=["date", "ticker", "canslim_score"])
+    c_pass = raw["eps_yoy_q0"] >= canslim_cfg.c_threshold
+    a_pass = raw["eps_cagr_3y"] >= canslim_cfg.a_threshold
+    n_pass = raw["n_prox"] <= canslim_cfg.n_within_high
+    all_pass = c_pass & a_pass & n_pass
+    out = pd.DataFrame(
+        {
+            "date": raw["date"],
+            "ticker": raw["ticker"],
+            "canslim_score": np.where(all_pass, 100.0, np.nan),
+        }
+    )
+    return out
+
+
 def _compute_fills(
     panel: pd.DataFrame,
     mdm_gate: pd.Series,
@@ -489,4 +690,9 @@ def _compute_metrics(result: PortfolioResult, period: Tuple[str, str]) -> Dict[s
     }
 
 
-__all__ = ["run_vn100_backtest", "precompute_static", "CACHE_DIR"]
+__all__ = [
+    "run_vn100_backtest",
+    "precompute_static",
+    "build_canslim_raw_frame",
+    "CACHE_DIR",
+]
