@@ -32,3 +32,27 @@ def test_hard_stop_out_of_range_raises():
 def test_negative_cost_raises():
     with pytest.raises(ValueError, match="entry_commission"):
         PortfolioConfig(entry_commission=-0.001)
+
+
+def test_state_imports():
+    from strategies.portfolio.state import PositionBook
+
+    book = PositionBook(max_slots=8)
+    assert book.slots.free_slots() == 8
+    assert book.slots.has_open("AAA") is False
+    assert book.completed_trades == []
+    assert book.unfilled == []
+
+
+def test_cooldown_clock():
+    """D-21: earliest re-entry bar = exit_bar + cooldown_days + 1 (D+6 at 5d)."""
+    from strategies.portfolio.state import CooldownRegistry
+
+    reg = CooldownRegistry()
+    reg.register("AAA", exit_bar_idx=10)
+    # Bars 11..15 still cooling (cooldown_days=5 → earliest re-entry = bar 16)
+    for b in range(11, 16):
+        assert reg.is_cooling("AAA", current_bar_idx=b, cooldown_days=5) is True
+    assert reg.is_cooling("AAA", current_bar_idx=16, cooldown_days=5) is False
+    # Untracked ticker never cooling
+    assert reg.is_cooling("ZZZ", current_bar_idx=0, cooldown_days=5) is False
