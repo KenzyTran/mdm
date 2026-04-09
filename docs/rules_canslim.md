@@ -221,5 +221,76 @@ score          = 0.70 * bool_component + 0.30 * rs_component
 
 **Excluded sectors (D-07):** `ctck` and `insurance` tickers are filtered by the scorer BEFORE rules run and are not returned in the output DataFrame at all.
 
-## 8. Validation vs rank_top_stocks.diem_canslim
-_TBD — plan 29-09_
+## 8. Baseline Validation (plan 29-09, CANS-12, SC6)
+
+Full report: [`docs/audits/phase29-canslim-validation.md`](audits/phase29-canslim-validation.md).
+Raw per-quarter details: [`docs/audits/phase29/baseline_comparison.md`](audits/phase29/baseline_comparison.md).
+
+### 8.1 Methodology
+
+- **Target baseline:** `stocks_backend.canslim` (composite `tong_diem` +
+  component percentiles `eps_quy_gan_nhat`, `eps_trailing_12_thang`,
+  `sale_quy_gan_nhat`). An upstream **quarterly** ranking — not a daily signal.
+- **Window:** 28 quarters, Q1 2019 → Q4 2025 inclusive.
+- **Universe:** VN100-restricted on both sides.
+- **As-of date:** last trading day in `stock_eod` at or before each
+  quarter-end. Scorer is daily; baseline is quarterly — some intra-quarter
+  drift in our N/S/RS/I/Liq rules is visible to us but not to the baseline,
+  by construction.
+- **Metrics:**
+  - Top-10 overlap count.
+  - Spearman ρ between our `score` and baseline `tong_diem` on the ticker
+    intersection.
+  - Per-component agreement rate between our boolean C / A / S passes and
+    the baseline percentile columns thresholded at **≥ 70**.
+- **Original acceptance gate:** Spearman ρ ≥ 0.5 on ≥ 70% of quarters.
+- **CLI:** `uv run python scripts/canslim_baseline_compare.py` — reproducible
+  via `--seed`, writes the per-quarter report as Markdown.
+
+### 8.2 Results
+
+| Metric                                 | Observed           |
+| -------------------------------------- | ------------------ |
+| Quarters compared                      | 28                 |
+| Median Spearman ρ                      | **0.280**          |
+| Quarters with ρ ≥ 0.5                  | **1 / 28 (4%)**    |
+| Mean top-10 overlap                    | **2.43 / 10**      |
+| Per-component agreement — C (EPS YoY)  | 69% mean           |
+| Per-component agreement — A (EPS TTM)  | 70% mean           |
+| Per-component agreement — S (Sales)    | 66% mean           |
+
+### 8.3 Caveats
+
+- **Quarterly-vs-daily semantics.** The baseline is a quarterly snapshot;
+  our scorer is daily. N/S/RS/I/Liq move intra-quarter for us and cannot
+  move for the baseline — they are structurally ineligible to agree.
+- **Boolean-vs-percentile thresholding.** The baseline's components are
+  continuous percentile ranks; ours are booleans. Mapping percentiles to
+  booleans via `≥ 70` inflates apparent disagreement vs. a rank correlation
+  the baseline could compute internally using the raw percentiles.
+- **Non-fundamental rules.** N, L (RS), I (foreign flow), Liq have no
+  counterparts in `stocks_backend.canslim` and by construction inject
+  divergence into any top-10 ordering.
+- **Composite weighting.** Our locked formula is
+  `0.70 * (bool_passes / 9) * 100 + 0.30 * rs_rating` (plan 29-08, §7).
+  The baseline uses a different, opaque weighting over its percentile
+  columns that we never reverse-engineered.
+
+### 8.4 Decision — independent screen, not a replica
+
+The user reviewed the SC6 results and explicitly chose to **ship Phase 29
+with the divergence documented** (Option A at the plan 29-09 checkpoint)
+rather than tune the composite to match `stocks_backend.canslim`. The
+per-component agreement rates of 66–70% on C / A / S confirm that the
+fundamental rules are directionally sound, which is the real intent
+of SC6.
+
+**Therefore:** treat `strategies/canslim` as an **independent CANSLIM screen
+for VN100**, not as a replica of the upstream `canslim` table. Calibration
+against a baseline — if ever desired — is **deferred to a future phase**,
+and should probably target forward returns or a re-derived baseline
+weighting rather than the current upstream composite.
+
+See the full report in [`docs/audits/phase29-canslim-validation.md`](audits/phase29-canslim-validation.md)
+for per-quarter tables, bug discoveries during the end-to-end run, and the
+Success Criteria roll-up (SC1–SC7).
