@@ -54,6 +54,21 @@ def _schema() -> dict:
     return _SCHEMA_LOCK["locked"]
 
 
+def _parse_thoigian(s: str):
+    """Parse 'Q<n> <YYYY>' → (yearreport, lengthreport).
+
+    lengthreport encodes month-of-period-end: Q1→3, Q2→6, Q3→9, Q4→12.
+    Returns (None, None) on unparseable strings.
+    """
+    try:
+        parts = s.strip().split()
+        qnum = int(parts[0].lstrip("Qq"))
+        year = int(parts[1])
+        return year, qnum * 3
+    except Exception:  # noqa: BLE001
+        return None, None
+
+
 def _load_quarters(
     mysql_engine,
     table: str,
@@ -63,26 +78,35 @@ def _load_quarters(
 ) -> pd.DataFrame:
     """Load up to 16 most recent published quarterly rows for ``ticker``.
 
-    Always selects ``yearreport`` and ``lengthreport`` so that
-    :func:`resolve_eps_publish_date` can impute a ``publish_date`` when the
-    source table has no publish/announce column. Rows with
+    **Schema reality (probed live 2026-04-09):** ``is_quarter_*`` tables use
+    ``mack`` (ticker) and ``thoigian`` (text "Q<n> YYYY"), NOT
+    ``stockcode``/``yearreport``/``lengthreport``. We derive yearreport +
+    lengthreport from ``thoigian`` so the downstream
+    :func:`resolve_eps_publish_date` imputation still works. Rows with
     ``publish_date > as_of_date`` are filtered out (D-11 look-ahead guard).
     """
     sql = f"""
-        SELECT stockcode, yearreport, lengthreport, {value_col} AS value
+        SELECT mack AS stockcode, thoigian, {value_col} AS value
         FROM {table}
-        WHERE stockcode = %(t)s
-        ORDER BY yearreport DESC, lengthreport DESC
-        LIMIT 32
+        WHERE mack = %(t)s
     """
     df = pd.read_sql(sql, mysql_engine, params={"t": ticker})
     if df.empty:
         return df
+    parsed = df["thoigian"].astype(str).map(_parse_thoigian)
+    df["yearreport"] = [p[0] for p in parsed]
+    df["lengthreport"] = [p[1] for p in parsed]
+    df = df.dropna(subset=["yearreport", "lengthreport"])
+    if df.empty:
+        return df
+    df["yearreport"] = df["yearreport"].astype(int)
+    df["lengthreport"] = df["lengthreport"].astype(int)
+    df = df.sort_values(
+        ["yearreport", "lengthreport"], ascending=[False, False]
+    ).reset_index(drop=True)
     df = resolve_eps_publish_date(df)
     cutoff = pd.Timestamp(as_of_date)
     df = df[df["publish_date"] <= cutoff].copy()
-    # Sort strictly by publish_date desc so index 0 is the most-recently
-    # published row that is still visible at as_of_date.
     df = df.sort_values("publish_date", ascending=False).reset_index(drop=True)
     return df.head(16)
 
@@ -184,10 +208,11 @@ def compute_fundamentals(
     locked = _schema()
     if sector == "bank":
         table = "is_quarter_bank"
-        # Fallback: schema_lock bank PPOP column may legitimately be null.
+        # Fallback: schema_lock bank PPOP column is null in phase 29, so we
+        # use the bank-table PPOP column name directly (probed live).
         value_col = (
             locked.get("is_quarter_bank_ppop_column")
-            or locked["is_quarter_nonbank_eps_column"]
+            or "loi_nhuan_tu_hdkd_truoc_chi_phi_du_phong_rui_ro_tin_dung"
         )
     else:
         table = "is_quarter_nonbank"

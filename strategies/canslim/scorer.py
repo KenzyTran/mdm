@@ -164,7 +164,10 @@ class CanslimScorer:
     def _load_panel(self, tickers: List[str], as_of_date: date) -> pd.DataFrame:
         """Load the OHLCV panel (close/high/volume) for ``tickers`` up to ``as_of_date``."""
         sql = """
-            SELECT stockcode, tradingdate, closeindex, highestindex, totalvol
+            SELECT stockcode, tradingdate,
+                   closeprice AS closeindex,
+                   highestprice AS highestindex,
+                   totalvol
             FROM stock_eod
             WHERE stockcode = ANY(%(t)s) AND tradingdate <= %(d)s
             ORDER BY stockcode, tradingdate
