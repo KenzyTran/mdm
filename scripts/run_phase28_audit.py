@@ -89,12 +89,11 @@ def section_a_stockcode_coverage(out_dir: Path) -> dict:
 # ---------------------------------------------------------------------------
 def section_b_vn100() -> dict:
     """Resolve VN100 universe. Prefer stock_list.nhomtop, else fallback."""
-    source = "stock_list.nhomtop ILIKE '%VN100%'"
+    source = "stock_list.nhomtop IN ('VN30','VN100')  -- single-tag column, VN30 and VN100 stored separately; union gives full VN100 universe of 100"
     try:
         df = pg_query(
             "SELECT DISTINCT stockcode FROM stock_list "
-            "WHERE nhomtop ILIKE :pat",
-            {"pat": "%VN100%"},
+            "WHERE nhomtop ILIKE '%VN100%' OR nhomtop ILIKE '%VN30%'",
         )
     except Exception as exc:  # noqa: BLE001
         df = pd.DataFrame(columns=["stockcode"])
