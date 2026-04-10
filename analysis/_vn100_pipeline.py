@@ -97,14 +97,20 @@ class _PortfolioFill:
 # ---------------------------------------------------------------------------
 # precompute_static
 # ---------------------------------------------------------------------------
-def precompute_static(period: Tuple[str, str]) -> Dict[str, Any]:
+def precompute_static(period: Tuple[str, str], mode: str = "current-vn100") -> Dict[str, Any]:
     """Precompute + cache period-static inputs.
+
+    Args:
+        period: (start_yyyy_mm_dd, end_yyyy_mm_dd).
+        mode: Universe mode string (default "current-vn100"). Included in
+            cache filenames so that sensitivity runs across different universe
+            modes do not collide. Fix for D-06.
 
     Returns dict with keys: universe, ohlc, fundamentals, foreign, mdm_gate.
 
     Cache layout (parquet under ``docs/audits/phase32/cache/``):
-        universe.parquet, ohlc.parquet, fundamentals.parquet,
-        foreign.parquet, mdm_gate.parquet
+        universe_{mode}_{start}_{end}.parquet,
+        ohlc_{mode}_{start}_{end}.parquet, etc.
     """
     if not (isinstance(period, tuple) and len(period) == 2):
         raise ValueError(f"period must be (start, end) tuple, got {period!r}")
@@ -112,11 +118,11 @@ def precompute_static(period: Tuple[str, str]) -> Dict[str, Any]:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     cache_files = {
-        "universe": CACHE_DIR / f"universe_{start}_{end}.parquet",
-        "ohlc": CACHE_DIR / f"ohlc_{start}_{end}.parquet",
-        "fundamentals": CACHE_DIR / f"fundamentals_{start}_{end}.parquet",
-        "foreign": CACHE_DIR / f"foreign_{start}_{end}.parquet",
-        "mdm_gate": CACHE_DIR / f"mdm_gate_{start}_{end}.parquet",
+        "universe": CACHE_DIR / f"universe_{mode}_{start}_{end}.parquet",
+        "ohlc": CACHE_DIR / f"ohlc_{mode}_{start}_{end}.parquet",
+        "fundamentals": CACHE_DIR / f"fundamentals_{mode}_{start}_{end}.parquet",
+        "foreign": CACHE_DIR / f"foreign_{mode}_{start}_{end}.parquet",
+        "mdm_gate": CACHE_DIR / f"mdm_gate_{mode}_{start}_{end}.parquet",
     }
 
     if all(p.exists() for p in cache_files.values()):
@@ -150,7 +156,7 @@ def precompute_static(period: Tuple[str, str]) -> Dict[str, Any]:
     from strategies.mdm_hybrid.config import HybridConfig, VN30_PRESET
 
     pg = postgres.get_engine()
-    loader = UniverseLoader(mode="current-vn100", pg_engine=pg)
+    loader = UniverseLoader(mode=mode, pg_engine=pg)
 
     # Semi-annual rebalance grid (D-02)
     rebalance_dates: List[pd.Timestamp] = []
@@ -400,15 +406,21 @@ def build_canslim_raw_frame(
     - ``n_prox``: 1 - close / rolling_max(highestprice, 252) — distance
       below the 252-day high. ``n_pass`` is ``n_prox <= n_within_high``.
 
-    Cached to :data:`CANSLIM_RAW_CACHE` (parquet) and reused across sweep
-    workers. Cache key is (min_date, max_date, ticker set hash) — stored
-    implicitly by overwrite on rebuild.
+    Cached per date range to ``canslim_raw_{min_date}_{max_date}.parquet``
+    under :data:`CACHE_DIR`. Date range is derived from the panel so that
+    OOS and in-sample runs never share the same cache file (D-03 fix).
 
     NaN rows are acceptable — the threshold applier will score them NaN
     (→ candidate dropped by PortfolioEngine).
     """
-    if CANSLIM_RAW_CACHE.exists():
-        cached = pd.read_parquet(CANSLIM_RAW_CACHE)
+    # D-03 fix: cache key includes date range so OOS run does not silently
+    # reuse in-sample fundamentals.
+    min_d = pd.Timestamp(panel["date"].min()).strftime("%Y-%m-%d")
+    max_d = pd.Timestamp(panel["date"].max()).strftime("%Y-%m-%d")
+    cache_path = CACHE_DIR / f"canslim_raw_{min_d}_{max_d}.parquet"
+
+    if cache_path.exists():
+        cached = pd.read_parquet(cache_path)
         # cheap shape check: tickers match precomputed panel?
         want_tickers = set(panel["ticker"].unique())
         have_tickers = set(cached["ticker"].unique())
@@ -541,7 +553,7 @@ def build_canslim_raw_frame(
     )
     try:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        raw.to_parquet(CANSLIM_RAW_CACHE)
+        raw.to_parquet(cache_path)
     except Exception:
         pass
     return raw
