@@ -62,7 +62,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - [ ] Event-driven signal engine + stock-level entry confirmation
 - [ ] MDM capital allocation policy
 - [x] Multi-stock long-only portfolio engine (max 8 positions) — Phase 31
-- [ ] Backtest + performance reporting on VN100
+- [x] Backtest + performance reporting on VN100 — Phase 34 (profit_factor=3.74, real_CAGR, 5 benchmarks)
 - [ ] Validation vs `rank_top_stocks.diem_canslim` baseline
 
 ### Validated (v1.0-v5.0)
