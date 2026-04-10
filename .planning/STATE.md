@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: verifying
-stopped_at: Completed 34-02-PLAN.md
-last_updated: "2026-04-10T06:17:13.796Z"
+status: executing
+stopped_at: Completed 999.1-01-PLAN.md
+last_updated: "2026-04-10T06:42:38.628Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 13
   completed_phases: 12
-  total_plans: 42
-  completed_plans: 42
+  total_plans: 44
+  completed_plans: 43
 ---
 
 # Project State
@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Long-only CANSLIM stock picking trên VN100, dùng MDM làm capital allocation gate.
-**Current focus:** Phase 34 — reporting-documentation-retrospective
+**Current focus:** Phase 999.1 — fix-mdm-sell-reduce-slots
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 999.1 (fix-mdm-sell-reduce-slots) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-10
 
 ## Data Sources (verified 2026-04-08)
@@ -95,8 +95,8 @@ Last activity: 2026-04-10
 
 ## Session Continuity
 
-Last session: 2026-04-10T06:13:11.343Z
-Stopped at: Completed 34-02-PLAN.md
+Last session: 2026-04-10T06:42:38.621Z
+Stopped at: Completed 999.1-01-PLAN.md
 Resume: v7.0 complete — all 42 plans done, Phase 34 closed
 
 ## v7.0 Shipped

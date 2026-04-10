@@ -694,7 +694,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Context:
 - Bug found during Phase 33 review
@@ -706,5 +706,5 @@ Context:
 - Need to add `sell_retain_pct: float = 0.5` to `PortfolioConfig` for configurability
 
 Plans:
-- [ ] 999.1-01-PLAN.md -- TDD: Add sell_retain_pct config + RS-ranked partial liquidation in MDM SELL (SELL-REDUCE-01, SELL-REDUCE-02)
+- [x] 999.1-01-PLAN.md -- TDD: Add sell_retain_pct config + RS-ranked partial liquidation in MDM SELL (SELL-REDUCE-01, SELL-REDUCE-02)
 - [ ] 999.1-02-PLAN.md -- Integration verification + rule docs update (SELL-REDUCE-03)
