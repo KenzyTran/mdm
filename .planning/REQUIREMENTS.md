@@ -109,11 +109,11 @@
 - [x] **BT-01**: VN100 backtest engine wiring all layers (universe → CANSLIM → entry → portfolio → costs)
 - [x] **BT-02**: In-sample run 2014-2018 + parameter sweep (CANSLIM thresholds, entry option, stop, slots)
 - [x] **BT-03**: Out-of-sample run 2019-2025 with locked parameters
-- [ ] **BT-04**: Sensitivity runs across (a) current VN100 (b) liquidity-reconstructed (c) VN30-only
+- [x] **BT-04**: Sensitivity runs across (a) current VN100 (b) liquidity-reconstructed (c) VN30-only
 - [ ] **BT-05**: Performance report — CAGR, Sharpe (risk-free = 10Y VN govt ~3%), MaxDD, hit rate, profit factor, hold time, turnover, cost drag
 - [ ] **BT-06**: Benchmark comparison — VN-Index B&H, VN30 B&H, MDM-only-on-index, 12M deposit, SJC gold
 - [ ] **BT-07**: Real (inflation-adjusted) CAGR alongside nominal
-- [ ] **BT-08**: Validation targets — Sharpe uplift > 0.20 vs benchmark, MaxDD reduction > 30% vs B&H
+- [x] **BT-08**: Validation targets — Sharpe uplift > 0.20 vs benchmark, MaxDD reduction > 30% vs B&H
 
 ### Documentation
 

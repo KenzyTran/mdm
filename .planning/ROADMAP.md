@@ -428,7 +428,7 @@ Plans:
 - [x] **Phase 30: Entry Confirmation** — Option A (52wk high + vol) + Option C (Pocket Pivot), 20-day window from MDM BUY, A/B comparison (completed 2026-04-09)
 - [x] **Phase 31: Multi-Stock Portfolio Engine** — 8-slot equal-weight engine, stops, exits, cooldowns, costs, T+2 + ceiling/floor lock handling, `state[i-1]` discipline (completed 2026-04-09)
 - [x] **Phase 32: VN100 Backtest + In-Sample Sweep** — wire engine to data, run 2014-2018 sweep across CANSLIM/entry/stop params (completed 2026-04-10)
-- [ ] **Phase 33: Out-of-Sample + Sensitivity** — locked-param 2019-2025 run, sensitivity across (current VN100, liquidity-reconstructed, VN30-only), comparison vs `diem_canslim` baseline
+- [x] **Phase 33: Out-of-Sample + Sensitivity** — locked-param 2019-2025 run, sensitivity across (current VN100, liquidity-reconstructed, VN30-only), comparison vs `diem_canslim` baseline (completed 2026-04-10)
 - [ ] **Phase 34: Reporting + Documentation** — performance dashboard (CAGR/Sharpe/MaxDD/cost drag/benchmarks/real CAGR), `docs/rules_canslim_mdm.md`, milestone retrospective
 
 ## Phase Details
@@ -614,12 +614,12 @@ Plans:
   3. Comparison vs `rank_top_stocks.diem_canslim` baseline ranking strategy on same period
   4. Pass/fail vs targets: Sharpe uplift > 0.20 vs VN-Index B&H, MaxDD reduction > 30% vs VN-Index B&H
   5. If targets fail, written analysis identifies which component (CANSLIM/entry/MDM/costs) is responsible
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 **UI hint**: yes
 
 Plans:
 - [x] 33-01-PLAN.md -- Fix cache bugs + OOS backtest 2019-2025 (BT-03)
-- [ ] 33-02-PLAN.md -- Sensitivity matrix + baselines + verdict (BT-04, BT-08)
+- [x] 33-02-PLAN.md -- Sensitivity matrix + baselines + verdict (BT-04, BT-08)
 
 ### Phase 34: Reporting + Documentation + Retrospective
 **Goal**: v7.0 milestone is shippable: dashboard updated, rules documented, retrospective filed
@@ -675,5 +675,5 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 30. Stock-Level Entry Confirmation | v7.0 | 3/3 | Complete    | 2026-04-09 |
 | 31. Multi-Stock Portfolio Engine | v7.0 | 5/5 | Complete    | 2026-04-09 |
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 4/4 | Complete   | 2026-04-10 |
-| 33. Out-of-Sample + Sensitivity | v7.0 | 1/2 | In Progress|  |
+| 33. Out-of-Sample + Sensitivity | v7.0 | 2/2 | Complete   | 2026-04-10 |
 | 34. Reporting + Documentation | v7.0 | 0/0 | Pending | — |

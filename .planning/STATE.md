@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: executing
-stopped_at: Completed 33-01-PLAN.md
-last_updated: "2026-04-10T03:06:49.909Z"
+status: verifying
+stopped_at: Completed 33-02-PLAN.md
+last_updated: "2026-04-10T03:18:14.486Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 12
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 39
-  completed_plans: 38
+  completed_plans: 39
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 
 Phase: 33 (out-of-sample-sensitivity) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-10
 
 ## Data Sources (verified 2026-04-08)
@@ -63,6 +63,15 @@ Last activity: 2026-04-10
 - D-06 fixed: precompute_static gains mode param (default current-vn100) so sensitivity runs across universe modes don't collide in cache
 - OOS results (rank-1, 2019-2025): CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%, 62 trades
 
+### Decisions (Phase 33, Plan 02)
+
+- BT-08 FAIL: Sharpe uplift +0.064 (target >0.20 FAIL); MaxDD reduction 74.7% (target >30% PASS); Overall FAIL
+- CANSLIM scoring is primary bottleneck: CANSLIM-only baseline shows 0 trades, stock selection alone does not generate alpha
+- MDM timing is sound: MDM-only-on-index achieves Sharpe=0.508 (+0.125 uplift vs B&H), exceeding the BT-08 target
+- VN-Index B&H benchmark: CAGR=10.42%, Sharpe=0.383, MaxDD=-40.34% for 2019-2025
+- diem_canslim OOS: 24 quarters, median rho=0.365 (better than in-sample 0.280) — scorer generalizes well OOS
+- liquidity-reconstructed mode failed (SQL schema bug: closeindex column) — deferred to future fix
+
 ### Open Questions
 
 - Exact MDM capital allocation policy (BUY=100%, CASH=?%, SELL=0%?)
@@ -78,6 +87,6 @@ Last activity: 2026-04-10
 
 ## Session Continuity
 
-Last session: 2026-04-10T03:06:49.901Z
-Stopped at: Completed 33-01-PLAN.md
+Last session: 2026-04-10T03:18:14.479Z
+Stopped at: Completed 33-02-PLAN.md
 Resume: Continue with plan 32-04 or move to Phase 33
