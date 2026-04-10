@@ -2,22 +2,22 @@
 
 ## v7.0 CANSLIM + MDM on VN100 (Shipped: 2026-04-10)
 
-**Phases completed:** 7 phases (28-34), ~18 plans
+**Phases completed:** 8 phases (28-34 + 999.1), 34 plans, 62 tasks
+**Timeline:** 2026-04-08 → 2026-04-10 (2 days)
+**Files changed:** 250 files, 53,598 insertions
 
-**Summary:** CANSLIM + MDM on VN100 -- 7 phases (28-34), portfolio engine with 5-way benchmark comparison. OOS result: CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%.
+**Summary:** Long-only CANSLIM stock picking on VN100 with MDM as capital allocation gate. Full end-to-end pipeline from data connectors through portfolio engine, backtested in-sample (2014-2018) and out-of-sample (2019-2025). Phase 999.1 added RS-ranked partial liquidation on MDM SELL.
+
+**OOS Result (2019-2025, post-999.1):** CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%
 
 **Key accomplishments:**
-
-- Database connectors: Postgres (TA), MySQL (fundamentals) with sqlalchemy
-- VN100 universe loader with 3 modes: current-vn100, liquidity-reconstructed, vn30-only
-- CANSLIM scorer: C/A/N/S/L/I/liq boolean rules + composite score (0.70 bool + 0.30 RS)
-- Entry confirmation: Option A (pivot breakout) and Option C (pocket pivot) union feed
-- Multi-stock long-only portfolio engine: max 8 slots, event-driven, T+2.5, 7% limit
-- MDM capital allocation gate from HybridEngine + fail-safe (best v6.0 model)
-- In-sample sweep (Phase 32): rank-1 params selected (c_yoy=0.25, slots=5, entry=C)
-- OOS validation (Phase 33): BT-08 FAIL on Sharpe uplift, PASS on MaxDD reduction
-- Key finding: CANSLIM is alpha source (Sharpe 1.047), MDM reduces Sharpe but cuts MaxDD 74.7%
-- Documentation: rules_canslim_mdm.md, data_dictionary.md, retrospective entry
+- Postgres + MySQL connectors; VN100 data audit: 2936 stockcodes, 852 delisted, 16 EPS-sparse tickers
+- CANSLIM scorer (C/A/N/S/L/I/M + liquidity), validated vs diem_canslim baseline (OOS rho=0.365)
+- Entry confirmation: Option A (52w breakout) + Option C (Pocket Pivot), next-day ATO fills
+- Multi-stock portfolio engine: max 8 positions, 8% hard stop, MA50 trailing stop, T+2 settlement, 0.35% costs
+- OOS 2019-2025: CAGR=6.23%, Sharpe=0.448, MaxDD=-10.22% (pre-999.1); CAGR=10.18%, Sharpe=0.813, MaxDD=-16.31% (post-999.1)
+- Key finding: CANSLIM alone Sharpe=1.047; MDM gate reduces to Sharpe=0.448 but cuts MaxDD from -40% to -10%
+- RS-ranked partial liquidation (Phase 999.1): keep top 50% positions by RS on MDM SELL event
 
 ---
 

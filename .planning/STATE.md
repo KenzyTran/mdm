@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v6.0
-milestone_name: MDM Fail-Safe & Signal Refinement
-status: verifying
-stopped_at: Completed 999.1-fix-mdm-sell-reduce-slots/02-PLAN.md
-last_updated: "2026-04-10T07:19:05.237Z"
+milestone: v7.0
+milestone_name: CANSLIM + MDM on VN100
+status: milestone_complete
+stopped_at: v7.0 milestone archived 2026-04-10
+last_updated: "2026-04-10T00:00:00.000Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 13
@@ -17,10 +17,10 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-08)
+See: .planning/PROJECT.md (updated 2026-04-10)
 
-**Core value:** Long-only CANSLIM stock picking trên VN100, dùng MDM làm capital allocation gate.
-**Current focus:** Phase 999.1 — fix-mdm-sell-reduce-slots
+**Core value:** Discover MDM rules + apply as capital allocation gate for quantitative CANSLIM stock picking on VN100.
+**Current focus:** Planning next milestone
 
 ## Current Position
 

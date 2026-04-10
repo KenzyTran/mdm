@@ -41,35 +41,49 @@
 
 ---
 
-## Milestone: v7.0 -- CANSLIM + MDM on VN100
+## Milestone: v7.0 — CANSLIM + MDM on VN100
 
 **Shipped:** 2026-04-10
-**Phases:** 28-34 (7 phases) | **Plans:** ~18 plans | **Timeline:** ~3 days
+**Phases:** 28-34 + 999.1 (8 phases) | **Plans:** 34 plans | **Timeline:** 2 days (2026-04-08 → 2026-04-10)
 
 ### What Was Built
-- Multi-stock CANSLIM+MDM portfolio engine: long-only, event-driven, max 5 slots (locked)
-- VN100 universe loader with 3 modes (current-vn100, liquidity-reconstructed, vn30-only)
-- CANSLIM scorer (C/A/N/S/L/I rules) with configurable thresholds
-- Entry confirmation: Option A (pivot breakout) and Option C (pocket pivot)
-- MDM capital allocation gate from HybridEngine + fail-safe
-- In-sample sweep (Phase 32) + OOS validation (Phase 33)
-- Comprehensive performance report with 5-way benchmark comparison
+- Postgres + MySQL connectors; VN100 data audit (2936 stockcodes, 852 delisted, 16 EPS-sparse tickers)
+- VN100 universe loader (100-ticker static, 3 sensitivity modes: current-vn100, liquidity-reconstructed, vn30-only)
+- CANSLIM scorer (C/A/N/S/L/I/M + liquidity) validated vs diem_canslim baseline (OOS rho=0.365)
+- Entry confirmation: Option A (52w breakout) + Option C (pocket pivot), next-day ATO fills
+- Multi-stock portfolio engine: max 8 positions, 8% hard stop, MA50 trailing stop, T+2 settlement, 0.35% costs
+- MDM capital allocation gate (HybridEngine + fail-safe from v6.0)
+- In-sample sweep 2014-2018 (Phase 32) + OOS validation 2019-2025 (Phase 33)
+- Performance report: profit_factor=3.74, real_CAGR, 5-benchmark comparison
+- Phase 999.1: RS-ranked partial liquidation on MDM SELL → OOS CAGR=10.18%, Sharpe=0.813, MaxDD=-16.31%
 
 ### What Worked
-- Pipeline architecture: precompute_static -> build_canslim_raw -> run_backtest made sweep/OOS trivial
-- Separation of concerns: connectors (data) -> scorer (signals) -> engine (execution) -> report (output)
-- Phase 33 gap closure process caught and fixed SQL bugs (closeindex -> closeprice)
+- Pipeline architecture: precompute_static → build_canslim_raw → run_backtest made sweep/OOS trivial with no data leakage
+- Separation of concerns: connectors → scorer → entry → engine → report (each independently testable)
+- TDD-first on portfolio engine and 999.1 caught integration bugs early
+- Phase 33 gap closure process fixed two cache contamination bugs (D-03, D-06) and one SQL schema bug
+- 999.1 RS-ranked partial exit was a backlog item that significantly improved OOS: +3.95% CAGR, +0.365 Sharpe
 
 ### What Was Inefficient
-- CANSLIM scoring is the alpha source (Sharpe 1.047 standalone) but MDM gate reduces it (0.448 combined)
-- BT-08 Sharpe uplift target FAILED (+0.064 vs target >0.20)
-- liquidity-reconstructed universe mode has data quality issues, effectively unusable
+- BT-08 target was set too high (Sharpe uplift >0.20 vs benchmark) without knowing MDM gate is a drag on CANSLIM alpha
+- liquidity-reconstructed universe mode had SQL schema bug (closeindex vs closeprice) — discovered late in Phase 33
+- Many SUMMARY.md one-liner fields left as placeholders ("One-liner:") — made milestone complete tool output noisy
+
+### Patterns Established
+- Cache key includes date range to prevent in-sample/OOS contamination in multi-run pipelines
+- Sensitivity runs should always include a "strategy-only baseline" (CANSLIM-only, MDM-only) to decompose attribution
+- RS-ranked partial exit on market timing signals: keep strong, shed weak (reusable pattern for other strategies)
 
 ### Key Lessons
-1. Stock selection (CANSLIM) generates alpha; market timing (MDM) reduces drawdown but costs returns
-2. MDM gate dramatically reduces MaxDD (-10% vs -40% B&H) -- its value is risk management, not return enhancement
-3. Parameter sweep rank-1 is sensitive to universe mode -- current-vn100 significantly outperforms others
-4. state[i-1] discipline remains critical for avoiding look-ahead bias
+1. **Stock selection is the alpha source, market timing is risk management:** CANSLIM alone Sharpe=1.047 >> MDM+CANSLIM Sharpe=0.448. MDM cuts MaxDD 74.7% (from -40% to -10%) but costs 6pt return. This reframes the MDM gate's role.
+2. **Partial liquidation > full liquidation on SELL:** Keeping top 50% positions by RS when MDM signals SELL improved OOS from CAGR=6.23% to 10.18%. Market timing signals should trigger "risk reduction", not "full exit".
+3. **Baselines matter for attribution:** BT-08 FAIL was initially diagnosed as CANSLIM scoring being the bottleneck. Adding the CANSLIM-only baseline proved the opposite — CANSLIM generates alpha, MDM gate suppresses it.
+4. **state[i-1] discipline remains non-negotiable:** The 707% vs 93% look-ahead bias pattern was actively prevented via PositionBook design discipline throughout Phase 31.
+
+### Cost Observations
+- Model mix: ~80% sonnet, ~20% opus
+- Sessions: ~5 sessions across 2 days (high velocity sprint)
+- Notable: 34 plans in 2 days — fastest milestone by plan/day ratio
 
 ---
 
@@ -84,6 +98,8 @@
 | v3.0 | 1 day | 5 | Hybrid engine with Propose-Filter-Decide |
 | v4.0 | 1 day | 3 | Short signals and risk management |
 | v5.0 | 5 days | 4 | Signal quality filters with A/B validation |
+| v6.0 | 2 days | 5 | Fail-safe + gap filter + 6% threshold + banding |
+| v7.0 | 2 days | 8 | CANSLIM+MDM multi-stock portfolio engine on VN100 |
 
 ### Top Lessons (Verified Across Milestones)
 

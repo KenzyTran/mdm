@@ -2,33 +2,26 @@
 
 ## What This Is
 
-A research and trading system project to reverse-engineer Dr. K's Market Direction Model (MDM) using 52 years of published signal history (962 signals, 1974-2026) and multi-indicator feature engineering. The project discovers which technical indicator conditions (EMA crossovers, MACD, MA relationships) trigger Buy/Sell/Cash transitions, then applies discovered rules to both NASDAQ and VN30. Also maintains a separate VSA (Volume Spread Analysis) strategy.
+A research and trading system project to reverse-engineer Dr. K's Market Direction Model (MDM) using 52 years of published signal history (962 signals, 1974-2026), then apply it as a capital allocation gate for long-only CANSLIM stock picking on the VN100 universe. The project discovers indicator-based MDM rules (EMA crossovers, MACD, MA relationships) and combines them with a quantitative CANSLIM scorer to build a multi-stock portfolio engine for the Vietnamese market.
 
 ## Core Value
 
-Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
+Discover the actual indicator-based rules driving Dr. K's MDM signals — and combine them with quantitative CANSLIM stock selection on VN100 to build a backtested, rule-based trading system for the Vietnamese market.
 
-## Current Milestone: v7.0 CANSLIM Stock Picking + MDM Capital Allocation on VN100 (Shipped 2026-04-10)
+## Completed: v7.0 CANSLIM + MDM on VN100 (shipped 2026-04-10)
 
-**Goal:** Long-only CANSLIM stock picking trên rổ VN100, dùng MDM (HybridEngine + fail-safe) làm gate phân bổ tỷ lệ tiền/hàng, event-driven, max 8 vị thế, backtest qua nhiều năm.
+**Kết quả:**
+- [x] Postgres + MySQL connectors, VN100 universe loader (100 tickers, 2936 stockcodes audited) — Phase 28
+- [x] CANSLIM scorer (C/A/N/S/L/I/M) validated vs diem_canslim baseline (OOS rho=0.365) — Phase 29
+- [x] Stock entry confirmation: Option A (52w breakout) + Option C (Pocket Pivot), MDM BUY window — Phase 30
+- [x] Multi-stock portfolio engine: max 8 positions, 8% hard stop, MA50 trailing stop, T+2.5, 0.35% costs — Phase 31
+- [x] In-sample sweep 2014-2018, locked parameters selected — Phase 32
+- [x] OOS validation 2019-2025: CAGR=6.23%, Sharpe=0.448, MaxDD=-10.22% — Phase 33
+- [x] CANSLIM-only baseline Sharpe=1.047 >> MDM+CANSLIM Sharpe=0.448; MDM gate is bottleneck — Phase 33
+- [x] Performance report: profit_factor=3.74, real_CAGR, 5 benchmarks — Phase 34
+- [x] RS-ranked partial liquidation on MDM SELL (keep top 50%): OOS CAGR=10.18%, Sharpe=0.813, MaxDD=-16.31% — Phase 999.1
 
-**Target features:**
-- Research papers học thuật về CANSLIM (rules C/A/N/S/L/I/M, biến thể định lượng, entry confirmation)
-- Data layer: Postgres connector (TA), MySQL connector (fundamentals), Redis connector (live, phase sau)
-- VN100 universe loader (static)
-- CANSLIM scorer module (per-stock score 0-100, daily)
-- Event-driven signal engine (FTD, base breakout, RS new high, EPS surprise)
-- Stock-level entry confirmation (MDM BUY là cần, không đủ — phải chờ pivot buy point per stock)
-- MDM-driven capital allocation policy (BUY/CASH/SELL → exposure %)
-- Multi-stock long-only portfolio engine (max 8 vị thế, O'Neil stop 7-8%, T+2.5, 7% limit)
-- Backtest + performance reporting (CAGR, Sharpe, MaxDD, win rate vs benchmark)
-- Validation vs `rank_top_stocks.diem_canslim` baseline
-
-**Key context:**
-- Universe VN100 static (không có point-in-time data)
-- Data sources: Postgres `stock_eod` (5.9M rows, 2936 mã, đến 2026-04-08), Postgres `stock_rs`/`nganh_rs`/`nhnl_indicator`, MySQL `ratios_stock`/`is_quarter_*`/`rank_top_stocks`
-- Long-only, max 8 vị thế, event-driven
-- MDM signal source: HybridEngine + fail-safe (best v6.0)
+**Best model with 999.1 fix:** CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31% (OOS 2019-2025)
 
 ## Completed: v6.0 MDM Fail-Safe & Signal Refinement (shipped 2026-04-02)
 
@@ -53,17 +46,21 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 - ✓ Data loaders for VN30, NASDAQ, S&P500 — CSV format with OHLCV
 - ✓ Kelly Criterion position management — existing implementation
 
-### Active (v7.0)
+### Active
 
-- [ ] Research CANSLIM academic literature (rules, quantitative variants, Vietnam adaptation, entry confirmation)
-- [ ] Database connectors (Postgres TA, MySQL fundamentals, Redis live)
-- [ ] VN100 universe loader (static)
-- [ ] CANSLIM scorer (C/A/N/S/L/I/M components)
-- [ ] Event-driven signal engine + stock-level entry confirmation
-- [ ] MDM capital allocation policy
-- [x] Multi-stock long-only portfolio engine (max 8 positions) — Phase 31
-- [x] Backtest + performance reporting on VN100 — Phase 34 (profit_factor=3.74, real_CAGR, 5 benchmarks)
-- [ ] Validation vs `rank_top_stocks.diem_canslim` baseline
+*(No next milestone defined — planning in progress)*
+
+### Validated (v7.0)
+
+- ✓ Database connectors (Postgres TA, MySQL fundamentals) — v7.0
+- ✓ VN100 universe loader (100-ticker static, semi-annual rebalance) — v7.0
+- ✓ CANSLIM scorer (C/A/N/S/L/I/M, validated vs diem_canslim OOS rho=0.365) — v7.0
+- ✓ Stock entry confirmation (Option A breakout + Option C Pocket Pivot) — v7.0
+- ✓ MDM capital allocation gate (BUY=new entries, CASH=hold, SELL=partial liquidation by RS) — v7.0
+- ✓ Multi-stock long-only portfolio engine (max 8 positions, 8% stop, MA50 trailing) — v7.0
+- ✓ Backtest + performance reporting (profit_factor=3.74, real_CAGR, 5 benchmarks) — v7.0
+- ✓ RS-ranked partial liquidation on MDM SELL (keep top 50%) — v7.0
+- ✓ OOS validation 2019-2025: CAGR=10.18%, Sharpe=0.813, MaxDD=-16.31% — v7.0
 
 ### Validated (v1.0-v5.0)
 
@@ -167,6 +164,11 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzi
 | QE Floor disabled by default on VN30 | Fed liquidity has low correlation with VN30 — degrades performance (93.7% vs 190.8%) | ✓ Good |
 | Dashboard simplified to single V2 model | Hybrid/P15/Filtered models all underperform V2 on VN30 — less clutter | ✓ Good |
 | Walk-forward split at 2020-01-01 | Pre-COVID train, post-COVID test — validates filters across regime change | ✓ Good |
+| MDM BUY is necessary but not sufficient for stock entry | Stock-level confirmation (pivot buy point) required per stock — avoids buying on index signal alone | ✓ Good |
+| CANSLIM is primary alpha source, not MDM timing | CANSLIM-only Sharpe=1.047 >> MDM+CANSLIM Sharpe=0.448; MDM gate reduces exposure during corrections | ✓ Good |
+| RS-ranked partial liquidation on MDM SELL | Keep top 50% positions by RS instead of full liquidation; weaker positions closed, strongest held with individual stops | ✓ Good |
+| current-vn100 preferred over liquidity-reconstructed | Liquidity-reconstructed Sharpe=0.052 vs current-vn100 Sharpe=0.448; survivorship bias is acknowledged tradeoff | ✓ Good |
+| equal-weight 12.5%/slot sizing | 8 slots × 12.5% = 100% exposure; simpler and avoids Kelly overfitting on small sample | ✓ Good |
 
 ## Evolution
 
@@ -185,5 +187,21 @@ This document evolves at phase transitions and milestone boundaries.
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
+## Context
+
+**Current codebase state (v7.0):**
+- ~250 files, 53,598 insertions since v6.0
+- New packages: `strategies/canslim/`, `strategies/entry/`, `strategies/portfolio/`, `connectors/`
+- Data connectors: Postgres (`stock_eod`, `stock_rs`, `nganh_rs`, `nhnl_indicator`) + MySQL (`ratios_stock`, `is_quarter_*`, `rank_top_stocks`)
+- VN100 universe: 100-ticker static, semi-annual rebalance Jan/Jul
+- CANSLIM scorer: 8 rules (C/A/N/S/L/I/M + liquidity), schema-locked
+- Entry confirmation: Option A (52w-high breakout) + Option C (Pocket Pivot), next-day ATO fill
+- Portfolio engine: max 8 positions, 8% hard stop, MA50 trailing stop, T+2 settlement, 0.35% total cost
+- MDM signal source: HybridEngine + fail-safe on VNINDEX (v6.0 best model)
+- OOS performance (2019-2025, 999.1 fix): CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%
+
+**Key finding from v7.0:**
+CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
+
 ---
-*Last updated: 2026-04-10 — v7.0 shipped + Phase 999.1 fix: MDM SELL nay đóng chỉ 50% vị thế yếu nhất theo RS (partial liquidation); vị thế giữ lại vẫn đóng qua stop/signal cá nhân. OOS post-fix: CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%.*
+*Last updated: 2026-04-10 after v7.0 milestone*
