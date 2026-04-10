@@ -1,0 +1,25 @@
+{
+  "canslim_only": {
+    "CAGR": 0.0,
+    "Sharpe_rf3": 0.0,
+    "MaxDD": 0.0,
+    "MaxDD_duration_days": 0,
+    "hit_rate": 0.0,
+    "turnover": 0.0,
+    "total_cost_drag_pct": 0.0,
+    "num_trades": 0,
+    "avg_hold_days": 0.0
+  },
+  "mdm_only_index": {
+    "CAGR": 0.08008425611042824,
+    "Sharpe_rf3": 0.5075780831336999,
+    "MaxDD": -0.15595017321563348,
+    "MaxDD_duration_days": 1030
+  },
+  "vnindex_bh": {
+    "CAGR": 0.10420915383706286,
+    "Sharpe_rf3": 0.38349255136119564,
+    "MaxDD": -0.40342934899939153,
+    "MaxDD_duration_days": 882
+  }
+}

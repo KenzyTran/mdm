@@ -1,0 +1,152 @@
+{
+  "period": "2019-2025",
+  "quarters_compared": 24,
+  "median_spearman_rho": 0.3652855809305021,
+  "mean_top10_overlap": 2.8333333333333335,
+  "per_quarter": [
+    {
+      "quarter": "Q1 2020",
+      "rho": 0.2309065934065934,
+      "overlap": 4,
+      "n_common": 64
+    },
+    {
+      "quarter": "Q2 2020",
+      "rho": 0.2953234265734266,
+      "overlap": 3,
+      "n_common": 65
+    },
+    {
+      "quarter": "Q3 2020",
+      "rho": 0.4847465034965035,
+      "overlap": 2,
+      "n_common": 65
+    },
+    {
+      "quarter": "Q4 2020",
+      "rho": 0.2407473123891035,
+      "overlap": 2,
+      "n_common": 66
+    },
+    {
+      "quarter": "Q1 2021",
+      "rho": 0.33582089552238814,
+      "overlap": 3,
+      "n_common": 67
+    },
+    {
+      "quarter": "Q2 2021",
+      "rho": 0.3406496927129061,
+      "overlap": 3,
+      "n_common": 67
+    },
+    {
+      "quarter": "Q3 2021",
+      "rho": 0.21458216936706842,
+      "overlap": 3,
+      "n_common": 67
+    },
+    {
+      "quarter": "Q4 2021",
+      "rho": 0.3664160018322708,
+      "overlap": 4,
+      "n_common": 68
+    },
+    {
+      "quarter": "Q1 2022",
+      "rho": 0.3641551600287334,
+      "overlap": 4,
+      "n_common": 67
+    },
+    {
+      "quarter": "Q2 2022",
+      "rho": 0.33194987628701417,
+      "overlap": 4,
+      "n_common": 67
+    },
+    {
+      "quarter": "Q3 2022",
+      "rho": 0.4122299011460065,
+      "overlap": 3,
+      "n_common": 70
+    },
+    {
+      "quarter": "Q4 2022",
+      "rho": 0.42400438436244064,
+      "overlap": 3,
+      "n_common": 69
+    },
+    {
+      "quarter": "Q1 2023",
+      "rho": 0.1235294117647059,
+      "overlap": 1,
+      "n_common": 69
+    },
+    {
+      "quarter": "Q2 2023",
+      "rho": 0.5004008092529678,
+      "overlap": 4,
+      "n_common": 68
+    },
+    {
+      "quarter": "Q3 2023",
+      "rho": 0.3995877390540902,
+      "overlap": 2,
+      "n_common": 68
+    },
+    {
+      "quarter": "Q4 2023",
+      "rho": 0.5026671538180489,
+      "overlap": 2,
+      "n_common": 69
+    },
+    {
+      "quarter": "Q1 2024",
+      "rho": 0.5585372370882161,
+      "overlap": 0,
+      "n_common": 68
+    },
+    {
+      "quarter": "Q2 2024",
+      "rho": 0.6233919914494025,
+      "overlap": 3,
+      "n_common": 68
+    },
+    {
+      "quarter": "Q3 2024",
+      "rho": 0.4805626598465474,
+      "overlap": 3,
+      "n_common": 69
+    },
+    {
+      "quarter": "Q4 2024",
+      "rho": 0.44484297086869046,
+      "overlap": 2,
+      "n_common": 70
+    },
+    {
+      "quarter": "Q1 2025",
+      "rho": 0.31439532334673004,
+      "overlap": 5,
+      "n_common": 69
+    },
+    {
+      "quarter": "Q2 2025",
+      "rho": 0.4634271099744246,
+      "overlap": 2,
+      "n_common": 69
+    },
+    {
+      "quarter": "Q3 2025",
+      "rho": 0.35878699305809286,
+      "overlap": 2,
+      "n_common": 69
+    },
+    {
+      "quarter": "Q4 2025",
+      "rho": 0.32652539276580206,
+      "overlap": 4,
+      "n_common": 69
+    }
+  ]
+}
