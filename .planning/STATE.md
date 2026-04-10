@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Momentum Stock Selection
-status: roadmap_created
-stopped_at: Roadmap created for v8.0 (3 phases, 10 requirements mapped)
-last_updated: "2026-04-10T00:00:00.000Z"
+status: executing
+stopped_at: Completed 35-01-PLAN.md
+last_updated: "2026-04-10T09:32:17.757Z"
 last_activity: 2026-04-10
 progress:
-  total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 4
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
+  percent: 0
 ---
 
 # Project State
@@ -20,20 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-10)
 
 **Core value:** Discover MDM rules + apply as capital allocation gate for pure momentum stock picking on VN100.
-**Current focus:** Phase 35 — RS Module (ready to plan)
+**Current focus:** Phase 35 — rs-module
 
 ## Current Position
 
-Phase: 35 of 37 (RS Module)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-04-10 — Roadmap created for v8.0
+Phase: 35 (rs-module) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-04-10
 
 Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: —
 - Total execution time: 0 hours
@@ -45,10 +47,12 @@ Progress: [░░░░░░░░░░] 0%
 | - | - | - | - |
 
 **Recent Trend:**
+
 - Last 5 plans: —
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 35 P01 | 3min | 2 tasks | 6 files |
 
 ## Data Sources (verified 2026-04-08)
 
@@ -74,6 +78,8 @@ Progress: [░░░░░░░░░░] 0%
 - MDM gate unchanged: HybridEngine + fail-safe on VNINDEX
 - Pyramiding: max 2 buys per ticker, 30% NAV cap per ticker
 - Hard stop: 8%, no window limit (buy for full MDM BUY period)
+- [P35-01] Used fill_method=None in pct_change to avoid pandas FutureWarning deprecation
+- [P35-01] Excluded NaN rows (insufficient history) from RS output rather than returning NaN ranks
 
 ### v7.0 Baseline (for comparison)
 
@@ -91,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10
-Stopped at: Roadmap created for v8.0 — ready to plan Phase 35
+Last session: 2026-04-10T09:32:17.750Z
+Stopped at: Completed 35-01-PLAN.md
 Resume file: None

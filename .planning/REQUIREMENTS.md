@@ -7,8 +7,8 @@
 
 ### RS Module
 
-- [ ] **MOM-01**: RS Weighted ROC (IBD style) tính được cho toàn VN100 — 0.4×ROC63 + 0.2×ROC126 + 0.2×ROC189 + 0.2×ROC252 — rank cross-sectional percentile [0,100] theo từng ngày
-- [ ] **MOM-02**: RS ROC 6 tháng đơn giản (ROC126) tính song song để so sánh in-sample
+- [x] **MOM-01**: RS Weighted ROC (IBD style) tính được cho toàn VN100 — 0.4×ROC63 + 0.2×ROC126 + 0.2×ROC189 + 0.2×ROC252 — rank cross-sectional percentile [0,100] theo từng ngày
+- [x] **MOM-02**: RS ROC 6 tháng đơn giản (ROC126) tính song song để so sánh in-sample
 - [ ] **MOM-03**: RS cache vào parquet theo period/formula, không tính lại mỗi lần chạy
 
 ### Momentum Scorer
@@ -43,8 +43,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOM-01 | Phase 35 | Pending |
-| MOM-02 | Phase 35 | Pending |
+| MOM-01 | Phase 35 | Complete |
+| MOM-02 | Phase 35 | Complete |
 | MOM-03 | Phase 35 | Pending |
 | MSCO-01 | Phase 36 | Pending |
 | MSCO-02 | Phase 36 | Pending |
