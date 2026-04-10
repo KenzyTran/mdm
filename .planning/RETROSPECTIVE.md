@@ -41,6 +41,38 @@
 
 ---
 
+## Milestone: v7.0 -- CANSLIM + MDM on VN100
+
+**Shipped:** 2026-04-10
+**Phases:** 28-34 (7 phases) | **Plans:** ~18 plans | **Timeline:** ~3 days
+
+### What Was Built
+- Multi-stock CANSLIM+MDM portfolio engine: long-only, event-driven, max 5 slots (locked)
+- VN100 universe loader with 3 modes (current-vn100, liquidity-reconstructed, vn30-only)
+- CANSLIM scorer (C/A/N/S/L/I rules) with configurable thresholds
+- Entry confirmation: Option A (pivot breakout) and Option C (pocket pivot)
+- MDM capital allocation gate from HybridEngine + fail-safe
+- In-sample sweep (Phase 32) + OOS validation (Phase 33)
+- Comprehensive performance report with 5-way benchmark comparison
+
+### What Worked
+- Pipeline architecture: precompute_static -> build_canslim_raw -> run_backtest made sweep/OOS trivial
+- Separation of concerns: connectors (data) -> scorer (signals) -> engine (execution) -> report (output)
+- Phase 33 gap closure process caught and fixed SQL bugs (closeindex -> closeprice)
+
+### What Was Inefficient
+- CANSLIM scoring is the alpha source (Sharpe 1.047 standalone) but MDM gate reduces it (0.448 combined)
+- BT-08 Sharpe uplift target FAILED (+0.064 vs target >0.20)
+- liquidity-reconstructed universe mode has data quality issues, effectively unusable
+
+### Key Lessons
+1. Stock selection (CANSLIM) generates alpha; market timing (MDM) reduces drawdown but costs returns
+2. MDM gate dramatically reduces MaxDD (-10% vs -40% B&H) -- its value is risk management, not return enhancement
+3. Parameter sweep rank-1 is sensitive to universe mode -- current-vn100 significantly outperforms others
+4. state[i-1] discipline remains critical for avoiding look-ahead bias
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
