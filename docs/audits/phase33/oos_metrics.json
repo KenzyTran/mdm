@@ -1,11 +1,11 @@
 {
-  "CAGR": 0.06227118915664831,
-  "Sharpe_rf3": 0.44782086547369265,
-  "MaxDD": -0.10220654381910434,
-  "MaxDD_duration_days": 1007,
-  "hit_rate": 0.45161290322580644,
-  "turnover": 7.8218938119586685,
-  "total_cost_drag_pct": 9.552104389761574,
-  "num_trades": 62,
-  "avg_hold_days": 33.03225806451613
+  "CAGR": 0.1675037165554667,
+  "Sharpe_rf3": 0.529236321805763,
+  "MaxDD": -0.5644784371693283,
+  "MaxDD_duration_days": 927,
+  "hit_rate": 0.0,
+  "turnover": 0.12253407764349561,
+  "total_cost_drag_pct": 0.2986532705422841,
+  "num_trades": 2,
+  "avg_hold_days": 7.0
 }

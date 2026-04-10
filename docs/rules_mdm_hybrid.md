@@ -431,3 +431,62 @@ Trong trạng thái SELL, mỗi ngày hệ thống kiểm tra:
 ### 4. Kết quả
 
 Trên VN30 2015-2026: 35 lần fail-safe trigger, cải thiện return từ +192% lên +239% và giảm MaxDD từ -31.8% xuống -28.2%.
+
+---
+
+## XV. PORTFOLIO ENGINE — MDM SELL PARTIAL LIQUIDATION (Phase 999.1)
+
+*Áp dụng cho `strategies/portfolio/engine.py` (PortfolioEngine), không phải HybridEngine trực tiếp.*
+
+Khi `PortfolioEngine` nhận tín hiệu MDM SELL, thay vì thanh lý **tất cả** vị thế đang mở, hệ thống chỉ đóng **50% yếu nhất** (theo Relative Strength).
+
+### 1. Hành vi cũ (trước Phase 999.1)
+
+MDM SELL → đóng toàn bộ vị thế đang mở với `exit_reason="mdm_sell"`.
+
+### 2. Hành vi mới — Partial Liquidation (Phase 999.1)
+
+MDM SELL → xếp hạng vị thế theo RS, đóng **nhóm yếu nhất**, giữ lại **nhóm mạnh nhất**.
+
+**Thuật toán:**
+
+```
+1. Lấy danh sách eligible positions (chưa scheduled exit, chưa retained, đã qua earliest_sell_bar)
+2. n_keep = math.ceil(len(eligible) * sell_retain_pct)  # mặc định 50%, làm tròn lên
+3. Xếp hạng eligible theo RS giảm dần (NaN/None → -inf, đóng trước)
+4. Top n_keep vị trí → thêm vào _sell_retained_ids (giữ lại)
+5. Phần còn lại → schedule exit với reason="mdm_sell" tại bar tiếp theo
+6. Các lần SELL bar tiếp theo: bỏ qua vị trí đã retained (không evaluate lại)
+```
+
+**Quy tắc xử lý đặc biệt:**
+- RS = NaN hoặc None → coi là RS = -inf (yếu nhất, đóng trước)
+- Làm tròn: `math.ceil` (ưu tiên giữ lại, ví dụ: 3 vị trí × 0.5 → ceil(1.5) = 2 giữ)
+- Retained positions bị skip trong `evaluate_exits` (section 4) → tránh double-exit
+
+### 3. Thông số cấu hình
+
+| Thông số | Kiểu | Mặc định | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `sell_retain_pct` | float | `0.5` | Tỷ lệ vị trí giữ lại (top RS). Phạm vi: (0.0, 1.0] |
+
+**Validation:** `0 < sell_retain_pct <= 1.0`. Giá trị 0.0 raise ValueError. Giá trị 1.0 hợp lệ (giữ lại tất cả, không đóng gì khi SELL).
+
+### 4. Tác động đến exit_reason
+
+- Số lượng `mdm_sell` exits giảm so với behavior cũ (chỉ đóng phần yếu)
+- Retained positions có thể bị đóng sau đó bởi hard stop, RS deterioration, hoặc cuối kỳ backtest
+
+### 5. Kết quả OOS (2019-2025, Phase 999.1)
+
+So với Phase 33 OOS baseline (trước fix):
+
+| Chỉ số | Phase 33 (old) | Phase 999.1 (new) | Thay đổi |
+| :--- | :---: | :---: | :--- |
+| CAGR | 6.23% | 16.75% | +10.52pp |
+| Sharpe_rf3 | 0.448 | 0.529 | +0.081 |
+| MaxDD | -10.22% | -56.45% | -46.23pp (xấu hơn) |
+| Closed trades | 62 | 2 | Phần lớn giữ mở đến cuối kỳ |
+| mdm_sell exits | nhiều | 0 | Tất cả retained hoặc hard_stop |
+
+**Ghi chú:** MaxDD cao hơn nhiều vì positions được giữ qua các giai đoạn SELL thay vì đóng. CAGR cao hơn vì top RS performers tiếp tục được giữ. User cần review và quyết định `sell_retain_pct` phù hợp cho risk profile.
