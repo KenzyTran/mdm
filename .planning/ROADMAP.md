@@ -437,7 +437,7 @@ Plans:
 
 **Milestone Goal:** Replace CANSLIM fundamental stock selection (C/A rules) with pure RS momentum scoring, keep MDM as timing gate, compare vs v7.0 baseline.
 
-- [ ] **Phase 35: RS Module** - Build and cache both RS formulas, validate cross-sectional ranking across VN100
+- [x] **Phase 35: RS Module** - Build and cache both RS formulas, validate cross-sectional ranking across VN100 (completed 2026-04-10)
 - [ ] **Phase 36: Momentum Scorer** - Wire RS filter + N rule into pipeline, replace C/A fundamentals
 - [ ] **Phase 37: Backtest & Validation** - In-sample sweep to pick formula, OOS validation, compare vs v7.0
 
@@ -665,7 +665,7 @@ Plans:
 
 Plans:
 - [x] 35-01-PLAN.md -- RSConfig + vectorized compute_rs_panel with both formulas + unit tests (MOM-01, MOM-02)
-- [ ] 35-02-PLAN.md -- get_rs_rankings parquet caching layer + cache tests (MOM-03)
+- [x] 35-02-PLAN.md -- get_rs_rankings parquet caching layer + cache tests (MOM-03)
 
 ### Phase 36: Momentum Scorer
 **Goal**: The stock selection pipeline uses RS momentum instead of CANSLIM fundamentals to filter and rank candidates
@@ -730,7 +730,7 @@ Phases execute in numeric order: 35 -> 36 -> 37
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 4/4 | Complete   | 2026-04-10 |
 | 33. Out-of-Sample + Sensitivity | v7.0 | 3/3 | Complete    | 2026-04-10 |
 | 34. Reporting + Documentation | v7.0 | 2/2 | Complete    | 2026-04-10 |
-| 35. RS Module | v8.0 | 1/2 | In Progress|  |
+| 35. RS Module | v8.0 | 2/2 | Complete   | 2026-04-10 |
 | 36. Momentum Scorer | v8.0 | 0/TBD | Not started | - |
 | 37. Backtest & Validation | v8.0 | 0/TBD | Not started | - |
 
@@ -741,7 +741,7 @@ Phases execute in numeric order: 35 -> 36 -> 37
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Context:
 - Bug found during Phase 33 review
