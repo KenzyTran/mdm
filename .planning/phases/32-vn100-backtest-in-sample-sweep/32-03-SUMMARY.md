@@ -28,8 +28,8 @@ decisions:
   - "D-13 sanity gate passed: 1536/1536 configs are sanity_flag=OK, 0 CAGR_TOO_HIGH, 0 ERROR."
   - "Audit report documents survivorship bias caveat, RS stub, and low-Sharpe environment explanation for Phase 33 consumer."
 metrics:
-  duration: "~20 min"
-  tasks: 2
+  duration: "~25 min"
+  tasks: 3
   files: 4
   completed: "2026-04-10"
 requirements: [BT-02]
@@ -79,9 +79,9 @@ All `sanity_flag = OK`. JSON written to `docs/audits/phase32/locked_params_top3.
 7. Phase 33 handoff
 8. Notes & Caveats (survivorship bias, RS stub, fundamentals stub)
 
-### Task 3: checkpoint:human-verify (PAUSED)
+### Task 3: checkpoint:human-verify (APPROVED)
 
-Awaiting user review of top-3 JSON and audit report. See CHECKPOINT REACHED section below.
+User reviewed top-3 JSON and audit report. Checkpoint approved — plan 32-03 complete.
 
 ## Deviations from Plan
 
