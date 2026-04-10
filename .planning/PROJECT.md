@@ -57,6 +57,11 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - MDM gate: giữ nguyên (BUY/CASH/SELL + partial liquidation)
 - Backtest đầy đủ 2016-2025, so sánh với v7.0 baseline
 
+### Active (v8.0)
+
+- ✓ RS computation module: `compute_rs_panel` (IBD Weighted ROC + ROC-126, vectorized, cross-sectional percentile ranking) — Phase 35
+- ✓ Parquet caching layer: `get_rs_rankings` wraps compute_rs_panel with disk cache keyed by formula/mode/date range — Phase 35
+
 ### Active
 
 ### Validated (v7.0)
