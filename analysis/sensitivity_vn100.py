@@ -225,12 +225,18 @@ def run_canslim_only_baseline(configs: List[Dict[str, Any]]) -> Dict[str, Any]:
     print("\n[sensitivity] Running CANSLIM-only baseline (constant BUY gate)...")
     precomputed = precompute_static(PERIOD, mode="current-vn100")
 
-    # Override MDM gate with constant BUY
+    # Override MDM gate: create periodic CASH->BUY transitions so that
+    # buy windows (20 bars each) tile the entire period. Every 19th bar
+    # is CASH, the next bar re-opens a new window. This gives EntryEngine
+    # continuous buy eligibility — the correct semantic for "no MDM gate".
     all_buy = pd.Series(
         "BUY",
         index=precomputed["mdm_gate"].index,
         name="mdm_state",
     )
+    # Place CASH at bar 0, then every 19 bars to re-trigger windows
+    for i in range(0, len(all_buy), 19):
+        all_buy.iloc[i] = "CASH"
     precomputed_override = dict(precomputed)
     precomputed_override["mdm_gate"] = all_buy
 

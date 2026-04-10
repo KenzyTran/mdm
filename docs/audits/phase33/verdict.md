@@ -54,6 +54,7 @@
 | Mode | Rank 1 | Rank 2 | Rank 3 |
 |------|--------|--------|--------|
 | current-vn100 | 0.448 (F) | 0.381 (F) | 0.381 (F) |
+| liquidity-reconstructed | 0.064 (F) | 0.052 (F) | 0.052 (F) |
 | vn30-only | 0.268 (F) | 0.302 (F) | 0.302 (F) |
 
 P = Sharpe uplift > 0.20 vs VN-Index B&H. F = fails BT-08 Sharpe target.
@@ -66,7 +67,7 @@ P = Sharpe uplift > 0.20 vs VN-Index B&H. F = fails BT-08 Sharpe target.
 | Baseline | CAGR | Sharpe_rf3 | MaxDD |
 |----------|------|------------|-------|
 | Strategy (rank-1) | 6.23% | 0.448 | -10.22% |
-| CANSLIM-only (no MDM gate) | 0.00% | 0.000 | 0.00% |
+| CANSLIM-only (no MDM gate) | 16.43% | 1.047 | -32.24% |
 | MDM-only-on-index | 8.01% | 0.508 | -15.60% |
 | VN-Index B&H | 10.42% | 0.383 | -40.34% |
 
@@ -90,15 +91,15 @@ OOS rho (0.365) vs in-sample (0.280): OOS ranking agreement is higher — CANSLI
 
 ### Sharpe Uplift Failure
 
-**Primary reason:** CANSLIM scoring
+**Primary reason:** MDM gate
 
-CANSLIM-only Sharpe (0.000) is below VN-Index B&H Sharpe (0.383), meaning the stock selection itself does not beat the index even without MDM gating. The CANSLIM criteria (c_yoy=0.25, a_cagr=0.20, n_prox=0.10) may be too restrictive or the selected stocks underperform on average during the OOS period.
+Strategy Sharpe (0.448) is lower than CANSLIM-only Sharpe (1.047), suggesting the MDM gate is reducing exposure during profitable periods. The HybridEngine may be keeping the portfolio in CASH/SELL during VN-market bull runs that do not match the NASDAQ-calibrated MDM patterns.
 
 **Component breakdown:**
 - Strategy Sharpe: 0.448
-- CANSLIM-only Sharpe: 0.000
+- CANSLIM-only Sharpe: 1.047
 - MDM-only-index Sharpe: 0.508
 - VN-Index B&H Sharpe: 0.383
 - Cost drag (ratio): 9.5521
 
-**Actionable conclusion:** The primary reason for Sharpe uplift failure is **CANSLIM scoring** because CANSLIM-only Sharpe (0.000) is below VN-Index B&H Sharpe (0.383), meaning the stock selection itself does not beat the index even without MDM gating. The CANSLIM criteria (c_yoy=0.25, a_cagr=0.20, n_prox=0.10) may be too restrictive or the selected stocks underperform on average during the OOS period.
+**Actionable conclusion:** The primary reason for Sharpe uplift failure is **MDM gate** because Strategy Sharpe (0.448) is lower than CANSLIM-only Sharpe (1.047), suggesting the MDM gate is reducing exposure during profitable periods. The HybridEngine may be keeping the portfolio in CASH/SELL during VN-market bull runs that do not match the NASDAQ-calibrated MDM patterns.

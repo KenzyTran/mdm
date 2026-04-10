@@ -75,7 +75,7 @@ class UniverseLoader:
         rebalance = self._last_rebalance_date(as_of_date)
         sql = """
             SELECT stockcode,
-                   AVG(closeindex * totalvol) AS adv
+                   AVG(closeprice * totalvol) AS adv
             FROM stock_eod
             WHERE tradingdate BETWEEN %(start)s AND %(end)s
             GROUP BY stockcode

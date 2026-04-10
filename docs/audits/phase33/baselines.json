@@ -1,14 +1,14 @@
 {
   "canslim_only": {
-    "CAGR": 0.0,
-    "Sharpe_rf3": 0.0,
-    "MaxDD": 0.0,
-    "MaxDD_duration_days": 0,
-    "hit_rate": 0.0,
-    "turnover": 0.0,
-    "total_cost_drag_pct": 0.0,
-    "num_trades": 0,
-    "avg_hold_days": 0.0
+    "CAGR": 0.16430378363921894,
+    "Sharpe_rf3": 1.0469382648100487,
+    "MaxDD": -0.3224477933868189,
+    "MaxDD_duration_days": 901,
+    "hit_rate": 0.27522935779816515,
+    "turnover": 14.294115585932156,
+    "total_cost_drag_pct": 25.778226516257917,
+    "num_trades": 109,
+    "avg_hold_days": 45.26605504587156
   },
   "mdm_only_index": {
     "CAGR": 0.08008425611042824,
