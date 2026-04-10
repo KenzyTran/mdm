@@ -693,8 +693,8 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 ### Phase 999.1: Fix MDM SELL — close weakest positions by RS, keep strongest (BACKLOG)
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
-**Requirements:** TBD
-**Plans:** 2/2 plans complete
+**Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
+**Plans:** 2 plans
 
 Context:
 - Bug found during Phase 33 review
@@ -706,4 +706,5 @@ Context:
 - Need to add `sell_retain_pct: float = 0.5` to `PortfolioConfig` for configurability
 
 Plans:
-- [ ] TBD (promote with /gsd:review-backlog when ready)
+- [ ] 999.1-01-PLAN.md -- TDD: Add sell_retain_pct config + RS-ranked partial liquidation in MDM SELL (SELL-REDUCE-01, SELL-REDUCE-02)
+- [ ] 999.1-02-PLAN.md -- Integration verification + rule docs update (SELL-REDUCE-03)
