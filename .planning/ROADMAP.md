@@ -682,17 +682,20 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 
 ## Backlog
 
-### Phase 999.1: Fix MDM SELL to reduce slots instead of full liquidation (BACKLOG)
+### Phase 999.1: Fix MDM SELL — close weakest positions by RS, keep strongest (BACKLOG)
 
-**Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to reduce max slots proportionally (e.g. 50%) so the portfolio partially de-risks without fully exiting.
+**Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** TBD
 **Plans:** 0 plans
 
 Context:
 - Bug found during Phase 33 review
-- `strategies/portfolio/engine.py` — MDM SELL path schedules `_ScheduledExit` for every open position
-- Correct behavior: reduce `max_slots` temporarily (e.g. half) and let the portfolio naturally trim by not refilling closed slots
+- `strategies/portfolio/engine.py` line ~444 — MDM SELL path schedules `_ScheduledExit` for ALL open positions
+- Chosen approach (Hướng 2): rank by RS → close bottom 50% → keep top 50%
+- Requires RS values to be available at exit time (already in `rs_frame` in PortfolioEngine)
+- New entries blocked while gate=SELL (same as current behavior)
 - Affects attribution accuracy: current full-liquidation overstates MDM SELL's negative impact on returns
+- Need to add `sell_retain_pct: float = 0.5` to `PortfolioConfig` for configurability
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
