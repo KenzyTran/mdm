@@ -5,8 +5,9 @@ for the multi-stock long-only portfolio engine living in `strategies/portfolio/`
 Any change to engine logic, primitives, or parameters MUST update this file in
 the same commit.
 
-**Scope:** Phase 31 shipped the engine, primitives, and audit writers. End-to-end
-VN100 backtests and parameter sweeps live in Phase 32.
+**Scope:** Phase 31 shipped the engine, primitives, and audit writers. Phase 32
+ran in-sample parameter sweeps. Phase 33 validated out-of-sample with locked
+parameters.
 
 ---
 
@@ -20,6 +21,21 @@ daily positions, unfilled log). Covers requirements **GATE-01..04** and
 **PORT-01..10**.
 
 Key implementation: `strategies/portfolio/engine.py` (Phase 31 Plan 04).
+
+## Locked Parameters (rank-1)
+
+Selected as rank-1 from Phase 32 in-sample sweep (2014-2018) and locked for
+Phase 33 OOS validation (2019-2025).
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| c_yoy | 0.25 | Quarterly EPS YoY growth threshold (25%) |
+| a_cagr | 0.20 | 3-year EPS CAGR threshold (20%) |
+| n_prox | 0.10 | Proximity to 252-day high (within 10%) |
+| hard_stop | 0.06 | Hard stop-loss from cost basis (6%) |
+| slots | 5 | Maximum concurrent positions |
+| entry | C | Entry option: Pocket Pivot (Option C) |
+| slot_weight | 0.20 | Per-position weight (1/5 = 20% of NAV) |
 
 ## MDM Gate (Policy A) — D-08
 
@@ -42,9 +58,10 @@ on ties. Satisfies **PORT-01**.
 
 ## Slot Allocation — D-09, D-10, D-11
 
-- **Max slots:** `config.max_slots = 8` (PORT-01).
+- **Max slots:** Default `max_slots=8` in engine code; locked production config
+  uses `slots=5` (rank-1). `slot_weight = 1/slots = 0.20`.
 - **Slot weight:** `config.slot_weight = 1/8 = 0.125` of NAV[t-1] per new
-  entry (D-09).
+  entry (D-09); rank-1 locked config uses 0.20 (1/5).
 - **Tie-break when candidates > free_slots:** sort by `canslim_score` desc,
   drop rows with missing scores and log them as
   `unfilled.reason="canslim_score_missing"` (D-10, PORT-02).
@@ -125,7 +142,28 @@ canonical 4-CSV set — `trades.csv`, `positions.csv`, `nav.csv`,
 and stable; empty results still produce header-only CSVs. Phase 32 parameter
 sweeps consume these exact schemas. Satisfies **PORT-10**.
 
+## OOS Performance (2019-2025)
+
+Phase 33 OOS validation results using rank-1 locked parameters on current-vn100
+universe mode (2019-01-01 to 2025-12-31):
+
+| Metric | Value |
+|--------|-------|
+| CAGR | 6.23% |
+| Sharpe_rf3 | 0.448 |
+| MaxDD | -10.22% |
+| MaxDD duration | 1007 days |
+| Hit rate | 45.16% |
+| Num trades | 62 |
+| Avg hold days | 33.0 |
+
+BT-08 verdict: Sharpe uplift +0.064 vs VN-Index B&H (target >0.20 FAIL);
+MaxDD reduction 74.7% (target >30% PASS). Overall FAIL.
+
+Key finding: CANSLIM stock selection IS the alpha source (Sharpe 1.047
+standalone); MDM gate reduces Sharpe but dramatically cuts MaxDD from -40%
+to -10%.
+
 ---
 
-*Last updated: 2026-04-09 — Phase 31 Plan 05 (engine-only; no production
-VN100 backtest yet, deferred to Phase 32).*
+*Last updated: 2026-04-10 -- Phase 34 (locked rank-1 params from Phase 32 sweep, OOS results from Phase 33).*
