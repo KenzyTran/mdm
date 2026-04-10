@@ -128,6 +128,7 @@ def _make_inputs_with_varied_rs(
         max_slots=8,
         adv_mult=1.0,
         sell_retain_pct=sell_retain_pct,
+        rs_threshold=0.0,  # disable RS-deterioration so all positions survive until SELL
     )
 
     signal_date = dates[25]
@@ -201,7 +202,12 @@ def test_sell_nan_rs_treated_as_weakest():
             rs_rows.append({"date": d, "ticker": t, "rs_value": rs_map[t]})
     rs_frame = pd.DataFrame(rs_rows)
 
-    cfg = PortfolioConfig(max_slots=8, adv_mult=1.0, sell_retain_pct=0.5)
+    cfg = PortfolioConfig(
+        max_slots=8,
+        adv_mult=1.0,
+        sell_retain_pct=0.5,
+        rs_threshold=0.0,  # disable RS-deterioration so NaN ticker survives until SELL
+    )
     signal_date = dates[25]
     fill_date = dates[26]
     fills = []
@@ -265,8 +271,9 @@ def test_policy_a_sell_liquidates_all():
     eng = PortfolioEngine(cfg, mdm_state, fills, scorer, panel, rs, dates, initial_cash=1_000_000)
     result = eng.run()
     mdm_sell_trades = [t for t in result.trades if t.exit_reason == "mdm_sell"]
-    # Both positions liquidated via mdm_sell
-    assert len(mdm_sell_trades) >= 1
+    # With default sell_retain_pct=0.5 and 2 positions (tied RS=80), ceil(2*0.5)=1 retained.
+    # Exactly 1 position closed via mdm_sell.
+    assert len(mdm_sell_trades) == 1
     # Cooldown NOT registered for mdm_sell — verify via cooldowns internal
     for tr in mdm_sell_trades:
         # After an mdm_sell exit the ticker should NOT be in cooldown registry

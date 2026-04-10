@@ -135,6 +135,8 @@ class PortfolioEngine:
         self._rs_streak_counts: Dict[str, int] = {}
         self._nav_rows: List[dict] = []
         self._positions_rows: List[dict] = []
+        # Tracks position IDs retained during an MDM SELL period (not to be re-evaluated)
+        self._sell_retained_ids: set = set()
 
         # --- precompute indicators ONCE ---
         self._precompute_indicators()
@@ -442,32 +444,51 @@ class PortfolioEngine:
             # (3) MDM gate dispatch.
             gate = self.mdm_state.get(date)
             if gate == "SELL":
-                # Schedule liquidation for every open position at next open.
-                existing = {
+                # Rank open positions by RS — close weakest, keep strongest.
+                # sell_retain_pct (default 0.5) controls fraction kept.
+                # _sell_retained_ids tracks positions already evaluated & retained
+                # so they are not re-liquidated on subsequent SELL bars.
+                already_scheduled = {
                     id(sx.position)
                     for sx in self._scheduled_exits
                     if sx.reason == "mdm_sell"
                 }
-                for pos in self.book.slots.open_positions:
-                    if id(pos) in existing:
-                        continue
-                    # T+2 override still applies (D-14 via evaluate_exits path).
-                    # MDM SELL bypasses T+2? Per D-13 MDM SELL is first in chain
-                    # but D-14 is checked FIRST in evaluate_exits. We honor D-14.
-                    if bar_idx < pos.earliest_sell_bar:
-                        continue
-                    self._scheduled_exits.append(
-                        _ScheduledExit(
-                            position=pos,
-                            fill_bar_idx=bar_idx + 1,
-                            reason="mdm_sell",
+                eligible = [
+                    pos for pos in self.book.slots.open_positions
+                    if id(pos) not in already_scheduled
+                    and id(pos) not in self._sell_retained_ids
+                    and bar_idx >= pos.earliest_sell_bar
+                ]
+                if eligible:
+                    n_keep = math.ceil(len(eligible) * self.cfg.sell_retain_pct)
+
+                    def _rs_sort_key(pos: Position) -> float:
+                        val = self._rs_lookup.get((pos.ticker, date))
+                        if val is None or math.isnan(val):
+                            return float("-inf")
+                        return val
+
+                    ranked = sorted(eligible, key=_rs_sort_key, reverse=True)
+                    # Keep top n_keep (mark as retained), schedule exit for the rest
+                    for pos in ranked[:n_keep]:
+                        self._sell_retained_ids.add(id(pos))
+                    to_close = ranked[n_keep:]
+                    for pos in to_close:
+                        self._scheduled_exits.append(
+                            _ScheduledExit(
+                                position=pos,
+                                fill_bar_idx=bar_idx + 1,
+                                reason="mdm_sell",
+                            )
                         )
-                    )
 
             # (4) Per-position exit evaluation (non-SELL path triggers too).
             for pos in list(self.book.slots.open_positions):
                 # skip if already has a scheduled exit
                 if any(sx.position is pos for sx in self._scheduled_exits):
+                    continue
+                # skip if retained during MDM SELL partial liquidation
+                if id(pos) in self._sell_retained_ids:
                     continue
                 bar_ctx = self._build_bar_ctx(pos, bar_idx)
                 decision = evaluate_exits(pos, bar_idx, bar_ctx, self.cfg)
