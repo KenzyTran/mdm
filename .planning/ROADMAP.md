@@ -678,3 +678,21 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 4/4 | Complete   | 2026-04-10 |
 | 33. Out-of-Sample + Sensitivity | v7.0 | 3/3 | Complete    | 2026-04-10 |
 | 34. Reporting + Documentation | v7.0 | 0/0 | Pending | — |
+
+
+## Backlog
+
+### Phase 999.1: Fix MDM SELL to reduce slots instead of full liquidation (BACKLOG)
+
+**Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to reduce max slots proportionally (e.g. 50%) so the portfolio partially de-risks without fully exiting.
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Context:
+- Bug found during Phase 33 review
+- `strategies/portfolio/engine.py` — MDM SELL path schedules `_ScheduledExit` for every open position
+- Correct behavior: reduce `max_slots` temporarily (e.g. half) and let the portfolio naturally trim by not refilling closed slots
+- Affects attribution accuracy: current full-liquidation overstates MDM SELL's negative impact on returns
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
