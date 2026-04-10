@@ -424,10 +424,14 @@ Plans:
 
 - [x] **Phase 28: Data Audit & Connectors** — Postgres/MySQL connectors, audit delisted/adjusted/EPS publish_date, fundamental coverage report
  (completed 2026-04-09)
-- [x] **Phase 29: VN100 Universe + CANSLIM Scorer** — universe loader with semi-annual rebalance, C/A/N/S/L/I rules, sector handling, baseline cross-check (completed 2026-04-09)
-- [x] **Phase 30: Entry Confirmation** — Option A (52wk high + vol) + Option C (Pocket Pivot), 20-day window from MDM BUY, A/B comparison (completed 2026-04-09)
-- [x] **Phase 31: Multi-Stock Portfolio Engine** — 8-slot equal-weight engine, stops, exits, cooldowns, costs, T+2 + ceiling/floor lock handling, `state[i-1]` discipline (completed 2026-04-09)
-- [x] **Phase 32: VN100 Backtest + In-Sample Sweep** — wire engine to data, run 2014-2018 sweep across CANSLIM/entry/stop params (completed 2026-04-10)
+- [x] **Phase 29: VN100 Universe + CANSLIM Scorer** — universe loader with semi-annual rebalance, C/A/N/S/L/I rules, sector handling, baseline cross-check
+ (completed 2026-04-09)
+- [x] **Phase 30: Entry Confirmation** — Option A (52wk high + vol) + Option C (Pocket Pivot), 20-day window from MDM BUY, A/B comparison
+ (completed 2026-04-09)
+- [x] **Phase 31: Multi-Stock Portfolio Engine** — 8-slot equal-weight engine, stops, exits, cooldowns, costs, T+2 + ceiling/floor lock handling, `state[i-1]` discipline
+ (completed 2026-04-09)
+- [x] **Phase 32: VN100 Backtest + In-Sample Sweep** — wire engine to data, run 2014-2018 sweep across CANSLIM/entry/stop params
+ (completed 2026-04-10)
 - [x] **Phase 33: Out-of-Sample + Sensitivity** — locked-param 2019-2025 run, sensitivity across (current VN100, liquidity-reconstructed, VN30-only), comparison vs `diem_canslim` baseline (completed 2026-04-10)
 - [ ] **Phase 34: Reporting + Documentation** — performance dashboard (CAGR/Sharpe/MaxDD/cost drag/benchmarks/real CAGR), `docs/rules_canslim_mdm.md`, milestone retrospective
 
@@ -634,8 +638,12 @@ Plans:
   5. Data dictionary for connectors and CANSLIM scorer
   6. Retrospective entry added in `.planning/RETROSPECTIVE.md`
   7. PROJECT.md, MILESTONES.md, STATE.md updated for v7.0 ship
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 34-01-PLAN.md -- v7.0 performance report: profit factor, VN30 B&H, deposit, gold benchmarks, real CAGR (BT-05, BT-06, BT-07)
+- [ ] 34-02-PLAN.md -- Rules doc update with locked params, data dictionary, v7.0 retrospective (DOC-01, DOC-02)
 
 ## Progress
 
