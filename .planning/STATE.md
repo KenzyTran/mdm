@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: verifying
-stopped_at: Completed 33-02-PLAN.md
-last_updated: "2026-04-10T03:18:14.486Z"
+status: executing
+stopped_at: Completed 33-03-PLAN.md
+last_updated: "2026-04-10T04:01:29.466Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 12
   completed_phases: 11
-  total_plans: 39
-  completed_plans: 39
+  total_plans: 40
+  completed_plans: 40
 ---
 
 # Project State
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 ## Current Position
 
 Phase: 33 (out-of-sample-sensitivity) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-04-10
 
 ## Data Sources (verified 2026-04-08)
@@ -72,6 +72,14 @@ Last activity: 2026-04-10
 - diem_canslim OOS: 24 quarters, median rho=0.365 (better than in-sample 0.280) — scorer generalizes well OOS
 - liquidity-reconstructed mode failed (SQL schema bug: closeindex column) — deferred to future fix
 
+### Decisions (Phase 33, Plan 03)
+
+- SQL bug fixed: closeindex -> closeprice in universe.py _liquidity_reconstructed() (closeindex is index_eod column, not stock_eod)
+- CANSLIM-only baseline corrected: Sharpe=1.047, CAGR=16.4%, 109 trades (was 0 trades due to missing CASH->BUY transitions)
+- REVISED: CANSLIM stock selection IS the alpha source (Sharpe 1.047 >> B&H 0.383); MDM gate is the primary bottleneck (reduces to 0.448)
+- Liquidity-reconstructed universe Sharpe 0.052-0.064 vs current-vn100 0.381-0.448; current-vn100 remains preferred mode
+- Phase 33 gap closure complete: all verification gaps closed
+
 ### Open Questions
 
 - Exact MDM capital allocation policy (BUY=100%, CASH=?%, SELL=0%?)
@@ -87,6 +95,6 @@ Last activity: 2026-04-10
 
 ## Session Continuity
 
-Last session: 2026-04-10T03:18:14.479Z
-Stopped at: Completed 33-02-PLAN.md
+Last session: 2026-04-10T04:01:29.459Z
+Stopped at: Completed 33-03-PLAN.md
 Resume: Continue with plan 32-04 or move to Phase 33
