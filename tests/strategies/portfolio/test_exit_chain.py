@@ -59,9 +59,9 @@ def test_t2_blocks_all():
 
 
 def test_priority_order():
-    pos = make_position(earliest_sell_bar=0)
+    """hard_stop beats ma50_break and rs_deterioration (MDM SELL handled by engine, not here)."""
+    pos = make_position(buy_price=100.0, earliest_sell_bar=0)
     bar = make_bar(
-        mdm_state="SELL",
         low=50.0,
         close=50.0,
         ma50=100.0,
@@ -70,7 +70,7 @@ def test_priority_order():
     )
     d = evaluate_exits(pos, bar_idx=20, bar_ctx=bar, cfg=CFG)
     assert d is not None
-    assert d.reason == "mdm_sell"
+    assert d.reason == "hard_stop"
     assert d.fill_bar_idx == 21
 
 
@@ -131,11 +131,16 @@ def test_rs_streak_continuous():
     assert rs_streak_hit(s, threshold=70, min_streak=5) is True
 
 
-def test_mdm_sell_beats_hard_stop():
+def test_mdm_sell_retained_position_still_exits_on_hard_stop():
+    """Positions retained by partial SELL liquidation are still subject to hard_stop.
+    MDM SELL dispatch is handled by the engine (section 3), not evaluate_exits.
+    A retained position on a SELL bar with a hard-stop trigger should exit via hard_stop.
+    """
     pos = make_position(buy_price=100.0)
     bar = make_bar(mdm_state="SELL", low=80.0, close=80.0)
     d = evaluate_exits(pos, bar_idx=20, bar_ctx=bar, cfg=CFG)
-    assert d.reason == "mdm_sell"
+    assert d is not None
+    assert d.reason == "hard_stop"
 
 
 def test_hard_stop_beats_ma50():

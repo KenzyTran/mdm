@@ -43,10 +43,13 @@ def evaluate_exits(
 
     Order (D-13):
         1. T+2 block (D-14) — checked FIRST, silences all triggers.
-        2. MDM SELL dispatch (GATE-02).
-        3. Hard stop (-8%), with limit-down deferral (D-19).
-        4. MA50 break with volume confirmation.
-        5. RS deterioration (streak ≥ cfg.rs_streak_days).
+        2. Hard stop (-8%), with limit-down deferral (D-19).
+        3. MA50 break with volume confirmation.
+        4. RS deterioration (streak ≥ cfg.rs_streak_days).
+
+    Note: MDM SELL dispatch (GATE-02) is handled by engine section (3) via RS-ranked
+    partial liquidation. Positions retained by that process remain subject to these
+    individual exit rules on subsequent bars.
     """
     # D-14: T+2 hard block — no exit may fire before earliest_sell_bar.
     if bar_idx < position.earliest_sell_bar:
@@ -54,16 +57,7 @@ def evaluate_exits(
 
     fill_bar = bar_idx + 1
 
-    # 1. MDM SELL dispatch.
-    if bar_ctx.get("mdm_state") == "SELL":
-        return ExitDecision(
-            reason="mdm_sell",
-            fill_bar_idx=fill_bar,
-            deferred=False,
-            original_trigger_bar=bar_idx,
-        )
-
-    # 2. Hard stop (-hard_stop_pct from buy_price).
+    # 1. Hard stop (-hard_stop_pct from buy_price).
     stop_price = position.buy_price * (1.0 - cfg.hard_stop_pct)
     if bar_ctx["low"] <= stop_price:
         # D-19 limit-down deferral: bar is floor-locked (O==H==L==floor).

@@ -135,7 +135,8 @@ class PortfolioEngine:
         self._rs_streak_counts: Dict[str, int] = {}
         self._nav_rows: List[dict] = []
         self._positions_rows: List[dict] = []
-        # Tracks position IDs retained during an MDM SELL period (not to be re-evaluated)
+        # Tracks position IDs retained during MDM SELL partial liquidation.
+        # Prevents re-liquidating the same position on subsequent SELL bars.
         self._sell_retained_ids: set = set()
 
         # --- precompute indicators ONCE ---
@@ -434,7 +435,6 @@ class PortfolioEngine:
         """Execute bar-by-bar loop and return PortfolioResult."""
         for bar_idx in range(len(self.trading_dates)):
             date = pd.Timestamp(self.trading_dates[bar_idx])
-
             # (1) NAV[t-1] computed BEFORE any bar-t decision. SC8.
             nav_prev = self._compute_nav(bar_idx - 1)
 
@@ -486,9 +486,6 @@ class PortfolioEngine:
             for pos in list(self.book.slots.open_positions):
                 # skip if already has a scheduled exit
                 if any(sx.position is pos for sx in self._scheduled_exits):
-                    continue
-                # skip if retained during MDM SELL partial liquidation
-                if id(pos) in self._sell_retained_ids:
                     continue
                 bar_ctx = self._build_bar_ctx(pos, bar_idx)
                 decision = evaluate_exits(pos, bar_idx, bar_ctx, self.cfg)
