@@ -433,7 +433,7 @@ Plans:
 - [x] **Phase 32: VN100 Backtest + In-Sample Sweep** — wire engine to data, run 2014-2018 sweep across CANSLIM/entry/stop params
  (completed 2026-04-10)
 - [x] **Phase 33: Out-of-Sample + Sensitivity** — locked-param 2019-2025 run, sensitivity across (current VN100, liquidity-reconstructed, VN30-only), comparison vs `diem_canslim` baseline (completed 2026-04-10)
-- [ ] **Phase 34: Reporting + Documentation** — performance dashboard (CAGR/Sharpe/MaxDD/cost drag/benchmarks/real CAGR), `docs/rules_canslim_mdm.md`, milestone retrospective
+- [x] **Phase 34: Reporting + Documentation** — performance dashboard (CAGR/Sharpe/MaxDD/cost drag/benchmarks/real CAGR), `docs/rules_canslim_mdm.md`, milestone retrospective (completed 2026-04-10)
 
 ## Phase Details
 
@@ -643,7 +643,7 @@ Plans:
 
 Plans:
 - [x] 34-01-PLAN.md -- v7.0 performance report: profit factor, VN30 B&H, deposit, gold benchmarks, real CAGR (BT-05, BT-06, BT-07)
-- [ ] 34-02-PLAN.md -- Rules doc update with locked params, data dictionary, v7.0 retrospective (DOC-01, DOC-02)
+- [x] 34-02-PLAN.md -- Rules doc update with locked params, data dictionary, v7.0 retrospective (DOC-01, DOC-02)
 
 ## Progress
 
@@ -685,7 +685,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 31. Multi-Stock Portfolio Engine | v7.0 | 5/5 | Complete    | 2026-04-09 |
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 4/4 | Complete   | 2026-04-10 |
 | 33. Out-of-Sample + Sensitivity | v7.0 | 3/3 | Complete    | 2026-04-10 |
-| 34. Reporting + Documentation | v7.0 | 1/2 | In Progress|  |
+| 34. Reporting + Documentation | v7.0 | 2/2 | Complete   | 2026-04-10 |
 
 
 ## Backlog
@@ -694,7 +694,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** TBD
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Context:
 - Bug found during Phase 33 review

@@ -117,8 +117,8 @@
 
 ### Documentation
 
-- [ ] **DOC-01**: `docs/rules_canslim_mdm.md` describing locked rules + parameters (kept in sync with code per Code-Docs Sync Rule)
-- [ ] **DOC-02**: Data dictionary for new connectors and CANSLIM scorer
+- [x] **DOC-01**: `docs/rules_canslim_mdm.md` describing locked rules + parameters (kept in sync with code per Code-Docs Sync Rule)
+- [x] **DOC-02**: Data dictionary for new connectors and CANSLIM scorer
 
 ## Future Requirements
 
