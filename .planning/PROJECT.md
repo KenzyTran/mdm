@@ -186,4 +186,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 — v7.0 shipped: CANSLIM+MDM portfolio engine on VN100, in-sample sweep (Phase 32) + OOS validation (Phase 33) complete, documentation and retrospective done (Phase 34). OOS result: CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%.*
+*Last updated: 2026-04-10 — v7.0 shipped + Phase 999.1 fix: MDM SELL nay đóng chỉ 50% vị thế yếu nhất theo RS (partial liquidation); vị thế giữ lại vẫn đóng qua stop/signal cá nhân. OOS post-fix: CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%.*
