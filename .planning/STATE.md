@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v7.0
-milestone_name: CANSLIM + MDM on VN100
-status: milestone_complete
-stopped_at: v7.0 milestone archived 2026-04-10
+milestone: v8.0
+milestone_name: Momentum Stock Selection
+status: defining_requirements
+stopped_at: Milestone v8.0 started 2026-04-10
 last_updated: "2026-04-10T00:00:00.000Z"
 last_activity: 2026-04-10
 progress:
-  total_phases: 13
-  completed_phases: 13
-  total_plans: 44
-  completed_plans: 44
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -19,90 +19,43 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-04-10)
 
-**Core value:** Discover MDM rules + apply as capital allocation gate for quantitative CANSLIM stock picking on VN100.
-**Current focus:** Planning next milestone
+**Core value:** Discover MDM rules + apply as capital allocation gate for pure momentum stock picking on VN100.
+**Current focus:** Defining requirements for v8.0
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-10
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-10 — Milestone v8.0 started
 
 ## Data Sources (verified 2026-04-08)
 
 **Postgres (vpt_wong_stock_v1, TA):**
 
 - stock_eod: 5.9M rows, 2936 stocks, through 2026-04-08
-- stock_rs, nganh_rs, nhnl_indicator, index_eod, stock_list, stock_signals
+- stock_rs (rss/rsm/rsl): coverage from 2022-03-14 only
+- nganh_rs, nhnl_indicator, index_eod, stock_list, stock_signals
 
 **MySQL (stocks_backend, Fundamentals):**
 
-- ratios_stock (EPS, growth, P/E, ROE, market cap)
-- is_quarter_nonbank/bank/insurance/stock (income statement quarterly)
-- tm_quarter_* (balance sheet)
-- rank_top_stocks (has existing diem_canslim — baseline for comparison)
-
-**Redis (live/recent cache):** for live signal phase only, not historical backtest.
+- NOT needed for v8.0 — replaced by price-computed RS
 
 ## Accumulated Context
 
-### Decisions (v7.0)
+### Decisions (v7.0 → v8.0 pivot)
 
-- Universe: VN100 static (no point-in-time data available)
-- Long-only, max 8 concurrent positions
-- Event-driven (not periodic rebalance)
-- MDM signal source: HybridEngine + fail-safe (best v6.0 model = +239%)
-- MDM BUY is necessary but NOT sufficient — must wait for stock-level entry confirmation (pivot buy point)
-- MDM determines capital allocation ratio (exact policy: TBD in planning)
-- Postgres primary for TA, MySQL for fundamentals, Redis deferred to live-signal phase
+- CANSLIM fundamental (C/A rules: EPS YoY, EPS CAGR) replaced by RS momentum — removes MySQL dependency
+- RS computed cross-sectionally within VN100 from OHLC price data
+- Two RS formulas to compare: IBD Weighted ROC vs ROC 6-month
+- N rule (near 52-week high) + Volume surge at entry retained as TA filters
+- stock_rs DB data only from 2022 — not usable as primary RS source for backtest from 2016
+- MDM gate unchanged: HybridEngine + fail-safe on VNINDEX
+- Pyramiding: max 2 buys per ticker, 30% NAV cap per ticker
+- Hard stop: 8%, no window limit (buy for full MDM BUY period)
 
-### Decisions (Phase 33, Plan 01)
+### v7.0 Baseline (for comparison)
 
-- D-03 fixed: canslim_raw cache path derived from panel min/max date to prevent OOS from reusing in-sample fundamentals
-- D-06 fixed: precompute_static gains mode param (default current-vn100) so sensitivity runs across universe modes don't collide in cache
-- OOS results (rank-1, 2019-2025): CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%, 62 trades
-
-### Decisions (Phase 33, Plan 02)
-
-- BT-08 FAIL: Sharpe uplift +0.064 (target >0.20 FAIL); MaxDD reduction 74.7% (target >30% PASS); Overall FAIL
-- CANSLIM scoring is primary bottleneck: CANSLIM-only baseline shows 0 trades, stock selection alone does not generate alpha
-- MDM timing is sound: MDM-only-on-index achieves Sharpe=0.508 (+0.125 uplift vs B&H), exceeding the BT-08 target
-- VN-Index B&H benchmark: CAGR=10.42%, Sharpe=0.383, MaxDD=-40.34% for 2019-2025
-- diem_canslim OOS: 24 quarters, median rho=0.365 (better than in-sample 0.280) — scorer generalizes well OOS
-- liquidity-reconstructed mode failed (SQL schema bug: closeindex column) — deferred to future fix
-
-### Decisions (Phase 33, Plan 03)
-
-- SQL bug fixed: closeindex -> closeprice in universe.py _liquidity_reconstructed() (closeindex is index_eod column, not stock_eod)
-- CANSLIM-only baseline corrected: Sharpe=1.047, CAGR=16.4%, 109 trades (was 0 trades due to missing CASH->BUY transitions)
-- REVISED: CANSLIM stock selection IS the alpha source (Sharpe 1.047 >> B&H 0.383); MDM gate is the primary bottleneck (reduces to 0.448)
-- Liquidity-reconstructed universe Sharpe 0.052-0.064 vs current-vn100 0.381-0.448; current-vn100 remains preferred mode
-- Phase 33 gap closure complete: all verification gaps closed
-
-### Open Questions
-
-- Exact MDM capital allocation policy (BUY=100%, CASH=?%, SELL=0%?)
-- Stock-level entry confirmation mechanism (FTD-per-stock? base breakout? pivot + volume?)
-- Backtest start date (data coverage on fundamentals — verify in phase 1)
-- Position sizing method (equal-weight vs Kelly vs CANSLIM-score-weighted)
-
-### Blockers/Concerns
-
-- No point-in-time VN100 membership → survivorship bias risk (acknowledged)
-- Fundamentals row counts small (ratios_stock: 4580) — need to verify per-stock coverage
-- `is_quarter_stock` is securities-firms-only; general stocks use `is_quarter_nonbank`
-
-## Session Continuity
-
-Last session: 2026-04-10T07:13:40.133Z
-Stopped at: Completed 999.1-fix-mdm-sell-reduce-slots/02-PLAN.md
-Resume: v7.0 complete — all 42 plans done, Phase 34 closed
-
-## v7.0 Shipped
-
-**Milestone:** v7.0 CANSLIM + MDM on VN100
-**Shipped:** 2026-04-10
-**OOS result:** CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%
-**Phases:** 28-34 (7 phases), ~18 plans
-**Next milestone:** TBD
+- OOS 2019-2025: CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%
+- VN-Index B&H: CAGR=10.42%, Sharpe=0.383, MaxDD=-40.34%
+- CANSLIM-only (no MDM gate): Sharpe=1.047, CAGR=16.4%

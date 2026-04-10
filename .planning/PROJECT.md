@@ -46,9 +46,18 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - ✓ Data loaders for VN30, NASDAQ, S&P500 — CSV format with OHLCV
 - ✓ Kelly Criterion position management — existing implementation
 
-### Active
+## Current Milestone: v8.0 Momentum Stock Selection
 
-*(No next milestone defined — planning in progress)*
+**Goal:** Thay thế CANSLIM fundamental bằng RS momentum thuần TA để chọn cổ phiếu, giữ MDM làm timing gate.
+
+**Target features:**
+- RS tự tính từ giá: so sánh IBD Weighted ROC (0.4×ROC63 + 0.2×ROC126/189/252) vs ROC 6 tháng đơn giản
+- Stock filter: RS ≥ 70 (top 30% trong VN100) + N rule (gần đỉnh 52 tuần) + Volume surge tại entry
+- Entry confirmation: Option A/C giữ nguyên
+- MDM gate: giữ nguyên (BUY/CASH/SELL + partial liquidation)
+- Backtest đầy đủ 2016-2025, so sánh với v7.0 baseline
+
+### Active
 
 ### Validated (v7.0)
 
