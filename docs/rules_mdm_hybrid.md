@@ -462,7 +462,9 @@ MDM SELL → xếp hạng vị thế theo RS, đóng **nhóm yếu nhất**, gi�
 **Quy tắc xử lý đặc biệt:**
 - RS = NaN hoặc None → coi là RS = -inf (yếu nhất, đóng trước)
 - Làm tròn: `math.ceil` (ưu tiên giữ lại, ví dụ: 3 vị trí × 0.5 → ceil(1.5) = 2 giữ)
-- Retained positions bị skip trong `evaluate_exits` (section 4) → tránh double-exit
+- Retained positions bị skip trong `evaluate_exits` khi tìm MDM SELL exits → tránh double-exit
+- **Retained positions KHÔNG được giữ vô thời hạn**: vẫn bị đóng bởi `evaluate_exits` thông qua hard_stop, ma50_break, rs_streak nếu điều kiện kích hoạt
+- **MDM SELL dispatch**: được xử lý **hoàn toàn** bởi engine section (3). Hàm `evaluate_exits` KHÔNG có MDM SELL dispatch riêng — loại bỏ để tránh đóng các retained positions ngoài ý muốn
 
 ### 3. Thông số cấu hình
 
@@ -474,19 +476,20 @@ MDM SELL → xếp hạng vị thế theo RS, đóng **nhóm yếu nhất**, gi�
 
 ### 4. Tác động đến exit_reason
 
-- Số lượng `mdm_sell` exits giảm so với behavior cũ (chỉ đóng phần yếu)
-- Retained positions có thể bị đóng sau đó bởi hard stop, RS deterioration, hoặc cuối kỳ backtest
+- Số lượng `mdm_sell` exits giảm so với behavior cũ (chỉ đóng phần yếu — bottom 50%)
+- Retained positions tiếp tục được quản lý bình thường: vẫn bị đóng bởi `hard_stop`, `ma50_break`, `rs_streak` nếu điều kiện kích hoạt
+- Không có "giữ vô thời hạn" — chỉ là không bị forced-close bởi MDM SELL
 
 ### 5. Kết quả OOS (2019-2025, Phase 999.1)
 
-So với Phase 33 OOS baseline (trước fix):
+So với Phase 33 OOS baseline (trước fix). Kết quả sau khi sửa bug `evaluate_exits` (commit d218ce3):
 
-| Chỉ số | Phase 33 (old) | Phase 999.1 (new) | Thay đổi |
+| Chỉ số | Phase 33 (old, full liquidation) | Phase 999.1 (partial liquidation, sau fix) | Thay đổi |
 | :--- | :---: | :---: | :--- |
-| CAGR | 6.23% | 16.75% | +10.52pp |
-| Sharpe_rf3 | 0.448 | 0.529 | +0.081 |
-| MaxDD | -10.22% | -56.45% | -46.23pp (xấu hơn) |
-| Closed trades | 62 | 2 | Phần lớn giữ mở đến cuối kỳ |
-| mdm_sell exits | nhiều | 0 | Tất cả retained hoặc hard_stop |
+| CAGR | 6.23% | 10.18% | +3.95pp |
+| Sharpe_rf3 | 0.448 | 0.813 | +0.365 |
+| MaxDD | -10.22% | -16.31% | -6.09pp |
+| Closed trades | 62 | 59 | -3 |
+| mdm_sell exits | nhiều | 5 | Chỉ đóng bottom 50% mỗi lần SELL |
 
-**Ghi chú:** MaxDD cao hơn nhiều vì positions được giữ qua các giai đoạn SELL thay vì đóng. CAGR cao hơn vì top RS performers tiếp tục được giữ. User cần review và quyết định `sell_retain_pct` phù hợp cho risk profile.
+**Lưu ý quan trọng (bug đã sửa):** Phiên bản đầu tiên của Phase 999.1 có bug trong `evaluate_exits` — hàm này có MDM SELL dispatch riêng đóng cả retained positions. Bug đã được sửa (commit d218ce3): `evaluate_exits` không còn MDM SELL dispatch; engine section (3) xử lý hoàn toàn. Kết quả trên là sau khi sửa bug.
