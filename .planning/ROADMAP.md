@@ -661,7 +661,11 @@ Plans:
   2. Running the RS module produces ROC-126 percentile ranks [0,100] in parallel, same coverage
   3. RS results are cached as parquet files keyed by period/formula — re-running does not recompute from scratch
   4. Spot-checking 3-5 tickers on known dates shows ranks are cross-sectionally correct (e.g., top performer has rank near 99)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 35-01-PLAN.md -- RSConfig + vectorized compute_rs_panel with both formulas + unit tests (MOM-01, MOM-02)
+- [ ] 35-02-PLAN.md -- get_rs_rankings parquet caching layer + cache tests (MOM-03)
 
 ### Phase 36: Momentum Scorer
 **Goal**: The stock selection pipeline uses RS momentum instead of CANSLIM fundamentals to filter and rank candidates
