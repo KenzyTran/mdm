@@ -1,5 +1,26 @@
 # Milestones
 
+## v7.0 CANSLIM + MDM on VN100 (Shipped: 2026-04-10)
+
+**Phases completed:** 7 phases (28-34), ~18 plans
+
+**Summary:** CANSLIM + MDM on VN100 -- 7 phases (28-34), portfolio engine with 5-way benchmark comparison. OOS result: CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%.
+
+**Key accomplishments:**
+
+- Database connectors: Postgres (TA), MySQL (fundamentals) with sqlalchemy
+- VN100 universe loader with 3 modes: current-vn100, liquidity-reconstructed, vn30-only
+- CANSLIM scorer: C/A/N/S/L/I/liq boolean rules + composite score (0.70 bool + 0.30 RS)
+- Entry confirmation: Option A (pivot breakout) and Option C (pocket pivot) union feed
+- Multi-stock long-only portfolio engine: max 8 slots, event-driven, T+2.5, 7% limit
+- MDM capital allocation gate from HybridEngine + fail-safe (best v6.0 model)
+- In-sample sweep (Phase 32): rank-1 params selected (c_yoy=0.25, slots=5, entry=C)
+- OOS validation (Phase 33): BT-08 FAIL on Sharpe uplift, PASS on MaxDD reduction
+- Key finding: CANSLIM is alpha source (Sharpe 1.047), MDM reduces Sharpe but cuts MaxDD 74.7%
+- Documentation: rules_canslim_mdm.md, data_dictionary.md, retrospective entry
+
+---
+
 ## v6.0 MDM Fail-Safe & Signal Refinement (Shipped: 2026-04-02)
 
 **Phases completed:** 4 phases, 9 plans, 16 tasks

@@ -8,7 +8,7 @@ A research and trading system project to reverse-engineer Dr. K's Market Directi
 
 Discover the actual indicator-based rules driving Dr. K's MDM signals by analyzing 962 published signals against computed technical indicators — achieving high match rate across both historical and recent periods.
 
-## Current Milestone: v7.0 CANSLIM Stock Picking + MDM Capital Allocation on VN100
+## Current Milestone: v7.0 CANSLIM Stock Picking + MDM Capital Allocation on VN100 (Shipped 2026-04-10)
 
 **Goal:** Long-only CANSLIM stock picking trên rổ VN100, dùng MDM (HybridEngine + fail-safe) làm gate phân bổ tỷ lệ tiền/hàng, event-driven, max 8 vị thế, backtest qua nhiều năm.
 
@@ -186,4 +186,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 — Phase 31 complete: multi-stock PortfolioEngine shipped (strategies/portfolio/ package, 64 tests, verification passed 14/14 requirements). Next: Phase 32 VN100 backtest + in-sample sweep.*
+*Last updated: 2026-04-10 — v7.0 shipped: CANSLIM+MDM portfolio engine on VN100, in-sample sweep (Phase 32) + OOS validation (Phase 33) complete, documentation and retrospective done (Phase 34). OOS result: CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%.*
