@@ -614,8 +614,12 @@ Plans:
   3. Comparison vs `rank_top_stocks.diem_canslim` baseline ranking strategy on same period
   4. Pass/fail vs targets: Sharpe uplift > 0.20 vs VN-Index B&H, MaxDD reduction > 30% vs VN-Index B&H
   5. If targets fail, written analysis identifies which component (CANSLIM/entry/MDM/costs) is responsible
-**Plans**: TBD
+**Plans:** 2 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 33-01-PLAN.md -- Fix cache bugs + OOS backtest 2019-2025 (BT-03)
+- [ ] 33-02-PLAN.md -- Sensitivity matrix + baselines + verdict (BT-04, BT-08)
 
 ### Phase 34: Reporting + Documentation + Retrospective
 **Goal**: v7.0 milestone is shippable: dashboard updated, rules documented, retrospective filed
