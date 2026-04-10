@@ -9,6 +9,7 @@
 - ✅ **v5.0 Signal Quality & Macro Filter** - Phases 19-22 (shipped 2026-03-31)
 - ✅ **v6.0 MDM Fail-Safe & Signal Refinement** - Phases 23-27 (shipped 2026-04-02)
 - ✅ **v7.0 CANSLIM + MDM on VN100** - Phases 28-34 + 999.1 (shipped 2026-04-10)
+- **v8.0 Momentum Stock Selection** - Phases 35-37 (in progress)
 
 ## Phases
 
@@ -431,6 +432,15 @@ Plans:
 
 </details>
 
+
+### v8.0 Momentum Stock Selection (In Progress)
+
+**Milestone Goal:** Replace CANSLIM fundamental stock selection (C/A rules) with pure RS momentum scoring, keep MDM as timing gate, compare vs v7.0 baseline.
+
+- [ ] **Phase 35: RS Module** - Build and cache both RS formulas, validate cross-sectional ranking across VN100
+- [ ] **Phase 36: Momentum Scorer** - Wire RS filter + N rule into pipeline, replace C/A fundamentals
+- [ ] **Phase 37: Backtest & Validation** - In-sample sweep to pick formula, OOS validation, compare vs v7.0
+
 ## Phase Details
 
 ### Phase 23: Fail-Safe Mechanism
@@ -641,10 +651,44 @@ Plans:
 - [x] 34-01-PLAN.md -- v7.0 performance report: profit factor, VN30 B&H, deposit, gold benchmarks, real CAGR (BT-05, BT-06, BT-07)
 - [x] 34-02-PLAN.md -- Rules doc update with locked params, data dictionary, v7.0 retrospective (DOC-01, DOC-02)
 
+
+### Phase 35: RS Module
+**Goal**: Both RS formulas are computed, cached, and produce valid cross-sectional percentile rankings for the full VN100 universe
+**Depends on**: v7.0 infrastructure (Postgres connector, precompute_static cache, VN100 universe loader)
+**Requirements**: MOM-01, MOM-02, MOM-03
+**Success Criteria** (what must be TRUE):
+  1. Running the RS module produces IBD Weighted ROC percentile ranks [0,100] for every VN100 ticker on every trading day from 2014 onward
+  2. Running the RS module produces ROC-126 percentile ranks [0,100] in parallel, same coverage
+  3. RS results are cached as parquet files keyed by period/formula — re-running does not recompute from scratch
+  4. Spot-checking 3-5 tickers on known dates shows ranks are cross-sectionally correct (e.g., top performer has rank near 99)
+**Plans**: TBD
+
+### Phase 36: Momentum Scorer
+**Goal**: The stock selection pipeline uses RS momentum instead of CANSLIM fundamentals to filter and rank candidates
+**Depends on**: Phase 35
+**Requirements**: MSCO-01, MSCO-02, MSCO-03, MSCO-04
+**Success Criteria** (what must be TRUE):
+  1. Only stocks with RS >= 70 (top 30% of VN100) pass the stock filter on any given day
+  2. N rule is enforced — only stocks within 15% of 52-week high are eligible
+  3. Entry confirmation (Option A breakout / Option C Pocket Pivot) still triggers as before — volume surge logic unchanged
+  4. No EPS, earnings, or MySQL fundamental data is referenced anywhere in the v8.0 scorer pipeline
+  5. The scorer produces a ranked candidate list that the existing PortfolioEngine can consume without modification
+**Plans**: TBD
+
+### Phase 37: Backtest & Validation
+**Goal**: The best RS formula is selected via in-sample comparison, validated out-of-sample, and compared against v7.0 baseline
+**Depends on**: Phase 36
+**Requirements**: BT-01, BT-02, BT-03
+**Success Criteria** (what must be TRUE):
+  1. In-sample sweep (2016-2018) runs both RS formulas and produces comparable metrics (CAGR, Sharpe, MaxDD) to select the winner
+  2. OOS backtest (2019-2025) runs with the in-sample-selected formula and produces a full performance report
+  3. Comparison table shows v8.0 vs v7.0 baseline (CAGR=10.18%, Sharpe=0.813, MaxDD=-16.31%) and VN-Index B&H side by side
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
+Phases execute in numeric order: 35 -> 36 -> 37
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -682,6 +726,9 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 4/4 | Complete   | 2026-04-10 |
 | 33. Out-of-Sample + Sensitivity | v7.0 | 3/3 | Complete    | 2026-04-10 |
 | 34. Reporting + Documentation | v7.0 | 2/2 | Complete    | 2026-04-10 |
+| 35. RS Module | v8.0 | 0/TBD | Not started | - |
+| 36. Momentum Scorer | v8.0 | 0/TBD | Not started | - |
+| 37. Backtest & Validation | v8.0 | 0/TBD | Not started | - |
 
 
 ## Backlog
