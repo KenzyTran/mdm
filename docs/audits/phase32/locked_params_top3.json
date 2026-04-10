@@ -1,0 +1,68 @@
+{
+  "selected_at": "2026-04-10",
+  "selection_metric": "sharpe_rf3",
+  "period": "2014-01-01..2018-12-31",
+  "universe": "current-VN100",
+  "configs": [
+    {
+      "rank": 1,
+      "c_yoy": 0.25,
+      "a_cagr": 0.2,
+      "n_proximity": 0.1,
+      "hard_stop": 0.06,
+      "slots": 5,
+      "entry_option": "C",
+      "metrics": {
+        "CAGR": 0.037936710500283,
+        "Sharpe_rf3": 0.0589812960366241,
+        "MaxDD": -0.1766493739178301,
+        "MaxDD_duration_days": 293,
+        "hit_rate": 0.5,
+        "turnover": 4.273668819158191,
+        "total_cost_drag_pct": 4.535007364184989,
+        "num_trades": 34,
+        "avg_hold_days": 36.76470588235294
+      }
+    },
+    {
+      "rank": 2,
+      "c_yoy": 0.25,
+      "a_cagr": 0.25,
+      "n_proximity": 0.1,
+      "hard_stop": 0.06,
+      "slots": 8,
+      "entry_option": "C",
+      "metrics": {
+        "CAGR": 0.0375718682298586,
+        "Sharpe_rf3": 0.05658838362489,
+        "MaxDD": -0.1767239688764623,
+        "MaxDD_duration_days": 275,
+        "hit_rate": 0.5151515151515151,
+        "turnover": 4.150189264619944,
+        "total_cost_drag_pct": 4.398579528418272,
+        "num_trades": 33,
+        "avg_hold_days": 36.06060606060606
+      }
+    },
+    {
+      "rank": 3,
+      "c_yoy": 0.25,
+      "a_cagr": 0.25,
+      "n_proximity": 0.1,
+      "hard_stop": 0.06,
+      "slots": 10,
+      "entry_option": "C",
+      "metrics": {
+        "CAGR": 0.0375718682298586,
+        "Sharpe_rf3": 0.05658838362489,
+        "MaxDD": -0.1767239688764623,
+        "MaxDD_duration_days": 275,
+        "hit_rate": 0.5151515151515151,
+        "turnover": 4.150189264619944,
+        "total_cost_drag_pct": 4.398579528418272,
+        "num_trades": 33,
+        "avg_hold_days": 36.06060606060606
+      }
+    }
+  ]
+}
