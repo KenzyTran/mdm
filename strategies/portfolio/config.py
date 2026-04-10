@@ -47,6 +47,9 @@ class PortfolioConfig:
     ceiling_pct: float = 0.07
     floor_pct: float = 0.07
 
+    # MDM SELL partial liquidation
+    sell_retain_pct: float = 0.5  # fraction of positions to KEEP on SELL
+
     def __post_init__(self) -> None:
         if self.max_slots < 1 or self.max_slots > 20:
             raise ValueError(f"max_slots must be in [1,20], got {self.max_slots}")
@@ -89,3 +92,7 @@ class PortfolioConfig:
             raise ValueError(f"ma50_vol_mult must be >= 0, got {self.ma50_vol_mult}")
         if self.t_plus < 0:
             raise ValueError(f"t_plus must be >= 0, got {self.t_plus}")
+        if not (0 < self.sell_retain_pct <= 1):
+            raise ValueError(
+                f"sell_retain_pct must be in (0,1], got {self.sell_retain_pct}"
+            )
