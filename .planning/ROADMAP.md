@@ -614,11 +614,11 @@ Plans:
   3. Comparison vs `rank_top_stocks.diem_canslim` baseline ranking strategy on same period
   4. Pass/fail vs targets: Sharpe uplift > 0.20 vs VN-Index B&H, MaxDD reduction > 30% vs VN-Index B&H
   5. If targets fail, written analysis identifies which component (CANSLIM/entry/MDM/costs) is responsible
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 **UI hint**: yes
 
 Plans:
-- [ ] 33-01-PLAN.md -- Fix cache bugs + OOS backtest 2019-2025 (BT-03)
+- [x] 33-01-PLAN.md -- Fix cache bugs + OOS backtest 2019-2025 (BT-03)
 - [ ] 33-02-PLAN.md -- Sensitivity matrix + baselines + verdict (BT-04, BT-08)
 
 ### Phase 34: Reporting + Documentation + Retrospective
@@ -675,5 +675,5 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26 -> 27
 | 30. Stock-Level Entry Confirmation | v7.0 | 3/3 | Complete    | 2026-04-09 |
 | 31. Multi-Stock Portfolio Engine | v7.0 | 5/5 | Complete    | 2026-04-09 |
 | 32. VN100 Backtest + In-Sample Sweep | v7.0 | 4/4 | Complete   | 2026-04-10 |
-| 33. Out-of-Sample + Sensitivity | v7.0 | 0/0 | Pending | — |
+| 33. Out-of-Sample + Sensitivity | v7.0 | 1/2 | In Progress|  |
 | 34. Reporting + Documentation | v7.0 | 0/0 | Pending | — |

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v6.0
 milestone_name: MDM Fail-Safe & Signal Refinement
-status: verifying
-stopped_at: Phase 33 context gathered (assumptions mode)
-last_updated: "2026-04-10T02:44:00.940Z"
+status: executing
+stopped_at: Completed 33-01-PLAN.md
+last_updated: "2026-04-10T03:06:49.909Z"
 last_activity: 2026-04-10
 progress:
   total_phases: 12
   completed_phases: 10
-  total_plans: 37
-  completed_plans: 37
+  total_plans: 39
+  completed_plans: 38
 ---
 
 # Project State
@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Long-only CANSLIM stock picking trên VN100, dùng MDM làm capital allocation gate.
-**Current focus:** Phase 32 — vn100-backtest-in-sample-sweep
+**Current focus:** Phase 33 — out-of-sample-sensitivity
 
 ## Current Position
 
-Phase: 32 (vn100-backtest-in-sample-sweep) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
+Phase: 33 (out-of-sample-sensitivity) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-10
 
 ## Data Sources (verified 2026-04-08)
@@ -57,6 +57,12 @@ Last activity: 2026-04-10
 - MDM determines capital allocation ratio (exact policy: TBD in planning)
 - Postgres primary for TA, MySQL for fundamentals, Redis deferred to live-signal phase
 
+### Decisions (Phase 33, Plan 01)
+
+- D-03 fixed: canslim_raw cache path derived from panel min/max date to prevent OOS from reusing in-sample fundamentals
+- D-06 fixed: precompute_static gains mode param (default current-vn100) so sensitivity runs across universe modes don't collide in cache
+- OOS results (rank-1, 2019-2025): CAGR=6.23%, Sharpe_rf3=0.448, MaxDD=-10.22%, 62 trades
+
 ### Open Questions
 
 - Exact MDM capital allocation policy (BUY=100%, CASH=?%, SELL=0%?)
@@ -72,6 +78,6 @@ Last activity: 2026-04-10
 
 ## Session Continuity
 
-Last session: 2026-04-10T02:44:00.926Z
-Stopped at: Phase 33 context gathered (assumptions mode)
+Last session: 2026-04-10T03:06:49.901Z
+Stopped at: Completed 33-01-PLAN.md
 Resume: Continue with plan 32-04 or move to Phase 33
