@@ -1,0 +1,32 @@
+[
+  {
+    "label": "v8.0 (RS+N+MDM, roc126)",
+    "CAGR": 0.100272447585664,
+    "Sharpe_rf3": 0.6450056835446414,
+    "MaxDD": -0.24885669077010752,
+    "MaxDD_duration_days": 1027,
+    "hit_rate": 0.40217391304347827,
+    "num_trades": 92,
+    "avg_hold_days": 44.03260869565217
+  },
+  {
+    "label": "v7.0 (CANSLIM+MDM)",
+    "CAGR": 0.10182,
+    "Sharpe_rf3": 0.81335,
+    "MaxDD": -0.16309,
+    "MaxDD_duration_days": 938,
+    "hit_rate": 0.305,
+    "num_trades": 59,
+    "avg_hold_days": 41.25
+  },
+  {
+    "label": "VN-Index B&H",
+    "CAGR": 0.10421,
+    "Sharpe_rf3": 0.38349,
+    "MaxDD": -0.40343,
+    "MaxDD_duration_days": null,
+    "hit_rate": null,
+    "num_trades": null,
+    "avg_hold_days": null
+  }
+]
