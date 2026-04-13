@@ -1,0 +1,17 @@
+{
+  "rs_formula": "roc126",
+  "rs_threshold": 70.0,
+  "n_within_high": 0.1,
+  "hard_stop": 0.08,
+  "slots": 5,
+  "entry_option": "A",
+  "CAGR": 0.11348570849917095,
+  "Sharpe_rf3": 0.7018705659704275,
+  "MaxDD": -0.08453333929811008,
+  "MaxDD_duration_days": 186.0,
+  "hit_rate": 0.6086956521739131,
+  "turnover": 2.8180094048219835,
+  "total_cost_drag_pct": 3.2510322280881163,
+  "num_trades": 23.0,
+  "avg_hold_days": 62.30434782608695
+}
