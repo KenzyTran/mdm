@@ -516,7 +516,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 37-01-PLAN.md -- Add formula kwarg to build_momentum_raw_frame + run_v8_backtest + unit tests (BT-01)
+- [x] 37-01-PLAN.md -- Add formula kwarg to build_momentum_raw_frame + run_v8_backtest + unit tests (BT-01)
 - [ ] 37-02-PLAN.md -- In-sample sweep 216 configs 2016-2018, select winning formula by Sharpe_rf3 (BT-01)
 - [ ] 37-03-PLAN.md -- OOS run 2019-2025 with locked formula + comparison table v8.0 vs v7.0 vs VN-Index B&H (BT-02, BT-03)
 **UI hint**: yes
@@ -701,7 +701,7 @@ Plans:
   1. In-sample sweep (2016-2018) runs both RS formulas and produces comparable metrics (CAGR, Sharpe, MaxDD) to select the winner
   2. OOS backtest (2019-2025) runs with the in-sample-selected formula and produces a full performance report
   3. Comparison table shows v8.0 vs v7.0 baseline (CAGR=10.18%, Sharpe=0.813, MaxDD=-16.31%) and VN-Index B&H side by side
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 - [ ] 37-01-PLAN.md -- Add formula kwarg to build_momentum_raw_frame + run_v8_backtest + unit tests (BT-01)
@@ -751,7 +751,7 @@ Phases execute in numeric order: 35 -> 36 -> 37
 | 34. Reporting + Documentation | v7.0 | 2/2 | Complete    | 2026-04-10 |
 | 35. RS Module | v8.0 | 2/2 | Complete    | 2026-04-10 |
 | 36. Momentum Scorer | v8.0 | 2/2 | Complete    | 2026-04-13 |
-| 37. Backtest & Validation | v8.0 | 0/TBD | Not started | - |
+| 37. Backtest & Validation | v8.0 | 1/3 | In Progress|  |
 
 
 ## Backlog

@@ -20,7 +20,7 @@
 
 ### Backtest
 
-- [ ] **BT-01**: In-sample sweep 2016-2018 so sánh 2 RS formula (Weighted ROC vs ROC126), chọn formula tốt hơn
+- [x] **BT-01**: In-sample sweep 2016-2018 so sánh 2 RS formula (Weighted ROC vs ROC126), chọn formula tốt hơn
 - [ ] **BT-02**: OOS 2019-2025 với formula được chọn từ in-sample
 - [ ] **BT-03**: So sánh kết quả vs v7.0 baseline (CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%) và VN-Index B&H
 
@@ -50,7 +50,7 @@
 | MSCO-02 | Phase 36 | Complete |
 | MSCO-03 | Phase 36 | Complete |
 | MSCO-04 | Phase 36 | Complete |
-| BT-01 | Phase 37 | Pending |
+| BT-01 | Phase 37 | Complete |
 | BT-02 | Phase 37 | Pending |
 | BT-03 | Phase 37 | Pending |
 
