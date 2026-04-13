@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Momentum Stock Selection
-status: executing
-stopped_at: Completed 36-01-PLAN.md
-last_updated: "2026-04-13T01:53:43.084Z"
+status: verifying
+stopped_at: Completed 36-02-PLAN.md
+last_updated: "2026-04-13T01:57:46.359Z"
 last_activity: 2026-04-13
 progress:
   total_phases: 4
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 
 Phase: 36 (momentum-scorer) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-13
 
 Progress: [░░░░░░░░░░] 0%
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 35 P01 | 3min | 2 tasks | 6 files |
 | Phase 35 P02 | 2min | 1 tasks | 2 files |
 | Phase 36 P01 | 3 | 1 tasks | 3 files |
+| Phase 36 P02 | 4min | 1 tasks | 2 files |
 
 ## Data Sources (verified 2026-04-08)
 
@@ -87,6 +88,9 @@ Progress: [░░░░░░░░░░] 0%
 - [P36-01] canslim_score column name kept (not rs_score) for PortfolioEngine REQUIRED_SCORER_COLS wire compat
 - [P36-01] NaN in rs_rating or n_prox propagates as NaN score — missing data excluded from entry consideration
 - [P36-01] n_prox <= n_within_high (inclusive) — stock at exact 52w high boundary passes N rule
+- [P36-02] Lazy import of momentum scorer inside run_v8_backtest avoids circular deps, keeps v7.0 top-level import clean
+- [P36-02] build_momentum_raw_frame uses momentum_raw_* cache prefix — different columns from canslim_raw_*, avoids stale schema
+- [P36-02] run_v8_backtest only requires universe/ohlc/mdm_gate keys — fundamentals key NOT required (MSCO-04)
 
 ### v7.0 Baseline (for comparison)
 
@@ -104,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-13T01:53:43.068Z
-Stopped at: Completed 36-01-PLAN.md
+Last session: 2026-04-13T01:57:46.345Z
+Stopped at: Completed 36-02-PLAN.md
 Resume file: None

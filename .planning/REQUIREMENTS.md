@@ -15,7 +15,7 @@
 
 - [x] **MSCO-01**: Stock filter RS ≥ 70 (top 30% VN100) là điều kiện đủ điều kiện mua
 - [x] **MSCO-02**: N rule giữ lại — cổ phiếu phải trong vòng 15% đỉnh 52 tuần
-- [ ] **MSCO-03**: Volume surge tại ngày entry giữ lại (Option A/C đã có sẵn trong detector)
+- [x] **MSCO-03**: Volume surge tại ngày entry giữ lại (Option A/C đã có sẵn trong detector)
 - [x] **MSCO-04**: Bỏ hoàn toàn C/A rule (EPS YoY, EPS CAGR) — không cần MySQL fundamentals
 
 ### Backtest
@@ -48,7 +48,7 @@
 | MOM-03 | Phase 35 | Complete |
 | MSCO-01 | Phase 36 | Complete |
 | MSCO-02 | Phase 36 | Complete |
-| MSCO-03 | Phase 36 | Pending |
+| MSCO-03 | Phase 36 | Complete |
 | MSCO-04 | Phase 36 | Complete |
 | BT-01 | Phase 37 | Pending |
 | BT-02 | Phase 37 | Pending |

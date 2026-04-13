@@ -438,7 +438,7 @@ Plans:
 **Milestone Goal:** Replace CANSLIM fundamental stock selection (C/A rules) with pure RS momentum scoring, keep MDM as timing gate, compare vs v7.0 baseline.
 
 - [x] **Phase 35: RS Module** - Build and cache both RS formulas, validate cross-sectional ranking across VN100 (completed 2026-04-10)
-- [ ] **Phase 36: Momentum Scorer** - Wire RS filter + N rule into pipeline, replace C/A fundamentals
+- [x] **Phase 36: Momentum Scorer** - Wire RS filter + N rule into pipeline, replace C/A fundamentals (completed 2026-04-13)
 - [ ] **Phase 37: Backtest & Validation** - In-sample sweep to pick formula, OOS validation, compare vs v7.0
 
 ## Phase Details
@@ -677,11 +677,11 @@ Plans:
   3. Entry confirmation (Option A breakout / Option C Pocket Pivot) still triggers as before — volume surge logic unchanged
   4. No EPS, earnings, or MySQL fundamental data is referenced anywhere in the v8.0 scorer pipeline
   5. The scorer produces a ranked candidate list that the existing PortfolioEngine can consume without modification
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 36-01-PLAN.md -- MomentumScorerConfig + apply_momentum_thresholds + unit tests (MSCO-01, MSCO-02, MSCO-04)
-- [ ] 36-02-PLAN.md -- Wire scorer into pipeline: build_momentum_raw_frame + run_v8_backtest (MSCO-01, MSCO-02, MSCO-03, MSCO-04)
+- [x] 36-02-PLAN.md -- Wire scorer into pipeline: build_momentum_raw_frame + run_v8_backtest (MSCO-01, MSCO-02, MSCO-03, MSCO-04)
 
 ### Phase 37: Backtest & Validation
 **Goal**: The best RS formula is selected via in-sample comparison, validated out-of-sample, and compared against v7.0 baseline
@@ -735,7 +735,7 @@ Phases execute in numeric order: 35 -> 36 -> 37
 | 33. Out-of-Sample + Sensitivity | v7.0 | 3/3 | Complete    | 2026-04-10 |
 | 34. Reporting + Documentation | v7.0 | 2/2 | Complete    | 2026-04-10 |
 | 35. RS Module | v8.0 | 2/2 | Complete    | 2026-04-10 |
-| 36. Momentum Scorer | v8.0 | 1/2 | In Progress|  |
+| 36. Momentum Scorer | v8.0 | 2/2 | Complete   | 2026-04-13 |
 | 37. Backtest & Validation | v8.0 | 0/TBD | Not started | - |
 
 
