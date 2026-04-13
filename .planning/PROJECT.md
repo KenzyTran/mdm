@@ -61,6 +61,8 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 
 - ✓ RS computation module: `compute_rs_panel` (IBD Weighted ROC + ROC-126, vectorized, cross-sectional percentile ranking) — Phase 35
 - ✓ Parquet caching layer: `get_rs_rankings` wraps compute_rs_panel with disk cache keyed by formula/mode/date range — Phase 35
+- ✓ MomentumScorer: `apply_momentum_thresholds` (RS≥70 + N rule, replaces CANSLIM C/A fundamentals, zero MySQL) — Phase 36
+- ✓ v8 pipeline: `run_v8_backtest` + `build_momentum_raw_frame` in `_vn100_pipeline.py`, v7.0 intact for Phase 37 comparison — Phase 36
 
 ### Active
 
