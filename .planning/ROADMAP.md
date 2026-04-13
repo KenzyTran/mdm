@@ -677,10 +677,10 @@ Plans:
   3. Entry confirmation (Option A breakout / Option C Pocket Pivot) still triggers as before — volume surge logic unchanged
   4. No EPS, earnings, or MySQL fundamental data is referenced anywhere in the v8.0 scorer pipeline
   5. The scorer produces a ranked candidate list that the existing PortfolioEngine can consume without modification
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 36-01-PLAN.md -- MomentumScorerConfig + apply_momentum_thresholds + unit tests (MSCO-01, MSCO-02, MSCO-04)
+- [x] 36-01-PLAN.md -- MomentumScorerConfig + apply_momentum_thresholds + unit tests (MSCO-01, MSCO-02, MSCO-04)
 - [ ] 36-02-PLAN.md -- Wire scorer into pipeline: build_momentum_raw_frame + run_v8_backtest (MSCO-01, MSCO-02, MSCO-03, MSCO-04)
 
 ### Phase 37: Backtest & Validation
@@ -735,7 +735,7 @@ Phases execute in numeric order: 35 -> 36 -> 37
 | 33. Out-of-Sample + Sensitivity | v7.0 | 3/3 | Complete    | 2026-04-10 |
 | 34. Reporting + Documentation | v7.0 | 2/2 | Complete    | 2026-04-10 |
 | 35. RS Module | v8.0 | 2/2 | Complete    | 2026-04-10 |
-| 36. Momentum Scorer | v8.0 | 0/2 | Planning complete | - |
+| 36. Momentum Scorer | v8.0 | 1/2 | In Progress|  |
 | 37. Backtest & Validation | v8.0 | 0/TBD | Not started | - |
 
 
