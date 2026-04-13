@@ -102,31 +102,84 @@ def test_build_momentum_raw_frame_weighted_roc(tmp_path):
 # Test 3: formula="roc126" produces different rs_rating values vs weighted_roc
 # ---------------------------------------------------------------------------
 
+def _make_panel_diverging_formulas(n_rows: int = 350) -> pd.DataFrame:
+    """Crafted panel where roc126 and weighted_roc produce DIFFERENT cross-sectional rankings.
+
+    Strategy:
+    - TA: Strong recent 63-day momentum but weak 126-day (pumped recently).
+    - TB: Flat 63-day but strong 126-day momentum (recovering over longer term).
+    - TC: Neutral reference ticker.
+
+    For weighted_roc (0.4*ROC63 + ...) TA will likely rank above TB at late rows.
+    For roc126 (only 126-day), TB may rank above TA because 126d lookback sees more return.
+    This guarantees the cross-sectional orderings differ.
+    """
+    dates = pd.date_range("2018-01-01", periods=n_rows, freq="B")
+    rows = []
+
+    # TC: steady neutral baseline (grows 0.03%/day)
+    tc_close = np.cumprod(np.full(n_rows, 1.0003)) * 100.0
+
+    # TA: flat for first 220 days then strong pump (+80% over last 130 days)
+    ta_close = np.concatenate([
+        np.cumprod(np.full(220, 1.0001)) * 100.0,
+        np.cumprod(np.full(130, 1.0045)) * (np.cumprod(np.full(220, 1.0001)) * 100.0)[-1],
+    ])
+
+    # TB: strong growth for first 200 days (+0.05%/day), then flat for last 150 days
+    tb_close = np.concatenate([
+        np.cumprod(np.full(200, 1.0005)) * 100.0,
+        np.full(150, (np.cumprod(np.full(200, 1.0005)) * 100.0)[-1]),
+    ])
+
+    for tk, close_arr in [("TA", ta_close), ("TB", tb_close), ("TC", tc_close)]:
+        high = close_arr * 1.005
+        low = close_arr * 0.995
+        rows.append(pd.DataFrame({
+            "date": dates,
+            "ticker": tk,
+            "open": close_arr,
+            "high": high,
+            "low": low,
+            "close": close_arr,
+            "volume": 500_000.0,
+        }))
+    return pd.concat(rows, ignore_index=True).sort_values(["ticker", "date"]).reset_index(drop=True)
+
+
 def test_build_momentum_raw_frame_roc126(tmp_path):
-    """formula='roc126' produces rs_rating values that differ from weighted_roc."""
+    """formula='roc126' produces rs_rating values that differ from weighted_roc.
+
+    Uses crafted price series where recent momentum (63d) diverges from 6-month
+    momentum (126d), so the two formula arms produce different cross-sectional rankings.
+    """
     from analysis._vn100_pipeline import build_momentum_raw_frame
 
-    panel = _make_panel()
-    with patch("analysis._vn100_pipeline.CACHE_DIR", tmp_path):
+    panel = _make_panel_diverging_formulas()
+    tmp_wroc = tmp_path / "wroc"
+    tmp_wroc.mkdir()
+    tmp_roc126 = tmp_path / "roc126"
+    tmp_roc126.mkdir()
+
+    with patch("analysis._vn100_pipeline.CACHE_DIR", tmp_wroc):
         result_wroc = build_momentum_raw_frame(panel, formula="weighted_roc")
-    # Use a different tmp subdir so cache miss forces recompute for roc126
-    tmp2 = tmp_path / "roc126_cache"
-    tmp2.mkdir()
-    with patch("analysis._vn100_pipeline.CACHE_DIR", tmp2):
+    with patch("analysis._vn100_pipeline.CACHE_DIR", tmp_roc126):
         result_roc126 = build_momentum_raw_frame(panel, formula="roc126")
 
     assert "rs_rating" in result_roc126.columns, "rs_rating column missing for roc126 formula"
 
-    # Spot-check T00: at least some rows differ between formulas
+    # Cross-sectional rankings MUST differ somewhere for TA vs TB
     merged = result_wroc.merge(
         result_roc126, on=["date", "ticker"], suffixes=("_wroc", "_roc126")
-    )
-    t00 = merged[merged["ticker"] == "T00"].dropna(subset=["rs_rating_wroc", "rs_rating_roc126"])
-    assert len(t00) > 0, "No overlapping rows for spot-check ticker T00"
-    diffs = (t00["rs_rating_wroc"] - t00["rs_rating_roc126"]).abs()
+    ).dropna(subset=["rs_rating_wroc", "rs_rating_roc126"])
+
+    assert len(merged) > 0, "No overlapping valid rows between weighted_roc and roc126 results"
+
+    diffs = (merged["rs_rating_wroc"] - merged["rs_rating_roc126"]).abs()
     assert diffs.max() > 0.1, (
-        f"weighted_roc and roc126 produced identical rs_rating for T00 — "
-        f"formula branch may not be wired correctly (max diff = {diffs.max():.6f})"
+        f"weighted_roc and roc126 produced identical rs_rating across all rows — "
+        f"formula branch may not be wired correctly (max diff = {diffs.max():.6f}). "
+        f"Check that roc126 branch uses pct_change(126) not the weighted formula."
     )
 
 

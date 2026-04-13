@@ -444,6 +444,7 @@ def run_v8_backtest(
     period: Tuple[str, str],
     precomputed: Optional[Mapping[str, Any]] = None,
     entry_cfg=None,
+    formula: str = "weighted_roc",
 ) -> Dict[str, Any]:
     """Run a single VN100 v8.0 backtest — RS+N scoring, no fundamentals.
 
@@ -459,6 +460,8 @@ def run_v8_backtest(
         precomputed: optional dict from precompute_static. The
             "fundamentals" key is NOT required (ignored if present).
         entry_cfg: optional EntryConfig override.
+        formula: RS formula for build_momentum_raw_frame
+            ('weighted_roc' | 'roc126'). Default 'weighted_roc'.
 
     Returns:
         Same schema as run_vn100_backtest:
@@ -513,7 +516,7 @@ def run_v8_backtest(
     if "momentum_raw" in precomputed and isinstance(precomputed["momentum_raw"], pd.DataFrame):
         raw = precomputed["momentum_raw"]
     else:
-        raw = build_momentum_raw_frame(panel)
+        raw = build_momentum_raw_frame(panel, formula=formula)
     scorer_frame = apply_momentum_thresholds(raw, momentum_cfg)
 
     # RS frame: DB RS where available, fill gaps from computed rs_rating
@@ -784,19 +787,33 @@ def build_canslim_raw_frame(
 
 def build_momentum_raw_frame(
     panel: pd.DataFrame,
+    formula: str = "weighted_roc",
 ) -> pd.DataFrame:
     """Compute raw momentum metrics per (date, ticker) for v8.0 scorer.
 
     Returns DataFrame with columns: date, ticker, n_prox, rs_rating.
     Pure price-based computation — no DB connectors required (MSCO-04).
 
-    Cached per date range to ``momentum_raw_{min_date}_{max_date}.parquet``
-    under CACHE_DIR. Different filename prefix from v7.0 canslim_raw_*
-    to avoid stale schema collisions.
+    Cached per date range and formula to
+    ``momentum_raw_{formula}_{min_date}_{max_date}.parquet`` under CACHE_DIR.
+    Different filename prefix from v7.0 canslim_raw_* to avoid stale schema
+    collisions. Each formula variant has its own cache file to prevent
+    cross-contamination.
+
+    Args:
+        panel: DataFrame with columns date, ticker, open, high, low, close, volume.
+        formula: RS formula to use. One of:
+            - "weighted_roc" (default): IBD Weighted ROC —
+              0.4*ROC63 + 0.2*ROC126 + 0.2*ROC189 + 0.2*ROC252
+            - "roc126": Simple 6-month ROC — pct_change(126)
     """
+    _VALID_FORMULAS = ("weighted_roc", "roc126")
+    if formula not in _VALID_FORMULAS:
+        raise ValueError(f"formula must be one of {_VALID_FORMULAS}, got {formula!r}")
+
     min_d = pd.Timestamp(panel["date"].min()).strftime("%Y-%m-%d")
     max_d = pd.Timestamp(panel["date"].max()).strftime("%Y-%m-%d")
-    cache_path = CACHE_DIR / f"momentum_raw_{min_d}_{max_d}.parquet"
+    cache_path = CACHE_DIR / f"momentum_raw_{formula}_{min_d}_{max_d}.parquet"
 
     if cache_path.exists():
         cached = pd.read_parquet(cache_path)
@@ -832,17 +849,23 @@ def build_momentum_raw_frame(
         columns=["date", "ticker", "n_prox", "rs_rating"]
     )
 
-    # Cross-sectional RS rating — same formula as v7.0 build_canslim_raw_frame
-    # (MSCO-01: weighted ROC percentile rank within universe per date)
+    # Cross-sectional RS rating — formula branch controlled by `formula` kwarg
+    # (MSCO-01: percentile rank within universe per date)
     if not raw.empty and "close" in raw.columns:
         raw = raw.sort_values(["ticker", "date"]).reset_index(drop=True)
-        for lb in (63, 126, 189, 252):
-            raw[f"_close_lag{lb}"] = raw.groupby("ticker")["close"].shift(lb)
-        weights = {63: 0.4, 126: 0.2, 189: 0.2, 252: 0.2}
-        raw["_raw_rs"] = sum(
-            w * (raw["close"] / raw[f"_close_lag{lb}"] - 1.0)
-            for lb, w in weights.items()
-        )
+        if formula == "roc126":
+            # Simple 6-month ROC — single lookback
+            raw["_close_lag126"] = raw.groupby("ticker")["close"].shift(126)
+            raw["_raw_rs"] = raw["close"] / raw["_close_lag126"] - 1.0
+        else:
+            # IBD Weighted ROC: 0.4*ROC63 + 0.2*ROC126 + 0.2*ROC189 + 0.2*ROC252
+            for lb in (63, 126, 189, 252):
+                raw[f"_close_lag{lb}"] = raw.groupby("ticker")["close"].shift(lb)
+            weights = {63: 0.4, 126: 0.2, 189: 0.2, 252: 0.2}
+            raw["_raw_rs"] = sum(
+                w * (raw["close"] / raw[f"_close_lag{lb}"] - 1.0)
+                for lb, w in weights.items()
+            )
         raw["rs_rating"] = (
             raw.groupby("date")["_raw_rs"]
             .rank(pct=True, na_option="keep") * 100.0
