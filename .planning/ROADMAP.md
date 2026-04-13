@@ -513,7 +513,12 @@ Plans:
   1. A/B backtest report comparing V2 baseline vs V2+all_v6_features shows side-by-side metrics (total return, CAGR, max drawdown, Sharpe, trade count, false signal rate) on VN30
   2. Walk-forward validation (train pre-2022, test 2022-2026) shows combined v6.0 features degrade less than 10% out-of-sample vs in-sample on VN30
   3. S3 dashboard is updated with v6.0 performance metrics, fail-safe annotations, volatility regime overlay, and updated equity curve
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 37-01-PLAN.md -- Add formula kwarg to build_momentum_raw_frame + run_v8_backtest + unit tests (BT-01)
+- [ ] 37-02-PLAN.md -- In-sample sweep 216 configs 2016-2018, select winning formula by Sharpe_rf3 (BT-01)
+- [ ] 37-03-PLAN.md -- OOS run 2019-2025 with locked formula + comparison table v8.0 vs v7.0 vs VN-Index B&H (BT-02, BT-03)
 **UI hint**: yes
 
 ### Phase 28: Data Audit & Connectors
@@ -611,7 +616,12 @@ Plans:
   3. Sweep results CSV with per-config (CAGR, Sharpe, MaxDD, hit rate, turnover, total cost drag)
   4. Top-3 configs identified by Sharpe and locked for OOS
   5. Sanity: no config produces >300% CAGR (sign of look-ahead); equity curves visually plausible
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 37-01-PLAN.md -- Add formula kwarg to build_momentum_raw_frame + run_v8_backtest + unit tests (BT-01)
+- [ ] 37-02-PLAN.md -- In-sample sweep 216 configs 2016-2018, select winning formula by Sharpe_rf3 (BT-01)
+- [ ] 37-03-PLAN.md -- OOS run 2019-2025 with locked formula + comparison table v8.0 vs v7.0 vs VN-Index B&H (BT-02, BT-03)
 **UI hint**: no
 
 ### Phase 33: Out-of-Sample + Sensitivity
@@ -691,7 +701,12 @@ Plans:
   1. In-sample sweep (2016-2018) runs both RS formulas and produces comparable metrics (CAGR, Sharpe, MaxDD) to select the winner
   2. OOS backtest (2019-2025) runs with the in-sample-selected formula and produces a full performance report
   3. Comparison table shows v8.0 vs v7.0 baseline (CAGR=10.18%, Sharpe=0.813, MaxDD=-16.31%) and VN-Index B&H side by side
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 37-01-PLAN.md -- Add formula kwarg to build_momentum_raw_frame + run_v8_backtest + unit tests (BT-01)
+- [ ] 37-02-PLAN.md -- In-sample sweep 216 configs 2016-2018, select winning formula by Sharpe_rf3 (BT-01)
+- [ ] 37-03-PLAN.md -- OOS run 2019-2025 with locked formula + comparison table v8.0 vs v7.0 vs VN-Index B&H (BT-02, BT-03)
 
 ## Progress
 
