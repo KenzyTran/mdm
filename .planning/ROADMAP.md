@@ -735,7 +735,7 @@ Phases execute in numeric order: 35 -> 36 -> 37
 | 33. Out-of-Sample + Sensitivity | v7.0 | 3/3 | Complete    | 2026-04-10 |
 | 34. Reporting + Documentation | v7.0 | 2/2 | Complete    | 2026-04-10 |
 | 35. RS Module | v8.0 | 2/2 | Complete    | 2026-04-10 |
-| 36. Momentum Scorer | v8.0 | 2/2 | Complete   | 2026-04-13 |
+| 36. Momentum Scorer | v8.0 | 2/2 | Complete    | 2026-04-13 |
 | 37. Backtest & Validation | v8.0 | 0/TBD | Not started | - |
 
 
