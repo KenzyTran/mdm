@@ -57,12 +57,20 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - MDM gate: giữ nguyên (BUY/CASH/SELL + partial liquidation)
 - Backtest đầy đủ 2016-2025, so sánh với v7.0 baseline
 
-### Active (v8.0)
+### Validated (v8.0) — shipped 2026-04-13
+
+**Result: v8.0 TRAILS v7.0.** RS momentum (roc126) as stock selector does not outperform CANSLIM fundamentals.
 
 - ✓ RS computation module: `compute_rs_panel` (IBD Weighted ROC + ROC-126, vectorized, cross-sectional percentile ranking) — Phase 35
 - ✓ Parquet caching layer: `get_rs_rankings` wraps compute_rs_panel with disk cache keyed by formula/mode/date range — Phase 35
 - ✓ MomentumScorer: `apply_momentum_thresholds` (RS≥70 + N rule, replaces CANSLIM C/A fundamentals, zero MySQL) — Phase 36
-- ✓ v8 pipeline: `run_v8_backtest` + `build_momentum_raw_frame` in `_vn100_pipeline.py`, v7.0 intact for Phase 37 comparison — Phase 36
+- ✓ v8 pipeline: `run_v8_backtest` + `build_momentum_raw_frame` in `_vn100_pipeline.py`, formula kwarg wired — Phase 36-37
+- ✓ In-sample sweep 2016-2018 (216 configs): roc126 wins Sharpe_rf3=0.702, locked config written — Phase 37
+- ✓ OOS validation 2019-2025: CAGR=10.0%, Sharpe=0.645, MaxDD=-24.9% — Phase 37
+- ✓ Three-way comparison: v8.0 vs v7.0 (Sharpe=0.813) vs VN-Index B&H — Phase 37
+
+**v8.0 OOS:** CAGR=10.0%, Sharpe_rf3=0.645, MaxDD=-24.9% (trails v7.0 Sharpe=0.813)
+**Best model remains v7.0:** CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%
 
 ### Active
 
@@ -220,4 +228,4 @@ This document evolves at phase transitions and milestone boundaries.
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
 ---
-*Last updated: 2026-04-10 after v7.0 milestone*
+*Last updated: 2026-04-13
