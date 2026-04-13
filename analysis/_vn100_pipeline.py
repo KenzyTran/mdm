@@ -123,9 +123,15 @@ def precompute_static(period: Tuple[str, str], mode: str = "current-vn100") -> D
         "fundamentals": CACHE_DIR / f"fundamentals_{mode}_{start}_{end}.parquet",
         "foreign": CACHE_DIR / f"foreign_{mode}_{start}_{end}.parquet",
         "mdm_gate": CACHE_DIR / f"mdm_gate_{mode}_{start}_{end}.parquet",
+        "rs": CACHE_DIR / f"rs_{mode}_{start}_{end}.parquet",
     }
 
-    if all(p.exists() for p in cache_files.values()):
+    non_rs_keys = [k for k in cache_files if k != "rs"]
+    all_non_rs_exist = all(cache_files[k].exists() for k in non_rs_keys)
+    all_exist = all_non_rs_exist and cache_files["rs"].exists()
+
+    if all_non_rs_exist:
+        # Load the 5 main cache files (always available on this branch).
         ohlc = pd.read_parquet(cache_files["ohlc"])
         fundamentals = pd.read_parquet(cache_files["fundamentals"])
         foreign = pd.read_parquet(cache_files["foreign"])
@@ -140,12 +146,30 @@ def precompute_static(period: Tuple[str, str], mode: str = "current-vn100") -> D
             index=pd.to_datetime(gate_df["date"]),
             name="mdm_state",
         )
+
+        if all_exist:
+            rs_df = pd.read_parquet(cache_files["rs"])
+        else:
+            # RS cache missing — fetch only RS from DB and persist.
+            from connectors import postgres  # noqa: F401
+            all_tickers_cache: List[str] = sorted(
+                set(t for tks in universe.values() for t in tks)
+            )
+            try:
+                rs_df = postgres.load_stock_rs(
+                    start, end, tickers=all_tickers_cache, rs_col="rsl"
+                )
+            except Exception:
+                rs_df = pd.DataFrame(columns=["date", "ticker", "rs_value"])
+            rs_df.to_parquet(cache_files["rs"])
+
         return {
             "universe": universe,
             "ohlc": ohlc,
             "fundamentals": fundamentals,
             "foreign": foreign,
             "mdm_gate": mdm_gate,
+            "rs": rs_df,
         }
 
     # --- live load (fail-loud on connector/DB errors) ---------------------
@@ -229,6 +253,13 @@ def precompute_static(period: Tuple[str, str], mode: str = "current-vn100") -> D
         name="mdm_state",
     )
 
+    # RS ratings (long-term rsl). Best-effort — fall back to empty frame
+    # so a missing stock_rs table does not abort the backtest.
+    try:
+        rs = postgres.load_stock_rs(start, end, tickers=sorted(all_tickers), rs_col="rsl")
+    except Exception:
+        rs = pd.DataFrame(columns=["date", "ticker", "rs_value"])
+
     # --- persist cache ----------------------------------------------------
     adj.to_parquet(cache_files["ohlc"])
     fundamentals.to_parquet(cache_files["fundamentals"])
@@ -239,6 +270,7 @@ def precompute_static(period: Tuple[str, str], mode: str = "current-vn100") -> D
     pd.DataFrame(
         {"date": mdm_gate.index, "state": mdm_gate.values}
     ).to_parquet(cache_files["mdm_gate"])
+    rs.to_parquet(cache_files["rs"])
 
     return {
         "universe": universe,
@@ -246,6 +278,7 @@ def precompute_static(period: Tuple[str, str], mode: str = "current-vn100") -> D
         "fundamentals": fundamentals,
         "foreign": foreign,
         "mdm_gate": mdm_gate,
+        "rs": rs,
     }
 
 
@@ -258,6 +291,7 @@ def run_vn100_backtest(
     entry_option: str,
     period: Tuple[str, str],
     precomputed: Optional[Mapping[str, Any]] = None,
+    entry_cfg=None,
 ) -> Dict[str, Any]:
     """Run a single VN100 backtest end-to-end and return metrics + logs.
 
@@ -344,18 +378,171 @@ def run_vn100_backtest(
         raw = build_canslim_raw_frame(panel, precomputed)
     scorer_frame = _apply_canslim_thresholds(raw, canslim_cfg)
 
-    # --- RS frame: use precomputed if present, else synthesize ----------
-    if "rs" in precomputed and isinstance(precomputed["rs"], pd.DataFrame):
-        rs_frame = precomputed["rs"].copy()
+    # --- RS frame: DB RS where available, fill gaps from computed rs_rating --
+    db_rs = precomputed.get("rs")
+    if isinstance(db_rs, pd.DataFrame) and not db_rs.empty:
+        rs_frame = db_rs.copy()
+        rs_frame["date"] = pd.to_datetime(rs_frame["date"])
+        # Fill gaps before DB RS coverage using price-computed rs_rating from raw
+        if "rs_rating" in raw.columns:
+            computed_rs = raw[["date", "ticker", "rs_rating"]].rename(
+                columns={"rs_rating": "rs_value"}
+            ).copy()
+            computed_rs["date"] = pd.to_datetime(computed_rs["date"])
+            # Only keep computed rows where DB RS has no coverage for that date
+            db_dates = set(rs_frame["date"].unique())
+            gap_rs = computed_rs[~computed_rs["date"].isin(db_dates)]
+            rs_frame = pd.concat([gap_rs, rs_frame], ignore_index=True)
+    elif "rs_rating" in raw.columns:
+        # No DB RS at all — use price-computed RS for entire period
+        rs_frame = raw[["date", "ticker", "rs_rating"]].rename(
+            columns={"rs_rating": "rs_value"}
+        ).copy()
+        rs_frame["date"] = pd.to_datetime(rs_frame["date"])
     else:
         rs_frame = panel[["date", "ticker"]].copy()
-        rs_frame["rs_value"] = 80.0  # above threshold 70 by default
+        rs_frame["rs_value"] = 80.0
 
     # --- Fills: derive from precomputed if present, else run EntryEngine --
     if "fills" in precomputed:
         fills_in = precomputed["fills"]
     else:
-        fills_in = _compute_fills(panel, gate, entry_option)
+        fills_in = _compute_fills(panel, gate, entry_option, entry_cfg=entry_cfg)
+    fills = [_PortfolioFill.from_fill(f) for f in fills_in]
+
+    # Sync entry_mode on a COPY of config so caller's object is untouched.
+    pcfg = PortfolioConfig(**{**portfolio_cfg.__dict__})
+    pcfg.entry_mode = entry_option
+
+    engine = PortfolioEngine(
+        config=pcfg,
+        mdm_state=gate,
+        fills=fills,
+        scorer_frame=scorer_frame,
+        price_panel=panel,
+        rs_frame=rs_frame,
+        trading_dates=trading_dates,
+    )
+    result: PortfolioResult = engine.run()
+
+    metrics = _compute_metrics(result, period)
+    return {
+        "metrics": metrics,
+        "nav": result.nav_daily,
+        "trades": _trades_to_df(result),
+        "positions": result.positions_daily,
+    }
+
+
+# ---------------------------------------------------------------------------
+# run_v8_backtest — v8.0 entry point (RS+N scoring, no fundamentals)
+# ---------------------------------------------------------------------------
+def run_v8_backtest(
+    momentum_cfg: "MomentumScorerConfig",
+    portfolio_cfg: PortfolioConfig,
+    entry_option: str,
+    period: Tuple[str, str],
+    precomputed: Optional[Mapping[str, Any]] = None,
+    entry_cfg=None,
+) -> Dict[str, Any]:
+    """Run a single VN100 v8.0 backtest — RS+N scoring, no fundamentals.
+
+    Same contract as run_vn100_backtest but uses MomentumScorerConfig
+    instead of CanslimConfig. Pure price-based computation — no DB
+    connectors required in the v8.0 scoring path (MSCO-04).
+
+    Args:
+        momentum_cfg: MomentumScorerConfig (Phase 36 dataclass).
+        portfolio_cfg: PortfolioConfig (Phase 31 dataclass).
+        entry_option: "A" or "C".
+        period: (start_yyyy_mm_dd, end_yyyy_mm_dd).
+        precomputed: optional dict from precompute_static. The
+            "fundamentals" key is NOT required (ignored if present).
+        entry_cfg: optional EntryConfig override.
+
+    Returns:
+        Same schema as run_vn100_backtest:
+        {"metrics": {...}, "nav": DataFrame, "trades": DataFrame,
+         "positions": DataFrame}
+    """
+    from strategies.momentum.scorer import apply_momentum_thresholds
+    from strategies.momentum.scorer_config import MomentumScorerConfig
+
+    if not isinstance(momentum_cfg, MomentumScorerConfig):
+        raise ValueError("momentum_cfg must be MomentumScorerConfig")
+    if not isinstance(portfolio_cfg, PortfolioConfig):
+        raise ValueError("portfolio_cfg must be PortfolioConfig")
+    if entry_option not in ("A", "C"):
+        raise ValueError(f"entry_option must be 'A' or 'C', got {entry_option!r}")
+    if not (isinstance(period, tuple) and len(period) == 2):
+        raise ValueError(f"period must be (start, end) tuple, got {period!r}")
+
+    if precomputed is None:
+        precomputed = precompute_static(period)
+    # v8.0 does NOT require "fundamentals" key (MSCO-04)
+    for k in ("universe", "ohlc", "mdm_gate"):
+        if k not in precomputed:
+            raise ValueError(f"precomputed missing required key: {k!r}")
+
+    # Shape OHLC panel (same as v7.0)
+    ohlc = precomputed["ohlc"]
+    if ohlc is None or ohlc.empty:
+        raise ValueError("precomputed['ohlc'] is empty")
+    panel = pd.DataFrame({
+        "date": pd.to_datetime(ohlc["tradingdate"]),
+        "ticker": ohlc["stockcode"].astype(str).str.strip(),
+        "open": ohlc["adj_open"].astype(float) if "adj_open" in ohlc.columns else ohlc["openprice"].astype(float),
+        "high": ohlc["adj_high"].astype(float) if "adj_high" in ohlc.columns else ohlc["highestprice"].astype(float),
+        "low": ohlc["adj_low"].astype(float) if "adj_low" in ohlc.columns else ohlc["lowestprice"].astype(float),
+        "close": ohlc["adj_close"].astype(float) if "adj_close" in ohlc.columns else ohlc["closeprice"].astype(float),
+        "volume": ohlc["totalvol"].astype(float),
+    }).sort_values(["ticker", "date"]).reset_index(drop=True)
+
+    trading_dates = pd.DatetimeIndex(sorted(panel["date"].unique()))
+    if len(trading_dates) == 0:
+        raise ValueError("no trading dates in precomputed ohlc")
+
+    # MDM gate (same as v7.0)
+    gate_raw = precomputed["mdm_gate"]
+    if not isinstance(gate_raw, pd.Series):
+        raise ValueError("mdm_gate must be a pd.Series")
+    gate = gate_raw.reindex(trading_dates).ffill().fillna("CASH")
+    gate.name = "mdm_state"
+
+    # v8.0 scorer: momentum raw frame + thresholds
+    if "momentum_raw" in precomputed and isinstance(precomputed["momentum_raw"], pd.DataFrame):
+        raw = precomputed["momentum_raw"]
+    else:
+        raw = build_momentum_raw_frame(panel)
+    scorer_frame = apply_momentum_thresholds(raw, momentum_cfg)
+
+    # RS frame: DB RS where available, fill gaps from computed rs_rating
+    db_rs = precomputed.get("rs")
+    if isinstance(db_rs, pd.DataFrame) and not db_rs.empty:
+        rs_frame = db_rs.copy()
+        rs_frame["date"] = pd.to_datetime(rs_frame["date"])
+        if "rs_rating" in raw.columns:
+            computed_rs = raw[["date", "ticker", "rs_rating"]].rename(
+                columns={"rs_rating": "rs_value"}
+            ).copy()
+            computed_rs["date"] = pd.to_datetime(computed_rs["date"])
+            db_dates = set(rs_frame["date"].unique())
+            gap_rs = computed_rs[~computed_rs["date"].isin(db_dates)]
+            rs_frame = pd.concat([gap_rs, rs_frame], ignore_index=True)
+    elif "rs_rating" in raw.columns:
+        rs_frame = raw[["date", "ticker", "rs_rating"]].rename(
+            columns={"rs_rating": "rs_value"}
+        ).copy()
+        rs_frame["date"] = pd.to_datetime(rs_frame["date"])
+    else:
+        rs_frame = panel[["date", "ticker"]].copy()
+        rs_frame["rs_value"] = 80.0
+
+    # Fills (same as v7.0 — MSCO-03: Option A/C unchanged)
+    if "fills" in precomputed:
+        fills_in = precomputed["fills"]
+    else:
+        fills_in = _compute_fills(panel, gate, entry_option, entry_cfg=entry_cfg)
     fills = [_PortfolioFill.from_fill(f) for f in fills_in]
 
     # Sync entry_mode on a COPY of config so caller's object is untouched.
@@ -485,6 +672,7 @@ def build_canslim_raw_frame(
         dates = pd.to_datetime(g["date"]).values
         close = g["close"].astype(float).values
         high = g["high"].astype(float).values
+        vol = g["volume"].astype(float).values
 
         # N-rule raw: 1 - close / rolling 252d max high
         high_series = pd.Series(high)
@@ -492,6 +680,15 @@ def build_canslim_raw_frame(
         n_prox = np.where(
             (roll_max > 0) & np.isfinite(roll_max),
             1.0 - close / roll_max,
+            np.nan,
+        )
+
+        # S-rule raw: volume ratio = vol[t] / mean(vol[t-50..t-1])
+        vol_series = pd.Series(vol)
+        vol_avg50 = vol_series.shift(1).rolling(50, min_periods=10).mean().values
+        vol_ratio = np.where(
+            (vol_avg50 > 0) & np.isfinite(vol_avg50),
+            vol / vol_avg50,
             np.nan,
         )
 
@@ -544,13 +741,117 @@ def build_canslim_raw_frame(
                     "eps_yoy_q0": yoy_q0,
                     "eps_cagr_3y": cagr_3y,
                     "n_prox": n_prox,
+                    "vol_ratio": vol_ratio,
+                    "close": close,
                 }
             )
         )
 
     raw = pd.concat(all_rows, ignore_index=True) if all_rows else pd.DataFrame(
-        columns=["date", "ticker", "eps_yoy_q0", "eps_cagr_3y", "n_prox"]
+        columns=["date", "ticker", "eps_yoy_q0", "eps_cagr_3y", "n_prox", "vol_ratio", "close", "rs_rating"]
     )
+
+    # --- Cross-sectional RS rating (percentile rank within universe) ------
+    # Formula: raw_rs = 0.4*ROC63 + 0.2*ROC126 + 0.2*ROC189 + 0.2*ROC252
+    # Computed per date across all tickers in panel.
+    if not raw.empty and "close" in raw.columns:
+        raw = raw.sort_values(["ticker", "date"]).reset_index(drop=True)
+        # Compute shifted closes for ROC lookbacks using per-ticker groupby
+        for lb in (63, 126, 189, 252):
+            raw[f"_close_lag{lb}"] = raw.groupby("ticker")["close"].shift(lb)
+        weights = {63: 0.4, 126: 0.2, 189: 0.2, 252: 0.2}
+        raw["_raw_rs"] = sum(
+            w * (raw["close"] / raw[f"_close_lag{lb}"] - 1.0)
+            for lb, w in weights.items()
+        )
+        # Rank cross-sectionally per date → [0, 100]
+        raw["rs_rating"] = (
+            raw.groupby("date")["_raw_rs"]
+            .rank(pct=True, na_option="keep") * 100.0
+        )
+        raw = raw.drop(columns=[c for c in raw.columns if c.startswith("_close_lag") or c == "_raw_rs"])
+    else:
+        raw["rs_rating"] = np.nan
+
+    raw = raw.drop(columns=["close"], errors="ignore")
+    try:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        raw.to_parquet(cache_path)
+    except Exception:
+        pass
+    return raw
+
+
+def build_momentum_raw_frame(
+    panel: pd.DataFrame,
+) -> pd.DataFrame:
+    """Compute raw momentum metrics per (date, ticker) for v8.0 scorer.
+
+    Returns DataFrame with columns: date, ticker, n_prox, rs_rating.
+    Pure price-based computation — no DB connectors required (MSCO-04).
+
+    Cached per date range to ``momentum_raw_{min_date}_{max_date}.parquet``
+    under CACHE_DIR. Different filename prefix from v7.0 canslim_raw_*
+    to avoid stale schema collisions.
+    """
+    min_d = pd.Timestamp(panel["date"].min()).strftime("%Y-%m-%d")
+    max_d = pd.Timestamp(panel["date"].max()).strftime("%Y-%m-%d")
+    cache_path = CACHE_DIR / f"momentum_raw_{min_d}_{max_d}.parquet"
+
+    if cache_path.exists():
+        cached = pd.read_parquet(cache_path)
+        want_tickers = set(panel["ticker"].unique())
+        have_tickers = set(cached["ticker"].unique())
+        if want_tickers.issubset(have_tickers) and not cached.empty:
+            return cached
+
+    all_rows: List[pd.DataFrame] = []
+    for tk, g in panel.groupby("ticker"):
+        g = g.sort_values("date").reset_index(drop=True)
+        dates = pd.to_datetime(g["date"]).values
+        close = g["close"].astype(float).values
+        high = g["high"].astype(float).values
+
+        # N-rule raw: 1 - close / rolling 252d max high (MSCO-02)
+        high_series = pd.Series(high)
+        roll_max = high_series.rolling(252, min_periods=252).max().values
+        n_prox = np.where(
+            (roll_max > 0) & np.isfinite(roll_max),
+            1.0 - close / roll_max,
+            np.nan,
+        )
+
+        all_rows.append(pd.DataFrame({
+            "date": dates,
+            "ticker": tk,
+            "n_prox": n_prox,
+            "close": close,
+        }))
+
+    raw = pd.concat(all_rows, ignore_index=True) if all_rows else pd.DataFrame(
+        columns=["date", "ticker", "n_prox", "rs_rating"]
+    )
+
+    # Cross-sectional RS rating — same formula as v7.0 build_canslim_raw_frame
+    # (MSCO-01: weighted ROC percentile rank within universe per date)
+    if not raw.empty and "close" in raw.columns:
+        raw = raw.sort_values(["ticker", "date"]).reset_index(drop=True)
+        for lb in (63, 126, 189, 252):
+            raw[f"_close_lag{lb}"] = raw.groupby("ticker")["close"].shift(lb)
+        weights = {63: 0.4, 126: 0.2, 189: 0.2, 252: 0.2}
+        raw["_raw_rs"] = sum(
+            w * (raw["close"] / raw[f"_close_lag{lb}"] - 1.0)
+            for lb, w in weights.items()
+        )
+        raw["rs_rating"] = (
+            raw.groupby("date")["_raw_rs"]
+            .rank(pct=True, na_option="keep") * 100.0
+        )
+        raw = raw.drop(columns=[c for c in raw.columns if c.startswith("_close_lag") or c == "_raw_rs"])
+    else:
+        raw["rs_rating"] = np.nan
+
+    raw = raw.drop(columns=["close"], errors="ignore")
     try:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         raw.to_parquet(cache_path)
@@ -565,16 +866,19 @@ def _apply_canslim_thresholds(
 ) -> pd.DataFrame:
     """Convert raw frame + thresholds into a PortfolioEngine scorer_frame.
 
-    Rule: canslim_score = 100 iff eps_yoy_q0 >= c_threshold AND
-    eps_cagr_3y >= a_threshold AND n_prox <= n_within_high. NaN raw values
-    fail their rule (score → NaN → engine drops candidate).
+    Rule: canslim_score = 100 iff C AND A AND N AND S all pass. NaN raw
+    values fail their rule (score → NaN → engine drops candidate).
     """
     if raw.empty:
         return pd.DataFrame(columns=["date", "ticker", "canslim_score"])
     c_pass = raw["eps_yoy_q0"] >= canslim_cfg.c_threshold
     a_pass = raw["eps_cagr_3y"] >= canslim_cfg.a_threshold
     n_pass = raw["n_prox"] <= canslim_cfg.n_within_high
-    all_pass = c_pass & a_pass & n_pass
+    if canslim_cfg.s_vol_mult > 0 and "vol_ratio" in raw.columns:
+        s_pass = raw["vol_ratio"] >= canslim_cfg.s_vol_mult
+    else:
+        s_pass = pd.Series(True, index=raw.index)
+    all_pass = c_pass & a_pass & n_pass & s_pass
     out = pd.DataFrame(
         {
             "date": raw["date"],
@@ -589,6 +893,7 @@ def _compute_fills(
     panel: pd.DataFrame,
     mdm_gate: pd.Series,
     entry_option: str,
+    entry_cfg=None,
 ) -> List[Any]:
     """Run EntryEngine on the panel and return raw Fill objects.
 
@@ -596,7 +901,7 @@ def _compute_fills(
     """
     from strategies.entry import EntryEngine, EntryConfig
 
-    cfg = EntryConfig()
+    cfg = entry_cfg if entry_cfg is not None else EntryConfig()
     per_ticker: Dict[str, pd.DataFrame] = {}
     for ticker, g in panel.groupby("ticker"):
         df = g.copy()
@@ -704,7 +1009,9 @@ def _compute_metrics(result: PortfolioResult, period: Tuple[str, str]) -> Dict[s
 
 __all__ = [
     "run_vn100_backtest",
+    "run_v8_backtest",
     "precompute_static",
     "build_canslim_raw_frame",
+    "build_momentum_raw_frame",
     "CACHE_DIR",
 ]
