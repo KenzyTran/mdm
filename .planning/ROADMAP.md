@@ -736,7 +736,7 @@ Plans:
 
 Plans:
 - [x] 38-01-PLAN.md -- Config fields (atr_buffer_* in MDMV2Config + presets) + Indicators.add_violation_threshold_column (ATR-01, ATR-03)
-- [ ] 38-02-PLAN.md -- Engine pipeline hook + position_manager m-day streak branch at CASH->SELL (ATR-02, ATR-03)
+- [x] 38-02-PLAN.md -- Engine pipeline hook + position_manager m-day streak branch at CASH->SELL (ATR-02, ATR-03)
 - [ ] 38-03-PLAN.md -- v6.0 baseline fixture + regression pytest + docs/rules_mdm_hybrid.md sync (ATR-04)
 
 ### Phase 39: Refined Distribution Day Module
@@ -828,7 +828,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 35. RS Module | v8.0 | 2/2 | Complete    | 2026-04-10 |
 | 36. Momentum Scorer | v8.0 | 2/2 | Complete    | 2026-04-13 |
 | 37. Backtest & Validation | v8.0 | 3/3 | Complete    | 2026-04-13 |
-| 38. ATR Buffer Zone Module | v9.0 | 1/3 | In Progress|  |
+| 38. ATR Buffer Zone Module | v9.0 | 2/3 | In Progress|  |
 | 39. Refined Distribution Day Module | v9.0 | 0/0 | Not started | - |
 | 40. Grid Search Sweeps | v9.0 | 0/0 | Not started | - |
 | 41. A/B & Walk-Forward Validation | v9.0 | 0/0 | Not started | - |
@@ -841,7 +841,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Context:
 - Bug found during Phase 33 review
