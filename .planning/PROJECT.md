@@ -46,15 +46,34 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - ✓ Data loaders for VN30, NASDAQ, S&P500 — CSV format with OHLCV
 - ✓ Kelly Criterion position management — existing implementation
 
-## Current Milestone: v8.0 Momentum Stock Selection
+## Current Milestone: v9.0 VN30 MDM Whipsaw Reduction
 
-**Goal:** Thay thế CANSLIM fundamental bằng RS momentum thuần TA để chọn cổ phiếu, giữ MDM làm timing gate.
+**Goal:** Giảm whipsaw trong HybridEngine + fail-safe trên VN30 bằng ATR Buffer Zone cho MA50 violation và Refined Distribution Day (grid-searched), để beat baseline v6.0 (CAGR 11.5%, MaxDD -28.2%, Return +238.8% vs B&H +205%).
 
 **Target features:**
-- RS tự tính từ giá: so sánh IBD Weighted ROC (0.4×ROC63 + 0.2×ROC126/189/252) vs ROC 6 tháng đơn giản
-- Stock filter: RS ≥ 70 (top 30% trong VN100) + N rule (gần đỉnh 52 tuần) + Volume surge tại entry
+- ATR Buffer Zone: VT = SMA50 − k×ATR_N, require m phiên liên tiếp close < VT trước khi trigger SELL/CASH; grid search k ∈ [0.3, 0.5, 0.7, 1.0], N ∈ [10, 14, 20], m ∈ [1, 2, 3] (36 combos)
+- Refined Distribution Day: giảm ≥ large_drop với vol > MA20, HOẶC giảm ≥ small_drop với vol ở top percentile của 50 phiên; grid search large_drop ∈ [-0.5% đến -1.0%], small_drop ∈ [-0.3%, -0.4%, -0.5%], small_vol_percentile ∈ [3%, 5%, 10%] (54 combos)
+- Sequential grid search: sweep ATR trước (lock best) rồi sweep DD (90 runs thay vì 1944 joint)
+- Selection metric: max Sharpe với hard constraint MaxDD ≤ -30%, tie-break theo CAGR
+- A/B validation 4 scenarios (baseline / +ATR / +DD / +both) + walk-forward (Train 2015-2021, Test 2022-2026)
+- Success: CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%)
+
+**Baseline (HybridEngine + fail-safe, v6.0):** Return +238.8%, CAGR 11.5%, MaxDD -28.2%, Walk-forward Test 2022-2026 CAGR 8.1%.
+
+**Diagnostic driving this milestone:**
+- 124 SELL signals, **84% từ MA50 breakdown** (104/124) → ATR Buffer targets this path
+- 22 lần stop loss + DD threshold exits → Refined DD targets over-sensitive IBD -0.2% rule
+- Hypothesis: whipsaw từ large-cap "kéo xả" để thanh lý phái sinh F1 — ATR buffer hấp thụ nhịp nhúng giả
+
+## Completed: v8.0 Momentum Stock Selection (shipped 2026-04-13)
+
+**Result: v8.0 TRAILS v7.0.** RS momentum (roc126) as stock selector does not outperform CANSLIM fundamentals.
+
+**Target features (v8.0):**
+- RS tự tính từ giá: IBD Weighted ROC (0.4×ROC63 + 0.2×ROC126/189/252) vs ROC 6 tháng đơn giản
+- Stock filter: RS ≥ 70 (top 30% trong VN100) + N rule + Volume surge
 - Entry confirmation: Option A/C giữ nguyên
-- MDM gate: giữ nguyên (BUY/CASH/SELL + partial liquidation)
+- MDM gate: giữ nguyên
 - Backtest đầy đủ 2016-2025, so sánh với v7.0 baseline
 
 ### Validated (v8.0) — shipped 2026-04-13
@@ -72,7 +91,16 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 **v8.0 OOS:** CAGR=10.0%, Sharpe_rf3=0.645, MaxDD=-24.9% (trails v7.0 Sharpe=0.813)
 **Best model remains v7.0:** CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%
 
-### Active
+### Active (v9.0)
+
+- [ ] ATR Buffer Zone module (VT = SMA50 − k×ATR_N, m-day consecutive close)
+- [ ] Refined Distribution Day module (dual-threshold: large_drop + vol-MA, small_drop + top-percentile)
+- [ ] ATR parameter grid search (36 combos) in-sample 2015-2021
+- [ ] DD parameter grid search (54 combos) on locked ATR config
+- [ ] Selection pipeline: max Sharpe with MaxDD ≤ -30% constraint
+- [ ] A/B validation (baseline / +ATR / +DD / +both)
+- [ ] Walk-forward validation (Train 2015-2021 / Test 2022-2026)
+- [ ] Final OOS report vs baseline + B&H VN30
 
 ### Validated (v7.0)
 
@@ -228,4 +256,4 @@ This document evolves at phase transitions and milestone boundaries.
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
 ---
-*Last updated: 2026-04-13
+*Last updated: 2026-04-15 after milestone v9.0 start*
