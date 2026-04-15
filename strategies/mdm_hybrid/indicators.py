@@ -213,6 +213,38 @@ class Indicators:
         return df
 
     @staticmethod
+    def add_violation_threshold_column(
+        df: pd.DataFrame,
+        k: float = 0.5,
+        period: int = 14,
+    ) -> pd.DataFrame:
+        """Add ATR buffer violation threshold column for MA50 breakdown filter.
+
+        Computes: violation_threshold = MA50 - k * ATR_N
+
+        Uses column names 'atr_buf' and 'true_range_buf' (not 'atr'/'true_range')
+        to avoid overwriting the stop-loss ATR columns.
+
+        Args:
+            df: DataFrame with 'high', 'low', 'close', 'ma50' columns.
+            k: ATR multiplier (buffer depth). Default 0.5.
+            period: ATR lookback period. Default 14.
+
+        Returns:
+            DataFrame with 'violation_threshold' column added.
+            Intermediate columns 'atr_buf' and 'true_range_buf' are also present.
+        """
+        df = df.copy()
+        prev_close = df['close'].shift(1)
+        tr1 = df['high'] - df['low']
+        tr2 = (df['high'] - prev_close).abs()
+        tr3 = (df['low'] - prev_close).abs()
+        df['true_range_buf'] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        df['atr_buf'] = df['true_range_buf'].rolling(window=period, min_periods=1).mean()
+        df['violation_threshold'] = df['ma50'] - k * df['atr_buf']
+        return df
+
+    @staticmethod
     def drawdown_from_peak(current_close: float, peak_high: float) -> float:
         """
         Calculate drawdown from peak.
