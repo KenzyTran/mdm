@@ -7,9 +7,9 @@
 
 ### ATR Buffer Zone
 
-- [ ] **ATR-01**: Compute `violation_threshold` column = SMA50 − k × ATR_N, parameterized by (k, N); integrate into existing indicator pipeline
+- [x] **ATR-01**: Compute `violation_threshold` column = SMA50 − k × ATR_N, parameterized by (k, N); integrate into existing indicator pipeline
 - [ ] **ATR-02**: MA50 breakdown SELL trigger requires close < violation_threshold trên m phiên liên tiếp (configurable m)
-- [ ] **ATR-03**: Config flag `atr_buffer_enabled` trong MDMV2Config / HybridEngine để A/B baseline vs +ATR
+- [x] **ATR-03**: Config flag `atr_buffer_enabled` trong MDMV2Config / HybridEngine để A/B baseline vs +ATR
 - [ ] **ATR-04**: Backward-compat — khi `atr_buffer_enabled=False`, trigger behavior khớp hoàn toàn v6.0 baseline (byte-identical signal log)
 
 ### Refined Distribution Day
@@ -62,9 +62,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ATR-01 | Phase 38 | Pending |
+| ATR-01 | Phase 38 | Complete |
 | ATR-02 | Phase 38 | Pending |
-| ATR-03 | Phase 38 | Pending |
+| ATR-03 | Phase 38 | Complete |
 | ATR-04 | Phase 38 | Pending |
 | DD-01 | Phase 39 | Pending |
 | DD-02 | Phase 39 | Pending |
