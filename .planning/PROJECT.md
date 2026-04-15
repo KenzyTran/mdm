@@ -65,6 +65,9 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - 22 lần stop loss + DD threshold exits → Refined DD targets over-sensitive IBD -0.2% rule
 - Hypothesis: whipsaw từ large-cap "kéo xả" để thanh lý phái sinh F1 — ATR buffer hấp thụ nhịp nhúng giả
 
+**Progress:**
+- [x] Phase 38 — ATR Buffer Zone module (feature-gated, v6.0 parity when off) shipped 2026-04-15
+
 ## Completed: v8.0 Momentum Stock Selection (shipped 2026-04-13)
 
 **Result: v8.0 TRAILS v7.0.** RS momentum (roc126) as stock selector does not outperform CANSLIM fundamentals.
@@ -256,4 +259,4 @@ This document evolves at phase transitions and milestone boundaries.
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
 ---
-*Last updated: 2026-04-15 after milestone v9.0 start*
+*Last updated: 2026-04-15 after Phase 38 completion*
