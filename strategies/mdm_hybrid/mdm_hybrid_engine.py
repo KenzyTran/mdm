@@ -159,6 +159,15 @@ class HybridEngine:
             window=self.config.v2_config.atr_baseline_period, min_periods=1
         ).mean()
 
+        # ATR Buffer Zone: precompute violation_threshold column (Phase 38, ATR-01/ATR-02)
+        # Only when enabled -- D-08: no side effects when disabled (protects ATR-04)
+        if self.config.v2_config.atr_buffer_enabled:
+            df = Indicators.add_violation_threshold_column(
+                df,
+                k=self.config.v2_config.atr_buffer_k,
+                period=self.config.v2_config.atr_buffer_period,
+            )
+
         # Add EMA/MACD indicator columns for filter evaluation (per D-03, Phase 13)
         if self.config.filter_enabled:
             from core.indicators import build_indicator_dataframe
@@ -335,6 +344,17 @@ class HybridEngine:
                 # prev_high for fail-safe threshold (SAFE-01)
                 prev_high = df.iloc[idx - 1]['high'] if idx > 0 else 0.0
 
+                # ATR Buffer Zone: read precomputed column for current row (ATR-02)
+                violation_threshold_val = None
+                if self.config.v2_config.atr_buffer_enabled:
+                    violation_threshold_val = (
+                        row['violation_threshold'] if 'violation_threshold' in row.index else None
+                    )
+                    if violation_threshold_val is not None and pd.notna(violation_threshold_val):
+                        violation_threshold_val = float(violation_threshold_val)
+                    else:
+                        violation_threshold_val = None
+
                 new_state, action = self.position_manager.process_day(
                     date=date,
                     high=high,
@@ -350,6 +370,7 @@ class HybridEngine:
                     ma10=ma10,
                     ma50=ma50_val,
                     prev_high=prev_high,
+                    violation_threshold=violation_threshold_val,   # NEW: ATR-02
                 )
 
                 # If FTD triggered, reset rally tracker
