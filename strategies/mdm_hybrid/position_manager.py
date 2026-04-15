@@ -30,6 +30,7 @@ class V2Position:
     signal_type: str = "FTD"
     days_in_cash: int = 0
     ma10_below_count: int = 0
+    atr_buf_below_count: int = 0
     short_entry_price: float = 0.0
     short_entry_date: Optional[pd.Timestamp] = None
     fail_safe_threshold: float = 0.0
@@ -240,6 +241,7 @@ class V2PositionManager:
         ma10: float = None,
         ma50: float = None,
         prev_high: float = 0.0,
+        violation_threshold: float = None,
     ) -> Tuple[V2MarketState, str]:
         """
         Process a trading day and update state.
@@ -259,6 +261,7 @@ class V2PositionManager:
             ma10: Current 10-day MA
             ma50: Current 50-day MA
             prev_high: High of previous day (for fail-safe threshold)
+            violation_threshold: ATR buffer zone threshold (ma50 - k*atr_buf); None during warm-up
 
         Returns:
             Tuple of (new_state, action_taken)
@@ -274,10 +277,36 @@ class V2PositionManager:
             if is_ftd:
                 self.enter_buy(ftd_price, date, low, signal_type)
                 action = f"BUY at {ftd_price:.2f} ({signal_type})"
-            # Check for CASH -> SELL: MA50 breakdown
-            elif self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
-                self.enter_sell(date, f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})", price=close, fail_safe_threshold=prev_high)
-                action = f"SELL signal: MA50 breakdown"
+            # Check for CASH -> SELL: MA50 breakdown or ATR buffer zone streak
+            elif self.config.ma50_sell_enabled and ma50 is not None:
+                if getattr(self.config, 'atr_buffer_enabled', False):
+                    # ATR buffer zone: m-day consecutive close < violation_threshold (D-03, ATR-02)
+                    if violation_threshold is not None and close < violation_threshold:
+                        self.position.atr_buf_below_count += 1
+                    else:
+                        self.position.atr_buf_below_count = 0
+                    m = self.config.atr_buffer_consecutive_days
+                    if (violation_threshold is not None
+                            and self.position.atr_buf_below_count >= m):
+                        vt = violation_threshold
+                        n = self.position.atr_buf_below_count
+                        self.enter_sell(
+                            date,
+                            f"ATR buffer zone ({n} days below violation_threshold {vt:.2f})",
+                            price=close,
+                            fail_safe_threshold=prev_high,
+                        )
+                        action = f"SELL signal: ATR buffer zone ({n} days)"
+                else:
+                    # Original v6.0 behavior (ATR-04 byte-identical when disabled)
+                    if close < ma50:
+                        self.enter_sell(
+                            date,
+                            f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})",
+                            price=close,
+                            fail_safe_threshold=prev_high,
+                        )
+                        action = f"SELL signal: MA50 breakdown"
             # Check for CASH -> SELL: deterioration
             elif self.position.days_in_cash >= self.config.cash_deterioration_days:
                 self.enter_sell(date, f"Cash deterioration ({self.position.days_in_cash} days)", price=close, fail_safe_threshold=prev_high)
