@@ -732,7 +732,12 @@ Plans:
   2. HybridEngine SELL trigger from MA50 breakdown fires only after close < violation_threshold on m consecutive trading days (m configurable)
   3. A config flag `atr_buffer_enabled` toggles the new trigger on/off inside MDMV2Config / HybridEngine without code changes elsewhere
   4. Running the HybridEngine on VN30 2015-2026 with `atr_buffer_enabled=False` produces a signal log byte-identical to the v6.0 baseline (regression test locks this invariant)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 38-01-PLAN.md -- Config fields (atr_buffer_* in MDMV2Config + presets) + Indicators.add_violation_threshold_column (ATR-01, ATR-03)
+- [ ] 38-02-PLAN.md -- Engine pipeline hook + position_manager m-day streak branch at CASH->SELL (ATR-02, ATR-03)
+- [ ] 38-03-PLAN.md -- v6.0 baseline fixture + regression pytest + docs/rules_mdm_hybrid.md sync (ATR-04)
 
 ### Phase 39: Refined Distribution Day Module
 **Goal**: Distribution Day detector replaces the hard-coded -0.2% rule with a parameterized dual-threshold definition that captures both obvious drops and subtle-but-heavy-volume drops
