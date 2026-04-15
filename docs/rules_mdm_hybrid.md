@@ -493,3 +493,59 @@ So với Phase 33 OOS baseline (trước fix). Kết quả sau khi sửa bug `ev
 | mdm_sell exits | nhiều | 5 | Chỉ đóng bottom 50% mỗi lần SELL |
 
 **Lưu ý quan trọng (bug đã sửa):** Phiên bản đầu tiên của Phase 999.1 có bug trong `evaluate_exits` — hàm này có MDM SELL dispatch riêng đóng cả retained positions. Bug đã được sửa (commit d218ce3): `evaluate_exits` không còn MDM SELL dispatch; engine section (3) xử lý hoàn toàn. Kết quả trên là sau khi sửa bug.
+
+---
+
+## XVI. ATR BUFFER ZONE — MA50 BREAKDOWN FILTER (Phase 38, ATR-01/ATR-03)
+
+*Thêm vào v9.0: Thay trigger SELL hiện tại (`close < MA50`) bằng rule có đệm để giảm whipsaw từ các nhịp nhúng giả trong SELL signal.*
+
+### 1. Mục tiêu
+
+84% tín hiệu SELL đến từ MA50 breakdown. Khi thị trường có nhịp "kéo xả" tạm thời (large-cap pulling down VN30 để thanh lý phái sinh F1), close có thể vi phạm MA50 trong 1-2 phiên rồi hồi lại. ATR Buffer Zone đặt ngưỡng vi phạm thấp hơn MA50 một khoảng `k × ATR_N`, yêu cầu close phải xuống dưới ngưỡng đó trong `m` phiên liên tiếp mới kích hoạt SELL.
+
+### 2. Công thức
+
+```
+violation_threshold[t] = MA50[t] - k × ATR_N[t]
+```
+
+Tín hiệu SELL kích hoạt khi: `close[t-m+1 .. t]` đều < `violation_threshold[t-m+1 .. t]` tương ứng.
+
+- `m = 1`: tương đương rule v6.0 (khi `violation_threshold ≡ MA50`)
+- `k = 0` + `m = 1`: byte-identical với v6.0
+
+### 3. Tham số cấu hình (MDMV2Config)
+
+| Thông số | Kiểu | Mặc định | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `atr_buffer_enabled` | bool | `False` | Feature gate — tắt = hành vi v6.0 (ATR-04) |
+| `atr_buffer_k` | float | `0.5` | Hệ số nhân ATR: `violation_threshold = MA50 - k × ATR_N` |
+| `atr_buffer_period` | int | `14` | Lookback ATR (tách biệt với `atr_period` dùng cho stop-loss) |
+| `atr_buffer_consecutive_days` | int | `2` | Số phiên `m` liên tiếp close phải < violation_threshold |
+
+### 4. Chỉ báo: `Indicators.add_violation_threshold_column(df, k, period)`
+
+- Static method trong `strategies/mdm_hybrid/indicators.py`
+- Ghi column `violation_threshold` = `ma50 - k * atr_buf`
+- Dùng column name riêng `atr_buf` / `true_range_buf` để **không ghi đè** `atr` / `true_range` của stop-loss
+- Input: DataFrame có cột `high`, `low`, `close`, `ma50`
+- Output: DataFrame với `violation_threshold`, `atr_buf`, `true_range_buf`
+
+### 5. Quy tắc áp dụng (phạm vi)
+
+- **Chỉ** áp dụng cho trigger CASH→SELL entry (MA50 breakdown)
+- **Không** áp dụng cho:
+  - Short cover SELL→CASH (`close > MA50`) — giữ nguyên (D-10)
+  - BUY-state MA50 exit trong stop_loss.py — giữ nguyên (D-11)
+- m-day rule là backward-looking: trigger fires hôm nay khi `m` phiên gần nhất đều vi phạm ngưỡng
+- Trong `m` ngày đầu tiên (warm-up): rule không fire (D-04)
+
+### 6. Bảo toàn backward compatibility (ATR-04)
+
+Khi `atr_buffer_enabled=False`, engine phải tái lập **byte-identical** signal log của v6.0 baseline trên VN30 2015-2026. Regression test (`tests/test_phase38_backward_compat.py`) bảo vệ invariant này bằng fixture parquet (`tests/fixtures/phase38_v6_baseline_signal_log.parquet`).
+
+### 7. Sweep tham số (Phase 40)
+
+- `k ∈ [0.3, 0.5, 0.7, 1.0]` × `N ∈ [10, 14, 20]` × `m ∈ [1, 2, 3]` = 36 combos
+- In-sample 2015-2021, metric: max Sharpe với MaxDD ≤ -30%

@@ -59,6 +59,12 @@ class MDMV2Config:
     # Fail-Safe Mechanism (SAFE-01, SAFE-02)
     fail_safe_enabled: bool = True        # Auto-exit SELL when close > standby-sell HIGH
 
+    # ATR Buffer Zone (Phase 38, ATR-01/ATR-03)
+    atr_buffer_enabled: bool = False          # Feature gate: off = v6.0 behavior (ATR-04)
+    atr_buffer_k: float = 0.5                 # Multiplier: violation_threshold = MA50 - k * ATR_N
+    atr_buffer_period: int = 14               # ATR lookback period (separate from atr_period for stop-loss)
+    atr_buffer_consecutive_days: int = 2      # m-day consecutive close < violation_threshold required
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -67,6 +73,9 @@ class MDMV2Config:
         assert self.correction_threshold < 0, "Correction threshold must be negative"
         assert self.stop_loss_pct > 0, "Stop loss percentage must be positive"
         assert self.dd_cash_threshold > 0, "DD cash threshold must be positive"
+        assert self.atr_buffer_k > 0, "atr_buffer_k must be positive"
+        assert self.atr_buffer_period > 0, "atr_buffer_period must be positive"
+        assert self.atr_buffer_consecutive_days >= 1, "atr_buffer_consecutive_days must be >= 1"
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
@@ -122,6 +131,10 @@ VN30_PRESET = MDMV2Config(
     stop_loss_min_multiplier=0.5,
     stop_loss_max_multiplier=2.5,
     fail_safe_enabled=True,
+    atr_buffer_enabled=False,
+    atr_buffer_k=0.5,
+    atr_buffer_period=14,
+    atr_buffer_consecutive_days=2,
     name="vn30",
 )
 
@@ -148,5 +161,9 @@ NASDAQ_PRESET = MDMV2Config(
     stop_loss_min_multiplier=0.5,
     stop_loss_max_multiplier=2.5,
     fail_safe_enabled=True,
+    atr_buffer_enabled=False,
+    atr_buffer_k=0.5,
+    atr_buffer_period=14,
+    atr_buffer_consecutive_days=2,
     name="nasdaq",
 )
