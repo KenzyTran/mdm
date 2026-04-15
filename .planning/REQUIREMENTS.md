@@ -62,31 +62,31 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ATR-01 | TBD | Pending |
-| ATR-02 | TBD | Pending |
-| ATR-03 | TBD | Pending |
-| ATR-04 | TBD | Pending |
-| DD-01 | TBD | Pending |
-| DD-02 | TBD | Pending |
-| DD-03 | TBD | Pending |
-| DD-04 | TBD | Pending |
-| SWEEP-01 | TBD | Pending |
-| SWEEP-02 | TBD | Pending |
-| SWEEP-03 | TBD | Pending |
-| SWEEP-04 | TBD | Pending |
-| VAL-01 | TBD | Pending |
-| VAL-02 | TBD | Pending |
-| VAL-03 | TBD | Pending |
-| VAL-04 | TBD | Pending |
-| DOC-01 | TBD | Pending |
-| DOC-02 | TBD | Pending |
-| DOC-03 | TBD | Pending |
+| ATR-01 | Phase 38 | Pending |
+| ATR-02 | Phase 38 | Pending |
+| ATR-03 | Phase 38 | Pending |
+| ATR-04 | Phase 38 | Pending |
+| DD-01 | Phase 39 | Pending |
+| DD-02 | Phase 39 | Pending |
+| DD-03 | Phase 39 | Pending |
+| DD-04 | Phase 39 | Pending |
+| SWEEP-01 | Phase 40 | Pending |
+| SWEEP-02 | Phase 40 | Pending |
+| SWEEP-03 | Phase 40 | Pending |
+| SWEEP-04 | Phase 40 | Pending |
+| VAL-01 | Phase 41 | Pending |
+| VAL-02 | Phase 41 | Pending |
+| VAL-03 | Phase 41 | Pending |
+| VAL-04 | Phase 41 | Pending |
+| DOC-01 | Phase 42 | Pending |
+| DOC-02 | Phase 42 | Pending |
+| DOC-03 | Phase 42 | Pending |
 
 **Coverage:**
 - v9.0 requirements: 19 total
-- Mapped to phases: 0 (roadmapper pending)
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-15 after initial v9.0 definition*
+*Last updated: 2026-04-15 after roadmap creation (Phases 38-42)*

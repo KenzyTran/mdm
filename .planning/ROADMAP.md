@@ -9,7 +9,8 @@
 - ✅ **v5.0 Signal Quality & Macro Filter** - Phases 19-22 (shipped 2026-03-31)
 - ✅ **v6.0 MDM Fail-Safe & Signal Refinement** - Phases 23-27 (shipped 2026-04-02)
 - ✅ **v7.0 CANSLIM + MDM on VN100** - Phases 28-34 + 999.1 (shipped 2026-04-10)
-- **v8.0 Momentum Stock Selection** - Phases 35-37 (in progress)
+- ✅ **v8.0 Momentum Stock Selection** - Phases 35-37 (shipped 2026-04-13)
+- **v9.0 VN30 MDM Whipsaw Reduction** - Phases 38-42 (in progress)
 
 ## Phases
 
@@ -433,13 +434,27 @@ Plans:
 </details>
 
 
-### v8.0 Momentum Stock Selection (In Progress)
-
-**Milestone Goal:** Replace CANSLIM fundamental stock selection (C/A rules) with pure RS momentum scoring, keep MDM as timing gate, compare vs v7.0 baseline.
+<details>
+<summary>✅ v8.0 Momentum Stock Selection (Phases 35-37) — SHIPPED 2026-04-13</summary>
 
 - [x] **Phase 35: RS Module** - Build and cache both RS formulas, validate cross-sectional ranking across VN100 (completed 2026-04-10)
 - [x] **Phase 36: Momentum Scorer** - Wire RS filter + N rule into pipeline, replace C/A fundamentals (completed 2026-04-13)
-- [x] **Phase 37: Backtest & Validation** - In-sample sweep to pick formula, OOS validation, compare vs v7.0 (completed 2026-04-13)
+- [x] **Phase 37: Backtest & Validation** - In-sample sweep to pick formula, OOS validation, compare vs v7.0 (completed 2026-04-13)
+
+**Result:** v8.0 OOS CAGR=10.0%, Sharpe=0.645, MaxDD=-24.9% — trails v7.0 (Sharpe=0.813). Best model remains v7.0.
+
+</details>
+
+
+### v9.0 VN30 MDM Whipsaw Reduction (In Progress)
+
+**Milestone Goal:** Giảm whipsaw trong HybridEngine + fail-safe trên VN30 bằng ATR Buffer Zone (MA50 violation) và Refined Distribution Day (grid-searched), để beat baseline v6.0 (CAGR 11.5%, MaxDD -28.2%, Return +238.8%).
+
+- [ ] **Phase 38: ATR Buffer Zone Module** - VT = SMA50 − k×ATR_N with m-day consecutive close rule, parameterized and A/B-gated
+- [ ] **Phase 39: Refined Distribution Day Module** - Dual-threshold DD rule (large_drop + vol>MA20 OR small_drop + top-percentile volume), parameterized and A/B-gated
+- [ ] **Phase 40: Grid Search Sweeps** - Sequential ATR sweep (36 runs) then DD sweep on locked ATR (54 runs), selection by max Sharpe with MaxDD ≤ -30% constraint
+- [ ] **Phase 41: A/B & Walk-Forward Validation** - 4-scenario A/B (baseline/+ATR/+DD/+both) on 2015-2026, walk-forward Train 2015-2021 / Test 2022-2026, whipsaw reduction report
+- [ ] **Phase 42: Documentation & Dashboard** - Update rules_mdm_hybrid.md, v9 dashboard JSON, v9.0 audit report with conclusion vs baseline
 
 ## Phase Details
 
@@ -708,10 +723,66 @@ Plans:
 - [ ] 37-02-PLAN.md -- In-sample sweep 216 configs 2016-2018, select winning formula by Sharpe_rf3 (BT-01)
 - [ ] 37-03-PLAN.md -- OOS run 2019-2025 with locked formula + comparison table v8.0 vs v7.0 vs VN-Index B&H (BT-02, BT-03)
 
+### Phase 38: ATR Buffer Zone Module
+**Goal**: MA50-breakdown SELL triggers use an ATR-based buffer zone with consecutive-day confirmation, parameterized and feature-gated for A/B comparison
+**Depends on**: Phase 37 (v8.0 complete)
+**Requirements**: ATR-01, ATR-02, ATR-03, ATR-04
+**Success Criteria** (what must be TRUE):
+  1. Indicator pipeline exposes a `violation_threshold` column equal to SMA50 − k × ATR_N for any configured (k, N) pair, computed daily on VN30 close history
+  2. HybridEngine SELL trigger from MA50 breakdown fires only after close < violation_threshold on m consecutive trading days (m configurable)
+  3. A config flag `atr_buffer_enabled` toggles the new trigger on/off inside MDMV2Config / HybridEngine without code changes elsewhere
+  4. Running the HybridEngine on VN30 2015-2026 with `atr_buffer_enabled=False` produces a signal log byte-identical to the v6.0 baseline (regression test locks this invariant)
+**Plans**: TBD
+
+### Phase 39: Refined Distribution Day Module
+**Goal**: Distribution Day detector replaces the hard-coded -0.2% rule with a parameterized dual-threshold definition that captures both obvious drops and subtle-but-heavy-volume drops
+**Depends on**: Phase 38
+**Requirements**: DD-01, DD-02, DD-03, DD-04
+**Success Criteria** (what must be TRUE):
+  1. DD detector accepts parameters (`large_drop`, `small_drop`, `large_vol_rule`, `small_vol_percentile`, `small_vol_lookback`) and stops using any hard-coded -0.2% threshold
+  2. A day is flagged DD when (drop ≥ large_drop AND volume > vol_ma20) OR (drop ≥ small_drop AND volume ∈ top small_vol_percentile% of small_vol_lookback recent days)
+  3. A config flag `refined_dd_enabled` toggles the new rule off, falling back cleanly to the classic -0.2% definition
+  4. Running HybridEngine on VN30 2015-2026 with `refined_dd_enabled=False` produces a DD count sequence identical to the v6.0 baseline (regression test locks this invariant)
+**Plans**: TBD
+
+### Phase 40: Grid Search Sweeps
+**Goal**: Best ATR and DD configurations are selected via a sequential, in-sample grid search that respects the OOS boundary and the max-drawdown constraint
+**Depends on**: Phase 39
+**Requirements**: SWEEP-01, SWEEP-02, SWEEP-03, SWEEP-04
+**Success Criteria** (what must be TRUE):
+  1. ATR sweep executes 36 runs over (atr_multiplier ∈ [0.3, 0.5, 0.7, 1.0]) × (atr_period ∈ [10, 14, 20]) × (consecutive_days ∈ [1, 2, 3]) on train window 2015-2021, writing `output/v9_atr_sweep.csv` with config columns plus Sharpe, CAGR, MaxDD, transition count
+  2. DD sweep executes 54 runs on the locked best ATR config over (large_drop ∈ [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]%) × (small_drop ∈ [-0.3, -0.4, -0.5]%) × (small_vol_percentile ∈ [3, 5, 10]%) on the same 2015-2021 window, writing `output/v9_dd_sweep.csv`
+  3. A selection script picks the max-Sharpe config subject to MaxDD ≤ -30% (tie-break by CAGR) from each sweep and writes `output/v9_atr_best.txt` and `output/v9_dd_best.txt`
+  4. No sweep touches data after 2021 — the OOS window (2022-2026) is provably untouched by the grid search (verified by date-range assertions in the sweep runners)
+**Plans**: TBD
+
+### Phase 41: A/B & Walk-Forward Validation
+**Goal**: Combined v9.0 model is validated against baseline with A/B comparison and walk-forward testing, and whipsaw reduction is quantified
+**Depends on**: Phase 40
+**Requirements**: VAL-01, VAL-02, VAL-03, VAL-04
+**Success Criteria** (what must be TRUE):
+  1. A/B report covers 4 scenarios (baseline / +ATR only / +DD only / +both) on 2015-2026, writing `output/v9_ab_comparison.txt` with CAGR, Sharpe, MaxDD, transition count, and time-in-state per scenario
+  2. Walk-forward validation trains on 2015-2021 and tests on 2022-2026, showing CAGR degradation from train to test < 50% of the train value (documented if breached)
+  3. Combined model meets milestone success criterion — CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 — or a failure-mode writeup explains the gap
+  4. Transition-count diagnostic quantifies whipsaw reduction: SELL signals drop from the 124 baseline, and the MA50-breakdown share of SELL signals drops from the 84% baseline
+**Plans**: TBD
+
+### Phase 42: Documentation & Dashboard
+**Goal**: v9.0 rules, dashboard, and audit report are published so the new model is reproducible and comparable to prior milestones
+**Depends on**: Phase 41
+**Requirements**: DOC-01, DOC-02, DOC-03
+**Success Criteria** (what must be TRUE):
+  1. `docs/rules_mdm_hybrid.md` reflects the new ATR buffer zone rule and the refined dual-threshold DD definition, with parameter defaults and toggles documented
+  2. Dashboard `dashboard/data/` includes v9 model JSON (equity curve + signal log) so the comparison view renders v9 alongside v6.0 and v7.0
+  3. `docs/audits/v9_0_report.md` contains baseline vs v9 metrics, sweep winners, whipsaw diagnostic, and a clear accepted/rejected conclusion with evidence
+**Plans**: TBD
+**UI hint**: yes
+
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 35 -> 36 -> 37
+Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -752,6 +823,11 @@ Phases execute in numeric order: 35 -> 36 -> 37
 | 35. RS Module | v8.0 | 2/2 | Complete    | 2026-04-10 |
 | 36. Momentum Scorer | v8.0 | 2/2 | Complete    | 2026-04-13 |
 | 37. Backtest & Validation | v8.0 | 3/3 | Complete    | 2026-04-13 |
+| 38. ATR Buffer Zone Module | v9.0 | 0/0 | Not started | - |
+| 39. Refined Distribution Day Module | v9.0 | 0/0 | Not started | - |
+| 40. Grid Search Sweeps | v9.0 | 0/0 | Not started | - |
+| 41. A/B & Walk-Forward Validation | v9.0 | 0/0 | Not started | - |
+| 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
 
 
 ## Backlog
