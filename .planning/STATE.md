@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
-status: executing
-stopped_at: Completed 40-01-PLAN.md (parallel wave 1)
-last_updated: "2026-04-16T07:36:38.131Z"
+status: verifying
+stopped_at: Completed 40-03-PLAN.md (Phase 40 pipeline closed; stage-1 winner atr-k1.0-N20-m2, stage-2 winner dd-L-0.007-S-0.003-P3, DD adds no alpha over ATR-only in-sample)
+last_updated: "2026-04-16T07:48:27.719Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 ## Current Position
 
-Phase: 40 (grid-search-sweeps) — EXECUTING
-Plan: 3 of 3 (40-01 + 40-02 completed in parallel wave 1)
-Status: Ready to execute
+Phase: 40 (grid-search-sweeps) — COMPLETE (ready for verification)
+Plan: 3 of 3 (all plans shipped; 40-01 + 40-02 in wave 1, 40-03 in wave 2)
+Status: Phase complete — ready for verifier / Phase 41 planning
 Last activity: 2026-04-16
 
-Progress: [███████░░░] Plans 40-01 + 40-02 / 3 shipped
+Progress: [██████████] All 3 Phase 40 plans shipped (100%)
 
 ## Accumulated Context
 
@@ -124,13 +124,29 @@ CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 | :--- | :---: | :---: | :---: | :--- |
 | 40-01 | ~4 min | 1 | 1 (created) | `19bd6ad` |
 
+### Phase 40 Plan 03 Decisions (shipped 2026-04-16)
+
+- `analysis/sweep_v9_dd.py` mirrors the plan-40-01 skeleton but adds (a) `load_locked_atr()` which reads `output/v9_atr_best.json` at startup and raises FileNotFoundError with the exact remediation command (`Run \`uv run python analysis/select_v9_best.py --stage atr\` first`) if the JSON is absent — enforces D-13 ordered execution without process-level orchestration, (b) extended 18-column CSV schema with locked ATR metadata (`atr_buffer_k/period/consecutive_days` duplicated per row) so Phase 41 readers get full config context from a single `pd.read_csv`, (c) `refined_dd_enabled=True` + `atr_buffer_enabled=True` per cell per D-06.
+- Full Phase 40 pipeline executed in sequence (all exit 0): sweep_v9_atr (108s, 36 rows) → select --stage atr → sweep_v9_dd (107s, 54 rows) → select --stage dd. All six artifacts schema-verified.
+- **Stage-1 winner:** `atr-k1.0-N20-m2` → Sharpe_rf3=**0.7596**, CAGR=14.14%, MaxDD=-16.69%, transitions=125.
+- **Stage-2 winner:** `dd-L-0.007-S-0.003-P3` → Sharpe_rf3=**0.7160**, CAGR=13.55%, MaxDD=-16.69%, transitions=121. DD winner UNDERPERFORMS the ATR-only stage-1 winner by 5.8% Sharpe — top 9 DD configs tied at 0.7160 (pandas stable-sort picked lexicographic-first `dd-L-0.007-S-0.003-P3`). **Refined DD provides no alpha over ATR-only on VN30 train window 2015-2021.**
+- **Implication for Phase 41:** A/B must test four scenarios (baseline / +ATR-only / +DD-only / +both); based on in-sample evidence the production v9.0 candidate is likely **ATR-only** not ATR+DD. If OOS 2022-2026 confirms ATR-only ≥ ATR+DD, Phase 42 docs ship ATR-only.
+- D-02 self-contained stage scripts: `compute_metrics` copied verbatim from `sweep_v9_atr.py` rather than imported — stage-2 re-run never triggers stage-1 code path as an import side effect.
+- Task 2 is a runtime-execution task whose products (`output/v9_{atr,dd}_{sweep,best}.*`) are gitignored by design; captured as a `--allow-empty` chore commit with full provenance in the message.
+
+### Phase 40 Plan 03 Metrics
+
+| Plan | Duration | Tasks | Files | Commits |
+| :--- | :---: | :---: | :---: | :--- |
+| 40-03 | ~7 min | 2 | 1 (created) + 6 gitignored runtime artifacts | `23807f8`, `abd900b` |
+
 ### Blockers/Concerns
 
 None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T07:36:38.122Z
-Stopped at: Completed 40-01-PLAN.md (parallel wave 1)
+Last session: 2026-04-16T07:48:27.712Z
+Stopped at: Completed 40-03-PLAN.md (Phase 40 pipeline closed; stage-1 winner atr-k1.0-N20-m2, stage-2 winner dd-L-0.007-S-0.003-P3, DD adds no alpha over ATR-only in-sample)
 Resume file: None
-Next command: continue phase 40 execution — plan 40-03 (DD sweep + pipeline end-to-end run) ready in wave 2; both 40-01 (ATR sweep script) and 40-02 (selection script) now shipped
+Next command: Phase 40 complete (all 3 plans shipped) — run `/gsd:verify-phase 40` to validate, then `/gsd:transition` to start Phase 41 (A/B + walk-forward validation) consuming the 4 best-artifact files
