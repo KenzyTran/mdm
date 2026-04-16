@@ -450,7 +450,8 @@ Plans:
 
 **Milestone Goal:** Giảm whipsaw trong HybridEngine + fail-safe trên VN30 bằng ATR Buffer Zone (MA50 violation) và Refined Distribution Day (grid-searched), để beat baseline v6.0 (CAGR 11.5%, MaxDD -28.2%, Return +238.8%).
 
-- [x] **Phase 38: ATR Buffer Zone Module** - VT = SMA50 − k×ATR_N with m-day consecutive close rule, parameterized and A/B-gated (completed 2026-04-15)
+- [x] **Phase 38: ATR Buffer Zone Module** - VT = SMA50 − k×ATR_N with m-day consecutive close rule, parameterized and A/B-gated
+ (completed 2026-04-15)
 - [x] **Phase 39: Refined Distribution Day Module** - Dual-threshold DD rule (large_drop + vol>MA20 OR small_drop + top-percentile volume), parameterized and A/B-gated (completed 2026-04-16)
 - [ ] **Phase 40: Grid Search Sweeps** - Sequential ATR sweep (36 runs) then DD sweep on locked ATR (54 runs), selection by max Sharpe with MaxDD ≤ -30% constraint
 - [ ] **Phase 41: A/B & Walk-Forward Validation** - 4-scenario A/B (baseline/+ATR/+DD/+both) on 2015-2026, walk-forward Train 2015-2021 / Test 2022-2026, whipsaw reduction report
@@ -764,7 +765,12 @@ Plans:
   2. DD sweep executes 54 runs on the locked best ATR config over (large_drop ∈ [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]%) × (small_drop ∈ [-0.3, -0.4, -0.5]%) × (small_vol_percentile ∈ [3, 5, 10]%) on the same 2015-2021 window, writing `output/v9_dd_sweep.csv`
   3. A selection script picks the max-Sharpe config subject to MaxDD ≤ -30% (tie-break by CAGR) from each sweep and writes `output/v9_atr_best.txt` and `output/v9_dd_best.txt`
   4. No sweep touches data after 2021 — the OOS window (2022-2026) is provably untouched by the grid search (verified by date-range assertions in the sweep runners)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 40-01-PLAN.md — analysis/sweep_v9_atr.py: 36-run ATR sweep (SWEEP-01, SWEEP-04)
+- [ ] 40-02-PLAN.md — analysis/select_v9_best.py: --stage {atr,dd} picker with MaxDD >= -30 constraint (SWEEP-03)
+- [ ] 40-03-PLAN.md — analysis/sweep_v9_dd.py: 54-run DD sweep on locked ATR + end-to-end pipeline execution (SWEEP-02, SWEEP-04)
 
 ### Phase 41: A/B & Walk-Forward Validation
 **Goal**: Combined v9.0 model is validated against baseline with A/B comparison and walk-forward testing, and whipsaw reduction is quantified
