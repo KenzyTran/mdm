@@ -168,6 +168,16 @@ class HybridEngine:
                 period=self.config.v2_config.atr_buffer_period,
             )
 
+        # Refined DD volume columns (Phase 39, DD-01/DD-02)
+        # Only when enabled -- D-05: no side effects when disabled (protects DD-04)
+        if self.config.v2_config.refined_dd_enabled:
+            df = Indicators.add_volume_ma_column(df, period=20)
+            df = Indicators.add_volume_percentile_column(
+                df,
+                lookback=self.config.v2_config.refined_dd_small_vol_lookback,
+                percentile=self.config.v2_config.refined_dd_small_vol_percentile,
+            )
+
         # Add EMA/MACD indicator columns for filter evaluation (per D-03, Phase 13)
         if self.config.filter_enabled:
             from core.indicators import build_indicator_dataframe
@@ -177,6 +187,18 @@ class HybridEngine:
         # Guard: only apply if is_expiry_day column exists (NASDAQ runs without it, per Pitfall 5)
         if 'is_expiry_day' in df.columns:
             df.loc[df['is_expiry_day'] == True, 'volume_up'] = False
+
+        # Suppress refined DD volume signals on expiry days (Phase 39, Pitfall 1).
+        # Classic DD is already suppressed above via volume_up=False, but the
+        # refined rule reads vol_top_pct directly and would otherwise fire on
+        # expiry days. vol_above_ma20 is computed per-row in the daily loop
+        # (no column to mask), so suppression only needs to reach vol_top_pct.
+        if (
+            'is_expiry_day' in df.columns
+            and self.config.v2_config.refined_dd_enabled
+            and 'vol_top_pct' in df.columns
+        ):
+            df.loc[df['is_expiry_day'] == True, 'vol_top_pct'] = False
 
         # Initialize result columns
         df['in_correction'] = False
@@ -289,8 +311,25 @@ class HybridEngine:
             dd_count = 0
 
             if current_state == V2MarketState.BUY:
+                # Refined DD inputs (Phase 39, DD-02). Only meaningful when
+                # refined_dd_enabled=True; defaults False otherwise so the
+                # classic v6.0 rule path is unaffected (D-05, DD-04).
+                vol_above_ma20 = False
+                vol_top_pct_val = False
+                if self.config.v2_config.refined_dd_enabled:
+                    # Pitfall 1: on expiry days, suppress refined DD volume
+                    # inputs (matches the spirit of the existing volume_up
+                    # expiry filter that protects classic DD).
+                    is_expiry = bool(row.get('is_expiry_day', False))
+                    if not is_expiry:
+                        vol_ma20_val = row.get('vol_ma20', 0.0)
+                        vol_above_ma20 = bool(row['volume'] > vol_ma20_val)
+                        vol_top_pct_val = bool(row.get('vol_top_pct', False))
+
                 is_dd, dd_type = self.dd_counter.check_distribution_day(
-                    date, high, price_change_pct, volume_up, p_loc
+                    date, high, price_change_pct, volume_up, p_loc,
+                    vol_above_ma20=vol_above_ma20,
+                    vol_top_pct=vol_top_pct_val,
                 )
                 dd_count = self.dd_counter.get_dd_count_in_window(date, all_dates)
 
