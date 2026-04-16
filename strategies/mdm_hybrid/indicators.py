@@ -245,6 +245,55 @@ class Indicators:
         return df
 
     @staticmethod
+    def add_volume_ma_column(df: pd.DataFrame, period: int = 20) -> pd.DataFrame:
+        """Add volume moving average column (per D-03, Phase 39).
+
+        Used by refined Distribution Day rule to compare current volume
+        against an N-day moving average baseline.
+
+        Args:
+            df: DataFrame with 'volume' column.
+            period: MA lookback period (default 20).
+
+        Returns:
+            DataFrame with 'vol_ma20' column added.
+        """
+        df = df.copy()
+        df['vol_ma20'] = df['volume'].rolling(window=period, min_periods=1).mean()
+        return df
+
+    @staticmethod
+    def add_volume_percentile_column(
+        df: pd.DataFrame, lookback: int = 50, percentile: int = 5
+    ) -> pd.DataFrame:
+        """Add volume percentile rank boolean column (per D-03, Phase 39).
+
+        For each row, checks whether the volume is in the top ``percentile``%
+        of the last ``lookback`` trading days. Used by the refined Distribution
+        Day rule to detect "small drop + extreme volume" scenarios.
+
+        Uses ``min_periods=1`` (consistent with all other rolling indicators
+        in this module — see Pitfall 2 in 39-RESEARCH.md). Early rows use
+        whatever data is available rather than producing NaN.
+
+        Args:
+            df: DataFrame with 'volume' column.
+            lookback: Rolling window size (default 50).
+            percentile: Top N percent threshold (default 5 = top 5%).
+
+        Returns:
+            DataFrame with 'vol_top_pct' boolean column added.
+        """
+        df = df.copy()
+        # Top 5% means >= 95th percentile of the rolling window
+        threshold_quantile = 1.0 - (percentile / 100.0)
+        rolling_threshold = df['volume'].rolling(
+            window=lookback, min_periods=1
+        ).quantile(threshold_quantile)
+        df['vol_top_pct'] = (df['volume'] >= rolling_threshold).astype(bool)
+        return df
+
+    @staticmethod
     def drawdown_from_peak(current_close: float, peak_high: float) -> float:
         """
         Calculate drawdown from peak.
