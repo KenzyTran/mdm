@@ -549,3 +549,101 @@ Khi `atr_buffer_enabled=False`, engine phải tái lập **byte-identical** sign
 
 - `k ∈ [0.3, 0.5, 0.7, 1.0]` × `N ∈ [10, 14, 20]` × `m ∈ [1, 2, 3]` = 36 combos
 - In-sample 2015-2021, metric: max Sharpe với MaxDD ≤ -30%
+
+---
+
+## XVII. REFINED DISTRIBUTION DAY (Phase 39, DD-01/DD-02/DD-03/DD-04)
+
+*Cập nhật v9.0: Thay định nghĩa Type 1 Distribution Day hard-code `-0.2%` bằng dual-threshold rule tham số hoá (DD-02). Toàn bộ tính năng nằm sau feature gate `refined_dd_enabled`; khi tắt, engine tái lập byte-identical hành vi v6.0 (DD-04).*
+
+### 1. Mục tiêu
+
+Trong baseline v6.0, 22 BUY-exits đến từ stop-loss + 5DD threshold. Rule `-0.2% AND volume_up` quá nhạy với nhiễu thị trường. Refined DD cho phép tách hai loại tín hiệu phân phối khác nhau:
+
+- **Large-drop path:** ngày giảm sâu kèm volume vượt trung bình 20 phiên (institutional distribution).
+- **Small-drop path:** ngày giảm vừa nhưng volume bứt phá (top-percentile của 50 phiên gần nhất) — bắt các ngày "kéo xả" mà drop chưa đủ lớn.
+
+### 2. Feature Gate (DD-04)
+
+| Trạng thái | Hành vi |
+| :--- | :--- |
+| `refined_dd_enabled=False` (mặc định) | Classic v6.0 rule: `price_change_pct <= dd_price_drop_threshold` AND `volume_up`. Byte-identical với baseline (DD-04). |
+| `refined_dd_enabled=True` | Dual-threshold rule bên dưới. Type 2 stalling vẫn chạy song song không đổi. |
+
+Cả `VN30_PRESET` và `NASDAQ_PRESET` đều ship `refined_dd_enabled=False` — Phase 40 sweep sẽ override khi cần.
+
+### 3. Dual-Threshold Rule (DD-02)
+
+Type 1 Distribution Day kích hoạt khi thoả **MỘT trong hai** đường:
+
+**Path A — Large Drop + Volume > MA20:**
+
+```
+price_change_pct <= refined_dd_large_drop      (mặc định -0.7%)
+AND
+volume > vol_ma20                              (SMA 20 phiên của volume)
+```
+
+**Path B — Small Drop + Top-Percentile Volume:**
+
+```
+price_change_pct <= refined_dd_small_drop      (mặc định -0.4%)
+AND
+volume nằm trong top `refined_dd_small_vol_percentile`% (mặc định 5%)
+của `refined_dd_small_vol_lookback` phiên gần nhất (mặc định 50)
+```
+
+Nếu cả hai path cùng thoả → vẫn count là 1 DD (không double-count).
+
+### 4. Type 2 Stalling DD
+
+**Không thay đổi** bất kể `refined_dd_enabled`. Vẫn dùng: `0 <= price_change_pct < dd_price_stall_threshold` AND `volume_up` AND `p_loc <= dd_stall_p_loc_threshold` (per D-01/D-04).
+
+### 5. DD Counting Logic
+
+**Không thay đổi.** Rolling 20-day window (`dd_window_size=20`), DD5 high tracking, 5DD threshold trong `position_manager` đều giữ nguyên (D-08). Refined DD chỉ thay đổi *WHAT* counts as DD, không thay đổi *HOW* DDs are counted.
+
+### 6. Tham số cấu hình (MDMV2Config)
+
+| Tham số | Kiểu | Mặc định | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `refined_dd_enabled` | bool | `False` | Feature gate. Off = v6.0 behavior (DD-04). |
+| `refined_dd_large_drop` | float | `-0.007` | Ngưỡng drop lớn (-0.7%) cho Path A. |
+| `refined_dd_small_drop` | float | `-0.004` | Ngưỡng drop nhỏ (-0.4%) cho Path B. |
+| `refined_dd_large_vol_rule` | str | `'vol_ma20'` | Volume comparison cho large drops. |
+| `refined_dd_small_vol_percentile` | int | `5` | Top N% volume cho Path B. |
+| `refined_dd_small_vol_lookback` | int | `50` | Lookback window cho percentile. |
+
+**Validation gated on `refined_dd_enabled=True`** (Pitfall 5): `MDMV2Config(refined_dd_enabled=False, refined_dd_large_drop=0.99)` vẫn construct được. Khi bật, assert: `large_drop < 0`, `small_drop < 0`, `large_drop <= small_drop` (more negative = larger drop), `0 < percentile <= 100`, `lookback > 0`.
+
+### 7. Indicator columns
+
+Hai static methods trong `strategies/mdm_hybrid/indicators.py`:
+
+- **`add_volume_ma_column(df, period=20)`** → thêm column `vol_ma20` = `volume.rolling(period, min_periods=1).mean()`
+- **`add_volume_percentile_column(df, lookback=50, percentile=5)`** → thêm column `vol_top_pct` (boolean) = `volume >= volume.rolling(lookback, min_periods=1).quantile(1 - percentile/100)`
+
+Cả hai cột **chỉ được compute** khi `refined_dd_enabled=True` (D-05) — khi disabled, engine không thêm cột nào để bảo đảm DD-04 invariant (fixture phase39 dùng `COLS = ['date', 'is_dd', 'dd_type', 'dd_count']` byte-identical với baseline).
+
+### 8. Expiry Day Suppression (Pitfall 1)
+
+VN30 derivative expiry days đã được suppress cho classic DD thông qua `volume_up=False` override. Refined DD cần cả hai lớp bảo vệ:
+
+1. **Column-level:** `df.loc[is_expiry_day, 'vol_top_pct'] = False` trong precompute.
+2. **Row-level:** `if not is_expiry:` guard trong BUY-state block trước khi tính `vol_above_ma20 = bool(row['volume'] > vol_ma20_val)`.
+
+Lý do: `vol_above_ma20` được compute per-row từ raw volume vs `vol_ma20`, không thể mask ở column level. Row guard đảm bảo refined DD không fire trên expiry days.
+
+### 9. Backward Compatibility (DD-04)
+
+Khi `refined_dd_enabled=False`, engine phải tái lập **byte-identical** DD sequence của v6.0 baseline trên VN30 2015-2026. Regression test (`tests/test_phase39_backward_compat.py`) bảo vệ invariant này bằng fixture parquet (`tests/fixtures/phase39_v6_baseline_dd_sequence.parquet`) chứa `is_dd`, `dd_type`, `dd_count` cho 2808 trading days.
+
+### 10. Sweep tham số (Phase 40)
+
+Chạy sau khi lock ATR buffer config từ Phase 38:
+
+- `refined_dd_large_drop ∈ [-0.005, -0.006, -0.007, -0.008, -0.009, -0.010]` (6 giá trị)
+- `refined_dd_small_drop ∈ [-0.003, -0.004, -0.005]` (3 giá trị)
+- `refined_dd_small_vol_percentile ∈ [3, 5, 10]` (3 giá trị)
+
+Tổng: **54 combos**. In-sample 2015-2021, metric: max Sharpe với MaxDD ≤ -30% (tie-break theo CAGR).
