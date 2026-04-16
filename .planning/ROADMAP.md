@@ -751,7 +751,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 39-01-PLAN.md -- Config fields (refined_dd_* in MDMV2Config + presets) + Indicators volume columns (DD-01, DD-03)
+- [x] 39-01-PLAN.md -- Config fields (refined_dd_* in MDMV2Config + presets) + Indicators volume columns (DD-01, DD-03)
 - [ ] 39-02-PLAN.md -- DD counter dual-threshold logic + engine pipeline wiring (DD-02, DD-03)
 - [ ] 39-03-PLAN.md -- v6.0 DD baseline fixture + regression pytest + docs/rules_mdm_hybrid.md sync (DD-04)
 
@@ -834,7 +834,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 36. Momentum Scorer | v8.0 | 2/2 | Complete    | 2026-04-13 |
 | 37. Backtest & Validation | v8.0 | 3/3 | Complete    | 2026-04-13 |
 | 38. ATR Buffer Zone Module | v9.0 | 3/3 | Complete    | 2026-04-15 |
-| 39. Refined Distribution Day Module | v9.0 | 0/3 | In progress | - |
+| 39. Refined Distribution Day Module | v9.0 | 1/3 | In Progress|  |
 | 40. Grid Search Sweeps | v9.0 | 0/0 | Not started | - |
 | 41. A/B & Walk-Forward Validation | v9.0 | 0/0 | Not started | - |
 | 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
@@ -846,7 +846,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 3/3 plans complete
+**Plans:** 1/3 plans executed
 
 Context:
 - Bug found during Phase 33 review

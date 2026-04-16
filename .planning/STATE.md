@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
-status: verifying
-stopped_at: Phase 39 context gathered
-last_updated: "2026-04-16T02:30:24.669Z"
-last_activity: 2026-04-15
+status: executing
+stopped_at: Completed 39-01-PLAN.md (refined DD config + volume indicator columns)
+last_updated: "2026-04-16T03:51:57.362Z"
+last_activity: 2026-04-16
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce whipsaw on VN30 index timing via ATR Buffer Zone + Refined Distribution Day.
-**Current focus:** Phase 38 — atr-buffer-zone-module
+**Current focus:** Phase 39 — refined-distribution-day-module
 
 ## Current Position
 
-Phase: 38
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-15
+Phase: 39 (refined-distribution-day-module) — EXECUTING
+Plan: 2 of 3
+Status: Plan 01 complete — ready to execute Plan 02
+Last activity: 2026-04-16 — Plan 01 shipped (config fields + volume indicator columns)
 
-Progress: [..........] 0% (0/5 phases)
+Progress: [███.......] 33% (1/3 plans in Phase 39)
 
 ## Accumulated Context
 
@@ -69,9 +69,17 @@ Progress: [..........] 0% (0/5 phases)
 
 CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 
+### Phase 39 Plan 01 Decisions (shipped 2026-04-16)
+
+- Refined DD validation in `MDMV2Config.__post_init__` is gated behind `refined_dd_enabled=True` (Pitfall 5) so disabled configs accept arbitrary placeholder params — prevents Phase 40 sweep wiring from accidentally tripping on placeholder values
+- Volume indicators (`vol_ma20`, `vol_top_pct`) use `min_periods=1` matching existing `add_*_column` convention — no NaN handling needed in Plan 02 DD counter loop
+- `vol_top_pct` cast to bool dtype via `.astype(bool)` for cheap downstream branch logic and self-describing parquet fixtures
+- Both VN30_PRESET and NASDAQ_PRESET ship `refined_dd_enabled=False` (D-07) preserving v6.0 byte-identical behavior — DD-04 backward-compat invariant intact
+
 ### Pending Todos
 
-None — awaiting `/gsd:plan-phase 38`.
+- Plan 02: wire `DistributionDayCounter` dual-threshold logic + engine precompute hook
+- Plan 03: regression fixture generation + DD-04 backward-compat pytest
 
 ### Blockers/Concerns
 
@@ -79,7 +87,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T02:30:24.664Z
-Stopped at: Phase 39 context gathered
-Resume file: .planning/phases/39-refined-distribution-day-module/39-CONTEXT.md
+Last session: 2026-04-16T03:51:57.356Z
+Stopped at: Completed 39-01-PLAN.md (refined DD config + volume indicator columns)
+Resume file: None
 Next command: `/gsd:plan-phase 38`

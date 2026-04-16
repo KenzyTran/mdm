@@ -14,9 +14,9 @@
 
 ### Refined Distribution Day
 
-- [ ] **DD-01**: DD detector accepts params (`large_drop`, `small_drop`, `large_vol_rule`, `small_vol_percentile`, `small_vol_lookback`) thay cho hard-coded -0.2%
+- [x] **DD-01**: DD detector accepts params (`large_drop`, `small_drop`, `large_vol_rule`, `small_vol_percentile`, `small_vol_lookback`) thay cho hard-coded -0.2%
 - [ ] **DD-02**: Implement dual-threshold rule — DD=True nếu (drop ≥ large_drop AND volume > vol_ma20) HOẶC (drop ≥ small_drop AND volume ∈ top small_vol_percentile% của small_vol_lookback phiên gần nhất)
-- [ ] **DD-03**: Config flag `refined_dd_enabled` để fallback về classic -0.2% rule khi off
+- [x] **DD-03**: Config flag `refined_dd_enabled` để fallback về classic -0.2% rule khi off
 - [ ] **DD-04**: Backward-compat — khi `refined_dd_enabled=False`, DD count khớp v6.0 baseline
 
 ### Grid Search & Selection
@@ -66,9 +66,9 @@
 | ATR-02 | Phase 38 | Complete |
 | ATR-03 | Phase 38 | Complete |
 | ATR-04 | Phase 38 | Complete |
-| DD-01 | Phase 39 | Pending |
+| DD-01 | Phase 39 | Complete |
 | DD-02 | Phase 39 | Pending |
-| DD-03 | Phase 39 | Pending |
+| DD-03 | Phase 39 | Complete |
 | DD-04 | Phase 39 | Pending |
 | SWEEP-01 | Phase 40 | Pending |
 | SWEEP-02 | Phase 40 | Pending |
