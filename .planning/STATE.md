@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
-status: executing
-stopped_at: Completed 39-02-PLAN.md (dual-threshold DD branch + engine wiring)
-last_updated: "2026-04-16T04:12:40.108Z"
+status: verifying
+stopped_at: Completed 39-03-PLAN.md (backward-compat fixture + DD-04 regression + rules_mdm_hybrid.md Section XVII) — Phase 39 ready for verification
+last_updated: "2026-04-16T06:07:43.581Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 9
   completed_plans: 9
-  percent: 33
+  percent: 67
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 ## Current Position
 
-Phase: 39 (refined-distribution-day-module) — EXECUTING
-Plan: 3 of 3
-Status: Plan 02 complete — ready to execute Plan 03 (regression fixture + DD-04 backward-compat pytest)
-Last activity: 2026-04-16 — Plan 02 shipped (dual-threshold DD branch + HybridEngine wiring)
+Phase: 39 (refined-distribution-day-module) — READY FOR VERIFICATION
+Plan: 3 of 3 (last)
+Status: Phase complete — ready for verification
+Last activity: 2026-04-16 — Plan 03 shipped (backward-compat fixture + DD-04 regression + docs sync)
 
-Progress: [██████....] 67% (2/3 plans in Phase 39)
+Progress: [██████████] 100% (3/3 plans in Phase 39)
 
 ## Accumulated Context
 
@@ -84,9 +84,18 @@ CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 - Belt-and-braces expiry suppression for refined DD: column-level `df.loc[is_expiry_day, 'vol_top_pct'] = False` during precompute AND row-level `if not is_expiry:` guard in daily BUY-state block. Needed because `vol_above_ma20` is computed per-row from raw `volume` vs `vol_ma20` and cannot be masked at column level (Pitfall 1 extended).
 - 11 unit tests green covering: 3 classic fallback, 2 refined large-drop, 3 refined small-drop, 1 Type 2 invariance, 2 check_distribution_day kwarg forwarding / backward-compat. Phase 38 regression still green — no side effects.
 
-### Pending Todos
+### Phase 39 Plan 03 Decisions (shipped 2026-04-16)
 
-- Plan 03: regression fixture generation (`tests/fixtures/phase39_v6_baseline_dd_sequence.parquet`) + DD-04 backward-compat pytest (`tests/test_phase39_backward_compat.py`)
+- Fixture COLS use engine column name `dd_count` (not `dd_count_20d` from decision-language). Engine has always exposed the column without the `_20d` suffix; renaming would have meant a chained refactor across `position_manager`, signal log code, and downstream notebooks — out of Plan 03 scope. Doc Section XVII clarifies the naming explicitly.
+- Regression test uses boolean/integer exact equality (no float tolerance) for `is_dd`, `dd_type`, `dd_count`. Discrete columns demand byte-identical match to catch 5DD-threshold regressions (e.g., `dd_count` 4→5 is the difference between "stay BUY" and "trigger SELL").
+- Code-docs sync deferred to terminal plan (03) rather than touching docs in every plan. `docs/rules_mdm_hybrid.md` Section XVII covers the completed feature surface atomically — avoids merge conflicts and keeps the doc update coherent with shipped behavior (CLAUDE.md Code-Docs Sync Rule honored at phase level).
+- Phase 39 shipped: 2 backward-compat tests + 11 DD-logic tests + 14 indicator tests = 27 Phase 39 tests, all green. Phase 38 regression (2 tests) still green. Total 29 passed in 13.78s.
+
+### Plan 03 Metrics
+
+| Plan | Duration | Tasks | Files | Commits |
+| :--- | :---: | :---: | :---: | :--- |
+| 39-03 | ~14 min | 2 | 4 (3 created, 1 modified) | `e713624`, `ba1ac02` |
 
 ### Blockers/Concerns
 
@@ -94,7 +103,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T04:12:40.103Z
-Stopped at: Completed 39-02-PLAN.md (dual-threshold DD branch + engine wiring)
+Last session: 2026-04-16T06:07:43.577Z
+Stopped at: Completed 39-03-PLAN.md (backward-compat fixture + DD-04 regression + rules_mdm_hybrid.md Section XVII) — Phase 39 ready for verification
 Resume file: None
-Next command: `/gsd:execute-phase 39` (Plan 03 — regression fixture + backward-compat test)
+Next command: `/gsd:verify-phase 39` (Phase 39 ready for verification — all 3 plans shipped, 27 tests green, DD-04 invariant locked)

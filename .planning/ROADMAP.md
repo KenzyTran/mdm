@@ -451,7 +451,7 @@ Plans:
 **Milestone Goal:** Giảm whipsaw trong HybridEngine + fail-safe trên VN30 bằng ATR Buffer Zone (MA50 violation) và Refined Distribution Day (grid-searched), để beat baseline v6.0 (CAGR 11.5%, MaxDD -28.2%, Return +238.8%).
 
 - [x] **Phase 38: ATR Buffer Zone Module** - VT = SMA50 − k×ATR_N with m-day consecutive close rule, parameterized and A/B-gated (completed 2026-04-15)
-- [ ] **Phase 39: Refined Distribution Day Module** - Dual-threshold DD rule (large_drop + vol>MA20 OR small_drop + top-percentile volume), parameterized and A/B-gated
+- [x] **Phase 39: Refined Distribution Day Module** - Dual-threshold DD rule (large_drop + vol>MA20 OR small_drop + top-percentile volume), parameterized and A/B-gated (completed 2026-04-16)
 - [ ] **Phase 40: Grid Search Sweeps** - Sequential ATR sweep (36 runs) then DD sweep on locked ATR (54 runs), selection by max Sharpe with MaxDD ≤ -30% constraint
 - [ ] **Phase 41: A/B & Walk-Forward Validation** - 4-scenario A/B (baseline/+ATR/+DD/+both) on 2015-2026, walk-forward Train 2015-2021 / Test 2022-2026, whipsaw reduction report
 - [ ] **Phase 42: Documentation & Dashboard** - Update rules_mdm_hybrid.md, v9 dashboard JSON, v9.0 audit report with conclusion vs baseline
@@ -753,7 +753,7 @@ Plans:
 Plans:
 - [x] 39-01-PLAN.md -- Config fields (refined_dd_* in MDMV2Config + presets) + Indicators volume columns (DD-01, DD-03)
 - [x] 39-02-PLAN.md -- DD counter dual-threshold logic + engine pipeline wiring (DD-02, DD-03)
-- [ ] 39-03-PLAN.md -- v6.0 DD baseline fixture + regression pytest + docs/rules_mdm_hybrid.md sync (DD-04)
+- [x] 39-03-PLAN.md -- v6.0 DD baseline fixture + regression pytest + docs/rules_mdm_hybrid.md sync (DD-04)
 
 ### Phase 40: Grid Search Sweeps
 **Goal**: Best ATR and DD configurations are selected via a sequential, in-sample grid search that respects the OOS boundary and the max-drawdown constraint
@@ -834,7 +834,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 36. Momentum Scorer | v8.0 | 2/2 | Complete    | 2026-04-13 |
 | 37. Backtest & Validation | v8.0 | 3/3 | Complete    | 2026-04-13 |
 | 38. ATR Buffer Zone Module | v9.0 | 3/3 | Complete    | 2026-04-15 |
-| 39. Refined Distribution Day Module | v9.0 | 2/3 | In Progress|  |
+| 39. Refined Distribution Day Module | v9.0 | 3/3 | Complete   | 2026-04-16 |
 | 40. Grid Search Sweeps | v9.0 | 0/0 | Not started | - |
 | 41. A/B & Walk-Forward Validation | v9.0 | 0/0 | Not started | - |
 | 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
@@ -846,7 +846,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Context:
 - Bug found during Phase 33 review
