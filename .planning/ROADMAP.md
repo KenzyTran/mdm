@@ -748,7 +748,12 @@ Plans:
   2. A day is flagged DD when (drop ≥ large_drop AND volume > vol_ma20) OR (drop ≥ small_drop AND volume ∈ top small_vol_percentile% of small_vol_lookback recent days)
   3. A config flag `refined_dd_enabled` toggles the new rule off, falling back cleanly to the classic -0.2% definition
   4. Running HybridEngine on VN30 2015-2026 with `refined_dd_enabled=False` produces a DD count sequence identical to the v6.0 baseline (regression test locks this invariant)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 39-01-PLAN.md -- Config fields (refined_dd_* in MDMV2Config + presets) + Indicators volume columns (DD-01, DD-03)
+- [ ] 39-02-PLAN.md -- DD counter dual-threshold logic + engine pipeline wiring (DD-02, DD-03)
+- [ ] 39-03-PLAN.md -- v6.0 DD baseline fixture + regression pytest + docs/rules_mdm_hybrid.md sync (DD-04)
 
 ### Phase 40: Grid Search Sweeps
 **Goal**: Best ATR and DD configurations are selected via a sequential, in-sample grid search that respects the OOS boundary and the max-drawdown constraint
@@ -829,7 +834,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 36. Momentum Scorer | v8.0 | 2/2 | Complete    | 2026-04-13 |
 | 37. Backtest & Validation | v8.0 | 3/3 | Complete    | 2026-04-13 |
 | 38. ATR Buffer Zone Module | v9.0 | 3/3 | Complete    | 2026-04-15 |
-| 39. Refined Distribution Day Module | v9.0 | 0/0 | Not started | - |
+| 39. Refined Distribution Day Module | v9.0 | 0/3 | In progress | - |
 | 40. Grid Search Sweeps | v9.0 | 0/0 | Not started | - |
 | 41. A/B & Walk-Forward Validation | v9.0 | 0/0 | Not started | - |
 | 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
