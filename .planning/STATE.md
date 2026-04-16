@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
-status: verifying
+status: planning
 stopped_at: Completed 40-03-PLAN.md (Phase 40 pipeline closed; stage-1 winner atr-k1.0-N20-m2, stage-2 winner dd-L-0.007-S-0.003-P3, DD adds no alpha over ATR-only in-sample)
-last_updated: "2026-04-16T07:48:27.719Z"
+last_updated: "2026-04-16T08:35:01.014Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 9
   completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -24,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 ## Current Position
 
-Phase: 40 (grid-search-sweeps) — COMPLETE (ready for verification)
-Plan: 3 of 3 (all plans shipped; 40-01 + 40-02 in wave 1, 40-03 in wave 2)
+Phase: 40
+Plan: Not started
 Status: Phase complete — ready for verifier / Phase 41 planning
 Last activity: 2026-04-16
 
