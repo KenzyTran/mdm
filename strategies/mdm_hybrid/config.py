@@ -65,6 +65,14 @@ class MDMV2Config:
     atr_buffer_period: int = 14               # ATR lookback period (separate from atr_period for stop-loss)
     atr_buffer_consecutive_days: int = 2      # m-day consecutive close < violation_threshold required
 
+    # Refined Distribution Day (Phase 39, DD-01/DD-03)
+    refined_dd_enabled: bool = False              # Feature gate: off = v6.0 behavior (DD-04)
+    refined_dd_large_drop: float = -0.007         # Large drop threshold (-0.7%) per D-06
+    refined_dd_small_drop: float = -0.004         # Small drop threshold (-0.4%) per D-06
+    refined_dd_large_vol_rule: str = 'vol_ma20'   # Volume comparison for large drops per D-06
+    refined_dd_small_vol_percentile: int = 5      # Top N% volume percentile per D-06
+    refined_dd_small_vol_lookback: int = 50       # Lookback window for percentile calc per D-06
+
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
@@ -76,6 +84,16 @@ class MDMV2Config:
         assert self.atr_buffer_k > 0, "atr_buffer_k must be positive"
         assert self.atr_buffer_period > 0, "atr_buffer_period must be positive"
         assert self.atr_buffer_consecutive_days >= 1, "atr_buffer_consecutive_days must be >= 1"
+        # Refined DD validation only fires when feature is enabled (Pitfall 5)
+        if self.refined_dd_enabled:
+            assert self.refined_dd_large_drop < 0, "large_drop must be negative"
+            assert self.refined_dd_small_drop < 0, "small_drop must be negative"
+            assert self.refined_dd_large_drop <= self.refined_dd_small_drop, \
+                "large_drop must be <= small_drop (more negative = larger drop)"
+            assert 0 < self.refined_dd_small_vol_percentile <= 100, \
+                "percentile must be 1-100"
+            assert self.refined_dd_small_vol_lookback > 0, \
+                "lookback must be positive"
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
@@ -135,6 +153,12 @@ VN30_PRESET = MDMV2Config(
     atr_buffer_k=0.5,
     atr_buffer_period=14,
     atr_buffer_consecutive_days=2,
+    refined_dd_enabled=False,
+    refined_dd_large_drop=-0.007,
+    refined_dd_small_drop=-0.004,
+    refined_dd_large_vol_rule='vol_ma20',
+    refined_dd_small_vol_percentile=5,
+    refined_dd_small_vol_lookback=50,
     name="vn30",
 )
 
@@ -165,5 +189,11 @@ NASDAQ_PRESET = MDMV2Config(
     atr_buffer_k=0.5,
     atr_buffer_period=14,
     atr_buffer_consecutive_days=2,
+    refined_dd_enabled=False,
+    refined_dd_large_drop=-0.007,
+    refined_dd_small_drop=-0.004,
+    refined_dd_large_vol_rule='vol_ma20',
+    refined_dd_small_vol_percentile=5,
+    refined_dd_small_vol_lookback=50,
     name="nasdaq",
 )
