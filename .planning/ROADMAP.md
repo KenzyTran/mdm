@@ -768,7 +768,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 40-01-PLAN.md — analysis/sweep_v9_atr.py: 36-run ATR sweep (SWEEP-01, SWEEP-04)
+- [x] 40-01-PLAN.md — analysis/sweep_v9_atr.py: 36-run ATR sweep (SWEEP-01, SWEEP-04)
 - [x] 40-02-PLAN.md — analysis/select_v9_best.py: --stage {atr,dd} picker with MaxDD >= -30 constraint (SWEEP-03)
 - [ ] 40-03-PLAN.md — analysis/sweep_v9_dd.py: 54-run DD sweep on locked ATR + end-to-end pipeline execution (SWEEP-02, SWEEP-04)
 
@@ -841,7 +841,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 37. Backtest & Validation | v8.0 | 3/3 | Complete    | 2026-04-13 |
 | 38. ATR Buffer Zone Module | v9.0 | 3/3 | Complete    | 2026-04-15 |
 | 39. Refined Distribution Day Module | v9.0 | 3/3 | Complete    | 2026-04-16 |
-| 40. Grid Search Sweeps | v9.0 | 1/3 | In Progress|  |
+| 40. Grid Search Sweeps | v9.0 | 2/3 | In Progress|  |
 | 41. A/B & Walk-Forward Validation | v9.0 | 0/0 | Not started | - |
 | 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
 
@@ -852,7 +852,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Context:
 - Bug found during Phase 33 review

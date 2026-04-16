@@ -3,15 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
 status: executing
-stopped_at: Completed 40-02-PLAN.md
-last_updated: "2026-04-16T07:34:53.302Z"
+stopped_at: Completed 40-01-PLAN.md (parallel wave 1)
+last_updated: "2026-04-16T07:36:38.131Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 9
   completed_plans: 9
-  percent: 100
 ---
 
 # Project State
@@ -26,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 ## Current Position
 
 Phase: 40 (grid-search-sweeps) — EXECUTING
-Plan: 2 of 3 (40-02 completed in parallel wave 1)
-Status: Executing Phase 40 — awaiting plan 40-03 execution
-Last activity: 2026-04-16 — Plan 40-02 shipped (analysis/select_v9_best.py)
+Plan: 3 of 3 (40-01 + 40-02 completed in parallel wave 1)
+Status: Ready to execute
+Last activity: 2026-04-16
 
-Progress: [██████░░░░] Plan 40-02 / 3 shipped
+Progress: [███████░░░] Plans 40-01 + 40-02 / 3 shipped
 
 ## Accumulated Context
 
@@ -111,13 +110,27 @@ CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 | :--- | :---: | :---: | :---: | :--- |
 | 40-02 | ~5 min | 1 | 1 (created) | `5085146` |
 
+### Phase 40 Plan 01 Decisions (shipped 2026-04-16)
+
+- `analysis/sweep_v9_atr.py` extends Phase 32 `compute_metrics` with Sharpe_rf3 (rf=3%: `(ann_return − 0.03) / (daily_returns.std() × √252)`) + whipsaw diagnostics (`sell_count`, `ma50_breakdown_sell_share`, `buy_count`, `buy_pct`, `cash_pct`, `sell_pct`) per D-18/D-19. Canonical 15-column CSV order (config → core → whipsaw → error) locked for Plan 40-02/03 downstream consumption.
+- `ma50_breakdown_sell_share` metric treats both `SELL signal: MA50 breakdown` (classic v6.0 label) and `SELL signal: ATR buffer zone` (buffered label) as MA50-breakdown-path hits — both strings are emitted from the same `ma50_sell_enabled` branch in `position_manager.py:280-309`, so counting both correctly attributes ATR-buffer impact to the 84% whipsaw source targeted by v9.0.
+- OOS-guard hard-coded: `TRAIN_START='2015-01-01'`, `TRAIN_END='2021-12-31'`, runtime assert `df['date'].max() <= pd.Timestamp(TRAIN_END)` (line 141). No CLI override — SWEEP-04 enforced by code path, not docs.
+- Fail-loud-per-config (D-10): per-cell `try/except` captures traceback to `error` column + NaN metrics; top-5 NaN guard at end raises `SummaryError` so broken configs cannot silently become winners. Guard fires AFTER CSV is written so debugging material survives failure.
+- First-run sweep: 36/36 configs completed cleanly in 128s (~3.6s/config). Top config `atr-k1.0-N20-m2` → Sharpe_rf3=0.76, CAGR=14.14%, MaxDD=-16.69% (beats v6.0 baseline CAGR 11.5%). All 36 configs pass MaxDD ≤ −30% constraint → Plan 40-02 selection guaranteed non-empty.
+
+### Phase 40 Plan 01 Metrics
+
+| Plan | Duration | Tasks | Files | Commits |
+| :--- | :---: | :---: | :---: | :--- |
+| 40-01 | ~4 min | 1 | 1 (created) | `19bd6ad` |
+
 ### Blockers/Concerns
 
 None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T07:34:53.295Z
-Stopped at: Completed 40-02-PLAN.md
-Resume file: .planning/phases/40-grid-search-sweeps/40-03-PLAN.md
-Next command: continue phase 40 execution — plan 40-03 (DD sweep + pipeline end-to-end run) pending in wave 2 after 40-01 + 40-02 ship
+Last session: 2026-04-16T07:36:38.122Z
+Stopped at: Completed 40-01-PLAN.md (parallel wave 1)
+Resume file: None
+Next command: continue phase 40 execution — plan 40-03 (DD sweep + pipeline end-to-end run) ready in wave 2; both 40-01 (ATR sweep script) and 40-02 (selection script) now shipped

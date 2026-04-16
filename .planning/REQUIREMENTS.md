@@ -21,10 +21,10 @@
 
 ### Grid Search & Selection
 
-- [ ] **SWEEP-01**: ATR grid search over `atr_multiplier` [0.3, 0.5, 0.7, 1.0] × `atr_period` [10, 14, 20] × `consecutive_days` [1, 2, 3] → 36 runs, output `output/v9_atr_sweep.csv` (config + Sharpe + CAGR + MaxDD + transitions)
+- [x] **SWEEP-01**: ATR grid search over `atr_multiplier` [0.3, 0.5, 0.7, 1.0] × `atr_period` [10, 14, 20] × `consecutive_days` [1, 2, 3] → 36 runs, output `output/v9_atr_sweep.csv` (config + Sharpe + CAGR + MaxDD + transitions)
 - [ ] **SWEEP-02**: DD grid search on locked best ATR config over `large_drop` [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]% × `small_drop` [-0.3, -0.4, -0.5]% × `small_vol_percentile` [3, 5, 10]% → 54 runs, output `output/v9_dd_sweep.csv`
 - [x] **SWEEP-03**: Selection script picks max Sharpe subject to MaxDD ≤ -30% (tie-break CAGR) from each sweep; writes `output/v9_atr_best.txt` và `output/v9_dd_best.txt`
-- [ ] **SWEEP-04**: All sweeps run on train window 2015-2021 only (no OOS leakage)
+- [x] **SWEEP-04**: All sweeps run on train window 2015-2021 only (no OOS leakage)
 
 ### A/B + Walk-Forward Validation
 
@@ -70,10 +70,10 @@
 | DD-02 | Phase 39 | Complete |
 | DD-03 | Phase 39 | Complete |
 | DD-04 | Phase 39 | Complete |
-| SWEEP-01 | Phase 40 | Pending |
+| SWEEP-01 | Phase 40 | Complete |
 | SWEEP-02 | Phase 40 | Pending |
 | SWEEP-03 | Phase 40 | Complete |
-| SWEEP-04 | Phase 40 | Pending |
+| SWEEP-04 | Phase 40 | Complete |
 | VAL-01 | Phase 41 | Pending |
 | VAL-02 | Phase 41 | Pending |
 | VAL-03 | Phase 41 | Pending |
