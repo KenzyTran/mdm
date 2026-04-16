@@ -30,21 +30,52 @@ class DistributionDayCounter:
         self.dd5_high = 0.0
     
     def is_distribution_day_type1(
-        self, 
-        price_change_pct: float, 
-        volume_up: bool
+        self,
+        price_change_pct: float,
+        volume_up: bool,
+        vol_above_ma20: bool = False,
+        vol_top_pct: bool = False,
     ) -> bool:
         """
         Check if it's a Type 1 Distribution Day (Heavy Selling).
-        
+
+        When ``refined_dd_enabled=False`` (default): classic v6.0 rule
+        (drop <= dd_price_drop_threshold AND volume_up). DD-04 backward-compat.
+
+        When ``refined_dd_enabled=True``: dual-threshold rule per DD-02:
+          - Large drop path: drop <= refined_dd_large_drop AND vol_above_ma20
+          - Small drop path: drop <= refined_dd_small_drop AND vol_top_pct
+
+        ``vol_above_ma20`` and ``vol_top_pct`` are computed by the engine
+        from precomputed ``vol_ma20`` / ``vol_top_pct`` columns (Phase 39
+        indicators) and only meaningful when refined mode is enabled.
+
         Args:
-            price_change_pct: Price change percentage
-            volume_up: Whether volume increased
-            
+            price_change_pct: Price change percentage.
+            volume_up: Whether volume increased (used by classic rule only).
+            vol_above_ma20: Whether current volume > 20-day volume MA.
+                Defaults to False so existing call sites work unchanged
+                (Pitfall 4).
+            vol_top_pct: Whether current volume is in the top percentile of
+                the lookback window. Defaults to False (Pitfall 4).
+
         Returns:
-            True if Type 1 DD
+            True if Type 1 DD.
         """
-        return (price_change_pct <= self.config.dd_price_drop_threshold) and volume_up
+        if not self.config.refined_dd_enabled:
+            # Classic v6.0 rule (DD-04 backward-compat, per D-02)
+            return (price_change_pct <= self.config.dd_price_drop_threshold) and volume_up
+
+        # Refined dual-threshold rule (DD-02, per D-01)
+        large_drop_dd = (
+            price_change_pct <= self.config.refined_dd_large_drop
+            and vol_above_ma20
+        )
+        small_drop_dd = (
+            price_change_pct <= self.config.refined_dd_small_drop
+            and vol_top_pct
+        )
+        return large_drop_dd or small_drop_dd
     
     def is_distribution_day_type2(
         self, 
@@ -74,22 +105,36 @@ class DistributionDayCounter:
         high: float,
         price_change_pct: float,
         volume_up: bool,
-        p_loc: float
+        p_loc: float,
+        vol_above_ma20: bool = False,
+        vol_top_pct: bool = False,
     ) -> Tuple[bool, int]:
         """
         Check if current day is a distribution day and update count.
 
         Args:
-            date: Current date
-            high: Current day's high price (for DD5 tracking)
-            price_change_pct: Price change percentage
-            volume_up: Whether volume increased
-            p_loc: Price location
+            date: Current date.
+            high: Current day's high price (for DD5 tracking).
+            price_change_pct: Price change percentage.
+            volume_up: Whether volume increased (classic rule + Type 2).
+            p_loc: Price location.
+            vol_above_ma20: Whether volume > vol_ma20. Only used by refined
+                Type 1 rule when ``refined_dd_enabled=True`` (per D-01).
+                Defaults to False (Pitfall 4 backward-compat).
+            vol_top_pct: Whether volume is in top percentile of lookback
+                window. Only used by refined Type 1 rule when
+                ``refined_dd_enabled=True`` (per D-01). Defaults to False
+                (Pitfall 4 backward-compat).
 
         Returns:
-            Tuple of (is_dd, dd_type) where dd_type is 0, 1, or 2
+            Tuple of (is_dd, dd_type) where dd_type is 0, 1, or 2.
         """
-        is_type1 = self.is_distribution_day_type1(price_change_pct, volume_up)
+        is_type1 = self.is_distribution_day_type1(
+            price_change_pct, volume_up,
+            vol_above_ma20=vol_above_ma20,
+            vol_top_pct=vol_top_pct,
+        )
+        # Type 2 stalling DD is NOT modified (per D-01, D-04)
         is_type2 = self.is_distribution_day_type2(price_change_pct, volume_up, p_loc)
 
         if is_type1 or is_type2:
