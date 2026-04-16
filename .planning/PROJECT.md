@@ -67,6 +67,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 
 **Progress:**
 - [x] Phase 38 — ATR Buffer Zone module (feature-gated, v6.0 parity when off) shipped 2026-04-15
+- [x] Phase 39 — Refined Distribution Day module (dual-threshold, feature-gated, v6.0 parity when off) shipped 2026-04-16
 
 ## Completed: v8.0 Momentum Stock Selection (shipped 2026-04-13)
 
@@ -96,8 +97,8 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 
 ### Active (v9.0)
 
-- [ ] ATR Buffer Zone module (VT = SMA50 − k×ATR_N, m-day consecutive close)
-- [ ] Refined Distribution Day module (dual-threshold: large_drop + vol-MA, small_drop + top-percentile)
+- [x] ATR Buffer Zone module (VT = SMA50 − k×ATR_N, m-day consecutive close) — Phase 38
+- [x] Refined Distribution Day module (dual-threshold: large_drop + vol-MA, small_drop + top-percentile) — Phase 39
 - [ ] ATR parameter grid search (36 combos) in-sample 2015-2021
 - [ ] DD parameter grid search (54 combos) on locked ATR config
 - [ ] Selection pipeline: max Sharpe with MaxDD ≤ -30% constraint
