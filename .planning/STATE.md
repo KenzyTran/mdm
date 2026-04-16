@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
-status: verifying
-stopped_at: Phase 40 context gathered
-last_updated: "2026-04-16T07:12:14.391Z"
+status: executing
+stopped_at: Completed 40-02-PLAN.md
+last_updated: "2026-04-16T07:34:53.302Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce whipsaw on VN30 index timing via ATR Buffer Zone + Refined Distribution Day.
-**Current focus:** Phase 39 — refined-distribution-day-module
+**Current focus:** Phase 40 — grid-search-sweeps
 
 ## Current Position
 
-Phase: 39
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-16
+Phase: 40 (grid-search-sweeps) — EXECUTING
+Plan: 2 of 3 (40-02 completed in parallel wave 1)
+Status: Executing Phase 40 — awaiting plan 40-03 execution
+Last activity: 2026-04-16 — Plan 40-02 shipped (analysis/select_v9_best.py)
 
-Progress: [██████████] 100% (3/3 plans in Phase 39)
+Progress: [██████░░░░] Plan 40-02 / 3 shipped
 
 ## Accumulated Context
 
@@ -97,13 +97,27 @@ CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 | :--- | :---: | :---: | :---: | :--- |
 | 39-03 | ~14 min | 2 | 4 (3 created, 1 modified) | `e713624`, `ba1ac02` |
 
+### Phase 40 Plan 02 Decisions (shipped 2026-04-16)
+
+- `analysis/select_v9_best.py` implements D-15 selection (MaxDD>=-30 filter) + D-17 3-tier tiebreak (sharpe_rf3/cagr_pct/max_dd_pct desc) + D-16 strict abort (RuntimeError + exit 1, NO unconstrained fallback) + D-21 JSON schema `{params, metrics, selected_at, train_window='2015-01-01..2021-12-31'}` + D-22 dual TXT/JSON artifact. Single file, 155 lines, pure stdlib + pandas.
+- `STAGE_CONFIG` dispatch table encapsulates all stage-specific paths/fields -- adding a future stage (e.g., joint ATR×DD in v10.0) is a one-line dict entry, not a code-path refactor.
+- NaN `sharpe_rf3` rows dropped BEFORE MaxDD filter so error rows from plan 40-01's fail-loud protocol cannot pollute selection. RuntimeError message reports both non-error row count AND best achievable max_dd_pct for actionable diagnostics.
+- Native Python type cast via `.item()` helper with AttributeError fallback — clean JSON (int stays int, float stays float, no numpy.int64 leakage).
+- No TDD split: single-file utility, verified via 5 synthetic algorithm tests + end-to-end write_outputs test in-session. All passed first run.
+
+### Phase 40 Plan 02 Metrics
+
+| Plan | Duration | Tasks | Files | Commits |
+| :--- | :---: | :---: | :---: | :--- |
+| 40-02 | ~5 min | 1 | 1 (created) | `5085146` |
+
 ### Blockers/Concerns
 
 None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T07:12:14.374Z
-Stopped at: Phase 40 context gathered
-Resume file: .planning/phases/40-grid-search-sweeps/40-CONTEXT.md
-Next command: `/gsd:verify-phase 39` (Phase 39 ready for verification — all 3 plans shipped, 27 tests green, DD-04 invariant locked)
+Last session: 2026-04-16T07:34:53.295Z
+Stopped at: Completed 40-02-PLAN.md
+Resume file: .planning/phases/40-grid-search-sweeps/40-03-PLAN.md
+Next command: continue phase 40 execution — plan 40-03 (DD sweep + pipeline end-to-end run) pending in wave 2 after 40-01 + 40-02 ship
