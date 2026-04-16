@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
 status: planning
-stopped_at: Completed 40-03-PLAN.md (Phase 40 pipeline closed; stage-1 winner atr-k1.0-N20-m2, stage-2 winner dd-L-0.007-S-0.003-P3, DD adds no alpha over ATR-only in-sample)
-last_updated: "2026-04-16T08:35:01.014Z"
+stopped_at: Phase 41 context gathered
+last_updated: "2026-04-16T09:54:27.662Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 4
@@ -147,7 +147,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T07:48:27.712Z
-Stopped at: Completed 40-03-PLAN.md (Phase 40 pipeline closed; stage-1 winner atr-k1.0-N20-m2, stage-2 winner dd-L-0.007-S-0.003-P3, DD adds no alpha over ATR-only in-sample)
-Resume file: None
+Last session: 2026-04-16T09:54:27.644Z
+Stopped at: Phase 41 context gathered
+Resume file: .planning/phases/41-ab-walk-forward-validation/41-CONTEXT.md
 Next command: Phase 40 complete (all 3 plans shipped) — run `/gsd:verify-phase 40` to validate, then `/gsd:transition` to start Phase 41 (A/B + walk-forward validation) consuming the 4 best-artifact files
