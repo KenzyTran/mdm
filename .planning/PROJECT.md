@@ -68,6 +68,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 **Progress:**
 - [x] Phase 38 — ATR Buffer Zone module (feature-gated, v6.0 parity when off) shipped 2026-04-15
 - [x] Phase 39 — Refined Distribution Day module (dual-threshold, feature-gated, v6.0 parity when off) shipped 2026-04-16
+- [x] Phase 40 — Grid-search sweeps (ATR 36 runs + DD 54 runs on locked ATR, train 2015-2021) shipped 2026-04-16. Stage-1 winner `atr-k1.0-N20-m2` (Sharpe_rf3=0.76, CAGR=14.1%, MaxDD=-16.7%). Stage-2 winner `dd-L-0.007-S-0.003-P3` tied 9-ways; refined DD shows **zero in-sample alpha** over ATR-only → Phase 41 A/B must treat ATR-only as primary candidate
 
 ## Completed: v8.0 Momentum Stock Selection (shipped 2026-04-13)
 
@@ -99,9 +100,9 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 
 - [x] ATR Buffer Zone module (VT = SMA50 − k×ATR_N, m-day consecutive close) — Phase 38
 - [x] Refined Distribution Day module (dual-threshold: large_drop + vol-MA, small_drop + top-percentile) — Phase 39
-- [ ] ATR parameter grid search (36 combos) in-sample 2015-2021
-- [ ] DD parameter grid search (54 combos) on locked ATR config
-- [ ] Selection pipeline: max Sharpe with MaxDD ≤ -30% constraint
+- [x] ATR parameter grid search (36 combos) in-sample 2015-2021 — Phase 40 (winner `atr-k1.0-N20-m2`)
+- [x] DD parameter grid search (54 combos) on locked ATR config — Phase 40 (winner `dd-L-0.007-S-0.003-P3`, 9-way tie, zero alpha over ATR-only)
+- [x] Selection pipeline: max Sharpe with MaxDD ≤ -30% constraint — Phase 40 (`analysis/select_v9_best.py`)
 - [ ] A/B validation (baseline / +ATR / +DD / +both)
 - [ ] Walk-forward validation (Train 2015-2021 / Test 2022-2026)
 - [ ] Final OOS report vs baseline + B&H VN30
@@ -260,4 +261,4 @@ This document evolves at phase transitions and milestone boundaries.
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
 ---
-*Last updated: 2026-04-15 after Phase 38 completion*
+*Last updated: 2026-04-16 after Phase 40 completion*
