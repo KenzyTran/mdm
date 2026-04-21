@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 Phase: 41
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-04-21
+Last activity: 2026-04-21 - Completed quick task 260421-lb4: Build VN30 liquidity proxy dataset and test correlation
 
 Progress: [██████████] All 3 Phase 40 plans shipped (100%)
 
@@ -177,6 +177,12 @@ CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 ### Blockers/Concerns
 
 None for Phase 42. Concerns feed into v10.0 planning: (1) walk-forward degradation indicates Phase 40 in-sample overfitting — v10.0 should widen train window or use walk-forward CV in the grid search itself, (2) current engine baseline (CAGR 10.70%, Sharpe 0.461) drifted from shipped v6.0 memory (CAGR 11.5%, MaxDD -28.2%) — reconcile before declaring any new production candidate.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260421-lb4 | Build VN30 liquidity proxy dataset and test correlation (GO verdict) | 2026-04-21 | 3a80ce1 | [260421-lb4-build-vn30-liquidity-proxy-dataset-and-t](./quick/260421-lb4-build-vn30-liquidity-proxy-dataset-and-t/) |
 
 ## Session Continuity
 
