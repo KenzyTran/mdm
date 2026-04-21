@@ -46,30 +46,45 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - ✓ Data loaders for VN30, NASDAQ, S&P500 — CSV format with OHLCV
 - ✓ Kelly Criterion position management — existing implementation
 
-## Current Milestone: v9.0 VN30 MDM Whipsaw Reduction
+## Completed: v9.0 VN30 MDM Whipsaw Reduction (shipped 2026-04-21)
 
-**Goal:** Giảm whipsaw trong HybridEngine + fail-safe trên VN30 bằng ATR Buffer Zone cho MA50 violation và Refined Distribution Day (grid-searched), để beat baseline v6.0 (CAGR 11.5%, MaxDD -28.2%, Return +238.8% vs B&H +205%).
+**Kết quả: v9.0 extensions REJECTED on evidence. v6.0 retained as production.**
+
+Tất cả 3 scenario v9 (+ATR, +DD, +both) fail gate CAGR ≥ 11.5% trên full 2015-2026. Walk-forward degradation +67% → +96% (breaches 50% threshold) → Phase 40 grid search overfit train window 2015-2021.
+
+**Phases shipped:**
+- [x] Phase 38 — ATR Buffer Zone module (feature-gated, v6.0 parity when off)
+- [x] Phase 39 — Refined Distribution Day module (dual-threshold, feature-gated, v6.0 parity when off)
+- [x] Phase 40 — Grid-search sweeps (ATR 36 runs + DD 54 runs, train 2015-2021). Stage-1 winner `atr-k1.0-N20-m2`. Stage-2: refined DD shows zero in-sample alpha over ATR-only
+- [x] Phase 41 — A/B + walk-forward validation. All 3 v9 scenarios FAIL VAL-03. Committed recommendation: **v6.0 HybridEngine + fail-safe retained as production** (D-21 fallback)
+
+**Production baseline (as measured Phase 41):** CAGR 10.70%, MaxDD -28.63%, Sharpe_rf3 0.461 (vs v6.0 shipped memory: CAGR 11.5%, MaxDD -28.2% — drift to reconcile in v10.0).
+
+**Artifacts:** `output/v9_ab_comparison.txt`, `output/v9_ab_scenarios.csv`, `analysis/validate_v9.py`
+
+## Current Milestone: v10.0 VN Macro Filter + Baseline Reconciliation
+
+**Goal:** Giảm MaxDD của v6.0 HybridEngine từ -28.6% xuống **dưới -20%** trên VN30 2015-2026 bằng cách tích hợp VN macro filter (DXY/EEM 20d z-scores + SBV regime), **sau khi** reconcile baseline drift (shipped 11.5% → measured 10.70%).
 
 **Target features:**
-- ATR Buffer Zone: VT = SMA50 − k×ATR_N, require m phiên liên tiếp close < VT trước khi trigger SELL/CASH; grid search k ∈ [0.3, 0.5, 0.7, 1.0], N ∈ [10, 14, 20], m ∈ [1, 2, 3] (36 combos)
-- Refined Distribution Day: giảm ≥ large_drop với vol > MA20, HOẶC giảm ≥ small_drop với vol ở top percentile của 50 phiên; grid search large_drop ∈ [-0.5% đến -1.0%], small_drop ∈ [-0.3%, -0.4%, -0.5%], small_vol_percentile ∈ [3%, 5%, 10%] (54 combos)
-- Sequential grid search: sweep ATR trước (lock best) rồi sweep DD (90 runs thay vì 1944 joint)
-- Selection metric: max Sharpe với hard constraint MaxDD ≤ -30%, tie-break theo CAGR
-- A/B validation 4 scenarios (baseline / +ATR / +DD / +both) + walk-forward (Train 2015-2021, Test 2022-2026)
-- Success: CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%)
+- Baseline drift forensics: tìm commit nào gây drift CAGR 11.5% → 10.70% và SELL count 124 → 105, fix forward để có baseline sạch trước khi tối ưu
+- Liquidity proxy data pipeline: cố định `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` làm canonical input, regenerable
+- Macro filter module: DXY 20d z-score, EEM 20d z-score, SBV regime (easing/neutral/tightening, 90-day decay), feature-gated với v6.0 parity khi off
+- Walk-forward-native grid search: rolling windows trong chính grid search (không phải post-hoc), chỉ accept params có median degradation < 30%
+- A/B + OOS validation với HARD gate
+- Docs + dashboard update (chỉ khi gate pass)
 
-**Baseline (HybridEngine + fail-safe, v6.0):** Return +238.8%, CAGR 11.5%, MaxDD -28.2%, Walk-forward Test 2022-2026 CAGR 8.1%.
+**Success criteria (HARD gate — nếu fail = reject, giữ v6.0):**
+- MaxDD < -20% AND CAGR ≥ reconciled baseline
+- Walk-forward degradation < 30% qua tất cả rolling windows
+- v6.0 parity duy trì khi filter off (regression test)
 
-**Diagnostic driving this milestone:**
-- 124 SELL signals, **84% từ MA50 breakdown** (104/124) → ATR Buffer targets this path
-- 22 lần stop loss + DD threshold exits → Refined DD targets over-sensitive IBD -0.2% rule
-- Hypothesis: whipsaw từ large-cap "kéo xả" để thanh lý phái sinh F1 — ATR buffer hấp thụ nhịp nhúng giả
-
-**Progress:**
-- [x] Phase 38 — ATR Buffer Zone module (feature-gated, v6.0 parity when off) shipped 2026-04-15
-- [x] Phase 39 — Refined Distribution Day module (dual-threshold, feature-gated, v6.0 parity when off) shipped 2026-04-16
-- [x] Phase 40 — Grid-search sweeps (ATR 36 runs + DD 54 runs on locked ATR, train 2015-2021) shipped 2026-04-16. Stage-1 winner `atr-k1.0-N20-m2` (Sharpe_rf3=0.76, CAGR=14.1%, MaxDD=-16.7%). Stage-2 winner `dd-L-0.007-S-0.003-P3` tied 9-ways; refined DD shows **zero in-sample alpha** over ATR-only → Phase 41 A/B must treat ATR-only as primary candidate
-- [x] Phase 41 — A/B + walk-forward validation shipped 2026-04-21. **All 3 v9 scenarios FAIL VAL-03** on full 2015-2026; walk-forward degradation +67% to +96% (breaches 50% threshold). Production Candidate recommendation: **v6.0 HybridEngine + fail-safe retained as production** (D-21 fallback committed). Artifacts: `output/v9_ab_comparison.txt`, `output/v9_ab_scenarios.csv`, `analysis/validate_v9.py`
+**Evidence driving this milestone (from quick task 260421-lb4, GO verdict):**
+- DXY 20d z-score corr = -0.1909 với 20d forward VN30 returns (inverse, expected)
+- EEM 20d z-score corr = +0.1911 với 20d forward VN30 returns
+- SBV regime split: easing +31.84% CAGR (465 days) vs tightening -23.92% CAGR (84 days) — spread 55.76pp
+- USD/VND + US10Y: near-zero correlation, exclude from feature set
+- MANDATORY: walk-forward CV trong grid search (Phase 41 lesson, do not repeat)
 
 ## Completed: v8.0 Momentum Stock Selection (shipped 2026-04-13)
 
@@ -97,16 +112,25 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 **v8.0 OOS:** CAGR=10.0%, Sharpe_rf3=0.645, MaxDD=-24.9% (trails v7.0 Sharpe=0.813)
 **Best model remains v7.0:** CAGR=10.18%, Sharpe_rf3=0.813, MaxDD=-16.31%
 
-### Active (v9.0)
+### Active (v10.0)
 
-- [x] ATR Buffer Zone module (VT = SMA50 − k×ATR_N, m-day consecutive close) — Phase 38
-- [x] Refined Distribution Day module (dual-threshold: large_drop + vol-MA, small_drop + top-percentile) — Phase 39
-- [x] ATR parameter grid search (36 combos) in-sample 2015-2021 — Phase 40 (winner `atr-k1.0-N20-m2`)
-- [x] DD parameter grid search (54 combos) on locked ATR config — Phase 40 (winner `dd-L-0.007-S-0.003-P3`, 9-way tie, zero alpha over ATR-only)
-- [x] Selection pipeline: max Sharpe with MaxDD ≤ -30% constraint — Phase 40 (`analysis/select_v9_best.py`)
-- [x] A/B validation (baseline / +ATR / +DD / +both) — Phase 41 (all v9 scenarios fail milestone criterion)
-- [x] Walk-forward validation (Train 2015-2021 / Test 2022-2026) — Phase 41 (degradation +67% to +96%, breaches 50% threshold)
-- [ ] Final OOS report vs baseline + B&H VN30 — Phase 42 (docs + dashboard + audit)
+- [ ] Baseline drift forensics — find commit(s) causing CAGR drift 11.5% → 10.70% and SELL count 124 → 105; fix forward
+- [ ] Canonical liquidity proxy data pipeline — regenerable `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` with publication-lag handling
+- [ ] VN macro filter module — DXY 20d z-score + EEM 20d z-score + SBV regime (90-day decay), feature-gated with v6.0 parity when off
+- [ ] Walk-forward-native grid search — rolling windows inside grid search, accept params only if median degradation < 30%
+- [ ] A/B validation (baseline / +DXY / +EEM / +SBV-regime / +all) + OOS with HARD gate (MaxDD < -20% AND CAGR ≥ baseline)
+- [ ] Docs + dashboard update — only if HARD gate passes
+
+### Validated (v9.0) — shipped 2026-04-21 (results REJECTED, v6.0 retained)
+
+- ✓ ATR Buffer Zone module (VT = SMA50 − k×ATR_N, m-day consecutive close) — Phase 38
+- ✓ Refined Distribution Day module (dual-threshold: large_drop + vol-MA, small_drop + top-percentile) — Phase 39
+- ✓ ATR parameter grid search (36 combos) in-sample 2015-2021 — Phase 40 (winner `atr-k1.0-N20-m2`)
+- ✓ DD parameter grid search (54 combos) on locked ATR config — Phase 40 (winner `dd-L-0.007-S-0.003-P3`, 9-way tie, zero alpha over ATR-only)
+- ✓ Selection pipeline: max Sharpe with MaxDD ≤ -30% constraint — Phase 40 (`analysis/select_v9_best.py`)
+- ✓ A/B validation (baseline / +ATR / +DD / +both) — Phase 41 (all v9 scenarios FAIL milestone criterion)
+- ✓ Walk-forward validation (Train 2015-2021 / Test 2022-2026) — Phase 41 (degradation +67% to +96%, breaches 50% threshold)
+- ✓ Production Candidate recommendation committed: **v6.0 HybridEngine + fail-safe retained** — Phase 41 (D-21 fallback)
 
 ### Validated (v7.0)
 
@@ -228,6 +252,9 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 | current-vn100 preferred over liquidity-reconstructed | Liquidity-reconstructed Sharpe=0.052 vs current-vn100 Sharpe=0.448; survivorship bias is acknowledged tradeoff | ✓ Good |
 | equal-weight 12.5%/slot sizing | 8 slots × 12.5% = 100% exposure; simpler and avoids Kelly overfitting on small sample | ✓ Good |
 | v9.0 extensions rejected; v6.0 retained | Phase 41: all 3 v9 scenarios (+ATR, +DD, +both) fail CAGR ≥ 11.5% gate on 2015-2026; walk-forward degradation exceeds 50%. Phase 40 sweep winners were overfit to 2015-2021 train window | ✓ Good (evidence-based rejection) |
+| v10.0 uses VN-native macro proxies (DXY/EEM/SBV regime), not US/Fed | Quick task 260421-lb4 GO verdict: DXY/EEM 20d z-scores show ±0.19 corr with 20d fwd VN30 returns; SBV regime spread 55.76pp CAGR. USD/VND + US10Y near-zero and excluded. SBV OMO raw data not publicly available → proxies are the pragmatic path | — Pending |
+| v10.0 walk-forward CV in grid search (not post-hoc) | Phase 41 showed +67-96% degradation when tuning only on train window 2015-2021. Must rolling-validate inside grid search to avoid repeating overfit | — Pending |
+| v10.0 HARD gate: MaxDD < -20% AND CAGR ≥ baseline | User explicit: fail the gate = reject, retain v6.0. No soft acceptance of "improvement on one dimension only" | — Pending |
 
 ## Evolution
 
@@ -263,4 +290,4 @@ This document evolves at phase transitions and milestone boundaries.
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
 ---
-*Last updated: 2026-04-21 after Phase 41 completion (v9.0 extensions rejected, v6.0 retained as production)*
+*Last updated: 2026-04-21 after starting milestone v10.0 (VN Macro Filter + Baseline Reconciliation)*

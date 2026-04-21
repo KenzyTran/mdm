@@ -1,5 +1,34 @@
 # Milestones
 
+## v9.0 VN30 MDM Whipsaw Reduction (Shipped: 2026-04-21)
+
+**Phases completed:** 4 phases (38-41), 11 plans, 22 tasks
+**Timeline:** 2026-04-15 → 2026-04-21 (7 days)
+
+**Summary:** Attempted to reduce whipsaw in v6.0 HybridEngine + fail-safe on VN30 via ATR Buffer Zone (for MA50 breakdown suppression) and Refined Distribution Day (dual-threshold vol-aware). Grid search selected `atr-k1.0-N20-m2` and `dd-L-0.007-S-0.003-P3` on 2015-2021 train. A/B + walk-forward validation on full 2015-2026 REJECTED all 3 v9 scenarios. v6.0 retained as production.
+
+**Result: v9.0 extensions REJECTED on evidence.**
+
+| Scenario | CAGR | MaxDD | Sharpe | Walk-fwd Degradation | Verdict |
+|---|---|---|---|---|---|
+| Baseline v6.0 | 10.70% | -28.63% | 0.461 | +35.4% | reference |
+| +ATR | 8.78% | -33.40% | 0.369 | +96.4% | FAIL |
+| +DD | 10.03% | -29.03% | 0.417 | +67.2% | FAIL |
+| +both | 8.93% | -33.40% | 0.376 | +87.2% | FAIL |
+
+**Key accomplishments:**
+- ATR Buffer module (`strategies/mdm_hybrid/atr_buffer.py`) feature-gated with v6.0 parity — Phase 38
+- Refined DD module (`strategies/mdm_hybrid/refined_dd.py`) dual-threshold vol-aware, feature-gated — Phase 39
+- Sequential grid search pipeline (36 ATR + 54 DD runs, locked params JSON) — Phase 40
+- Unified A/B + walk-forward + whipsaw diagnostic validation script (`analysis/validate_v9.py`, 651 lines) — Phase 41
+- Production Candidate recommendation: `v6.0 HybridEngine + fail-safe remains production` (literal string in `output/v9_ab_comparison.txt`) — Phase 41
+
+**Key learning (flagged for v10.0):**
+- Grid search ONLY on train window → 67-96% degradation on OOS. Walk-forward CV must be INSIDE grid search, not post-hoc.
+- Engine baseline drift: measured CAGR 10.70% vs shipped v6.0 memory 11.5%. Must reconcile before declaring any new production candidate.
+
+---
+
 ## v7.0 CANSLIM + MDM on VN100 (Shipped: 2026-04-10)
 
 **Phases completed:** 8 phases (28-34 + 999.1), 34 plans, 62 tasks

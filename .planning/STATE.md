@@ -1,36 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.0
-milestone_name: VN30 MDM Whipsaw Reduction
-status: verifying
-stopped_at: Completed 41-02-PLAN.md
-last_updated: "2026-04-21T04:09:55.762Z"
+milestone: v10.0
+milestone_name: VN Macro Filter + Baseline Reconciliation
+status: defining
+stopped_at: Milestone v10.0 started
+last_updated: "2026-04-21T08:30:00.000Z"
 last_activity: 2026-04-21
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-15)
+See: .planning/PROJECT.md (updated 2026-04-21)
 
-**Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce whipsaw on VN30 index timing via ATR Buffer Zone + Refined Distribution Day.
-**Current focus:** Phase 41 — ab-walk-forward-validation
+**Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce v6.0 HybridEngine MaxDD from -28.6% to < -20% via VN-native macro filter (DXY/EEM/SBV regime), after reconciling baseline drift (shipped 11.5% → measured 10.70%).
+**Current focus:** Defining requirements for v10.0
 
 ## Current Position
 
-Phase: 41
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-21 - Completed quick task 260421-lb4: Build VN30 liquidity proxy dataset and test correlation
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-21 — Milestone v10.0 started
 
-Progress: [██████████] All 3 Phase 40 plans shipped (100%)
+Progress: [░░░░░░░░░░] 0% (requirements definition in progress)
 
 ## Accumulated Context
 
