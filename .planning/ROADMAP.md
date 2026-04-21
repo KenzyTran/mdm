@@ -811,7 +811,16 @@ Plans:
   2. Running `HybridEngine + fail-safe` on VN30 2015-2026 via the current codebase reproduces shipped v6.0 CAGR within ±0.3pp (fix-forward preferred; if drift is intentional/unsafe-to-revert, audit documents explicit justification)
   3. `tests/test_baseline_determinism.py` runs the engine 3x on identical inputs and asserts CAGR varies by ≤ 0.1pp (test is committed and passes in CI)
   4. A single "reconciled baseline" tuple (CAGR, MaxDD, Sharpe_rf3, SELL count) is published in the audit doc and quoted by every downstream phase as the gate reference
-**Plans**: TBD
+**Plans:** 6 plans
+
+Plans:
+- [ ] 42-01-PLAN.md — Scaffold analysis/bisect_v10_baseline.py (git-bisect CAGR gate, exit 0/1/125) (BASE-01)
+- [ ] 42-02-PLAN.md — Resolve v6.0 ship commit + HEAD anchors, seed docs/audits/v10_baseline_drift.md structure (BASE-01)
+- [ ] 42-03-PLAN.md — Execute git bisect, populate Bisect Log table + Root-Cause Narrative (BASE-01)
+- [ ] 42-04-PLAN.md — Fix-forward waterfall: selective revert → v60_strict_mode preset → accept-and-document; write Reconciliation Outcome (BASE-02)
+- [ ] 42-05-PLAN.md — Write analysis/publish_v10_baseline.py → output/v10_reconciled_baseline.json + audit-doc Reconciled Baseline section (BASE-02)
+- [ ] 42-06-PLAN.md — tests/test_baseline_determinism.py: 3-run numeric variance + byte-exact signal log (BASE-03)
+
 **Canonical refs**: `output/v9_ab_comparison.txt` (measured baseline 10.70%), `.planning/MILESTONES.md` v9.0 entry (shipped 11.5% memory), `strategies/mdm_hybrid/mdm_hybrid_engine.py` (engine under audit)
 
 ### Phase 43: Canonical Liquidity Data Pipeline
