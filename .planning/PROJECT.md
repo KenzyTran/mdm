@@ -69,6 +69,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - [x] Phase 38 — ATR Buffer Zone module (feature-gated, v6.0 parity when off) shipped 2026-04-15
 - [x] Phase 39 — Refined Distribution Day module (dual-threshold, feature-gated, v6.0 parity when off) shipped 2026-04-16
 - [x] Phase 40 — Grid-search sweeps (ATR 36 runs + DD 54 runs on locked ATR, train 2015-2021) shipped 2026-04-16. Stage-1 winner `atr-k1.0-N20-m2` (Sharpe_rf3=0.76, CAGR=14.1%, MaxDD=-16.7%). Stage-2 winner `dd-L-0.007-S-0.003-P3` tied 9-ways; refined DD shows **zero in-sample alpha** over ATR-only → Phase 41 A/B must treat ATR-only as primary candidate
+- [x] Phase 41 — A/B + walk-forward validation shipped 2026-04-21. **All 3 v9 scenarios FAIL VAL-03** on full 2015-2026; walk-forward degradation +67% to +96% (breaches 50% threshold). Production Candidate recommendation: **v6.0 HybridEngine + fail-safe retained as production** (D-21 fallback committed). Artifacts: `output/v9_ab_comparison.txt`, `output/v9_ab_scenarios.csv`, `analysis/validate_v9.py`
 
 ## Completed: v8.0 Momentum Stock Selection (shipped 2026-04-13)
 
@@ -103,9 +104,9 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 - [x] ATR parameter grid search (36 combos) in-sample 2015-2021 — Phase 40 (winner `atr-k1.0-N20-m2`)
 - [x] DD parameter grid search (54 combos) on locked ATR config — Phase 40 (winner `dd-L-0.007-S-0.003-P3`, 9-way tie, zero alpha over ATR-only)
 - [x] Selection pipeline: max Sharpe with MaxDD ≤ -30% constraint — Phase 40 (`analysis/select_v9_best.py`)
-- [ ] A/B validation (baseline / +ATR / +DD / +both)
-- [ ] Walk-forward validation (Train 2015-2021 / Test 2022-2026)
-- [ ] Final OOS report vs baseline + B&H VN30
+- [x] A/B validation (baseline / +ATR / +DD / +both) — Phase 41 (all v9 scenarios fail milestone criterion)
+- [x] Walk-forward validation (Train 2015-2021 / Test 2022-2026) — Phase 41 (degradation +67% to +96%, breaches 50% threshold)
+- [ ] Final OOS report vs baseline + B&H VN30 — Phase 42 (docs + dashboard + audit)
 
 ### Validated (v7.0)
 
@@ -226,6 +227,7 @@ Discover the actual indicator-based rules driving Dr. K's MDM signals — and co
 | RS-ranked partial liquidation on MDM SELL | Keep top 50% positions by RS instead of full liquidation; weaker positions closed, strongest held with individual stops | ✓ Good |
 | current-vn100 preferred over liquidity-reconstructed | Liquidity-reconstructed Sharpe=0.052 vs current-vn100 Sharpe=0.448; survivorship bias is acknowledged tradeoff | ✓ Good |
 | equal-weight 12.5%/slot sizing | 8 slots × 12.5% = 100% exposure; simpler and avoids Kelly overfitting on small sample | ✓ Good |
+| v9.0 extensions rejected; v6.0 retained | Phase 41: all 3 v9 scenarios (+ATR, +DD, +both) fail CAGR ≥ 11.5% gate on 2015-2026; walk-forward degradation exceeds 50%. Phase 40 sweep winners were overfit to 2015-2021 train window | ✓ Good (evidence-based rejection) |
 
 ## Evolution
 
@@ -261,4 +263,4 @@ This document evolves at phase transitions and milestone boundaries.
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
 ---
-*Last updated: 2026-04-16 after Phase 40 completion*
+*Last updated: 2026-04-21 after Phase 41 completion (v9.0 extensions rejected, v6.0 retained as production)*
