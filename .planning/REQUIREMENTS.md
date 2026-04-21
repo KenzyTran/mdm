@@ -1,92 +1,108 @@
-# Requirements: VN30 MDM Whipsaw Reduction (v9.0)
+# Requirements: VN Macro Filter + Baseline Reconciliation (v10.0)
 
-**Defined:** 2026-04-15
-**Core Value:** Giảm whipsaw trong HybridEngine + fail-safe trên VN30 bằng ATR Buffer Zone + Refined Distribution Day, beat baseline v6.0 (Return +238.8%, CAGR 11.5%, MaxDD -28.2%).
+**Defined:** 2026-04-21
+**Core Value:** Giảm MaxDD của v6.0 HybridEngine từ -28.6% xuống < -20% trên VN30 2015-2026 bằng VN-native macro filter (DXY/EEM 20d z-scores + SBV regime), sau khi reconcile baseline drift.
 
-## v9.0 Requirements
+## v10.0 Requirements
 
-### ATR Buffer Zone
+### Baseline Reconciliation
 
-- [x] **ATR-01**: Compute `violation_threshold` column = SMA50 − k × ATR_N, parameterized by (k, N); integrate into existing indicator pipeline
-- [x] **ATR-02**: MA50 breakdown SELL trigger requires close < violation_threshold trên m phiên liên tiếp (configurable m)
-- [x] **ATR-03**: Config flag `atr_buffer_enabled` trong MDMV2Config / HybridEngine để A/B baseline vs +ATR
-- [x] **ATR-04**: Backward-compat — khi `atr_buffer_enabled=False`, trigger behavior khớp hoàn toàn v6.0 baseline (byte-identical signal log)
+- [ ] **BASE-01**: Forensic audit — identify commit(s) causing baseline CAGR drift from v6.0 shipped (11.5%) to current measured (10.70%) and SELL count drift (124 → 105); produce `docs/audits/v10_baseline_drift.md` with commit hashes, diffs, and root cause
+- [ ] **BASE-02**: Reconciled baseline — fix forward (preferred) so current `HybridEngine + fail-safe` run matches v6.0 shipped CAGR within ±0.3pp, OR document drift with explicit justification if fix is unsafe/unnecessary
+- [ ] **BASE-03**: Regression test — engine run determinism verified (same inputs → CAGR ±0.1pp across 3 runs); test committed under `tests/test_baseline_determinism.py`
 
-### Refined Distribution Day
+### Liquidity Data Pipeline
 
-- [x] **DD-01**: DD detector accepts params (`large_drop`, `small_drop`, `large_vol_rule`, `small_vol_percentile`, `small_vol_lookback`) thay cho hard-coded -0.2%
-- [x] **DD-02**: Implement dual-threshold rule — DD=True nếu (drop ≥ large_drop AND volume > vol_ma20) HOẶC (drop ≥ small_drop AND volume ∈ top small_vol_percentile% của small_vol_lookback phiên gần nhất)
-- [x] **DD-03**: Config flag `refined_dd_enabled` để fallback về classic -0.2% rule khi off
-- [x] **DD-04**: Backward-compat — khi `refined_dd_enabled=False`, DD count khớp v6.0 baseline
+- [ ] **LIQ-01**: Canonical `data/vn_liquidity_proxy.csv` (DXY, EEM, VNM, USD/VND, US10Y) regenerable via `analysis/build_liquidity_proxy.py`; script takes `--start` / `--end` CLI args, handles yfinance 401 retries
+- [ ] **LIQ-02**: Canonical `data/sbv_policy_events.csv` curated from public sources (Reuters, SBV press releases, Vietnam News); columns `date, rate_change_pct, new_refinance_rate_pct, direction`; extensible as new events occur
+- [ ] **LIQ-03**: Publication-lag handling documented in `docs/liquidity_proxy_spec.md` — DXY/EEM same-day (US close → VN next session), SBV events event-day+1 (intra-session announcements available next day)
 
-### Grid Search & Selection
+### Macro Filter Module
 
-- [x] **SWEEP-01**: ATR grid search over `atr_multiplier` [0.3, 0.5, 0.7, 1.0] × `atr_period` [10, 14, 20] × `consecutive_days` [1, 2, 3] → 36 runs, output `output/v9_atr_sweep.csv` (config + Sharpe + CAGR + MaxDD + transitions)
-- [x] **SWEEP-02**: DD grid search on locked best ATR config over `large_drop` [-0.5, -0.6, -0.7, -0.8, -0.9, -1.0]% × `small_drop` [-0.3, -0.4, -0.5]% × `small_vol_percentile` [3, 5, 10]% → 54 runs, output `output/v9_dd_sweep.csv`
-- [x] **SWEEP-03**: Selection script picks max Sharpe subject to MaxDD ≤ -30% (tie-break CAGR) from each sweep; writes `output/v9_atr_best.txt` và `output/v9_dd_best.txt`
-- [x] **SWEEP-04**: All sweeps run on train window 2015-2021 only (no OOS leakage)
+- [ ] **MACRO-01**: DXY 20d z-score indicator computed from liquidity proxy, merged to daily VN30 trading dates via `pd.merge_asof` (backward direction, publication-lag aware)
+- [ ] **MACRO-02**: EEM 20d z-score indicator, same pipeline as DXY
+- [ ] **MACRO-03**: SBV regime classifier — labels each trading day as easing/neutral/tightening based on most recent rate change event with 90-day decay (user can tune decay window via config)
+- [ ] **MACRO-04**: `MacroFilter` module integrated into HybridEngine state pipeline, feature-gated via `macro_filter_enabled` flag in `MDMV2Config`; v6.0 parity verified when flag is False (byte-exact signal log)
+- [ ] **MACRO-05**: Filter policy — DXY easing suppresses SELL, DXY tightening amplifies SELL, SBV tightening regime forces half-position or full CASH (exact thresholds `dxy_z_threshold`, `sbv_tightening_position_frac` grid-searched in WF-01)
 
-### A/B + Walk-Forward Validation
+### Walk-Forward Discipline
 
-- [x] **VAL-01**: A/B report with 4 scenarios (baseline / +ATR only / +DD only / +both) on full period 2015-2026, output `output/v9_ab_comparison.txt` với CAGR, Sharpe, MaxDD, transitions, time-in-state
-- [x] **VAL-02**: Walk-forward validation — Train 2015-2021, Test 2022-2026, CAGR degradation < 50% threshold
-- [x] **VAL-03**: Combined model beats baseline v6.0 on CAGR (≥ 11.5%) AND (Sharpe > baseline OR MaxDD < -25%); document if fails
-- [x] **VAL-04**: Transition count report — measure whipsaw reduction (target: SELL signals reduce from 124 baseline, MA50-breakdown share drops from 84%)
+- [ ] **WF-01**: Rolling-window grid search infrastructure — train window 2015-2018, annual walk-forward evaluations 2019/2020/2021/2022/2023/2024, held-out test 2025-2026; implementation in `analysis/walkforward_grid.py`
+- [ ] **WF-02**: Median degradation metric computed per parameter combo across rolling windows (train CAGR vs each walk-forward year CAGR); param combo accepted only if median degradation < 30%
+- [ ] **WF-03**: Grid search dashboard — `output/v10_grid_results.csv` with per-scenario median CAGR/Sharpe/MaxDD/degradation, sortable, reproducible from locked params JSON
 
-### Documentation & Dashboard
+### Validation
 
-- [ ] **DOC-01**: Rule documentation updated — `docs/rules_mdm_hybrid.md` reflects new ATR buffer + DD definition
-- [ ] **DOC-02**: Dashboard `dashboard/data/` updated với v9 model JSON (equity curve + signal log) cho comparison view
-- [ ] **DOC-03**: v9 report markdown `docs/audits/v9_0_report.md` — baseline vs v9, sweep winners, diagnostic (whipsaw metrics), conclusion
+- [ ] **VAL-01**: A/B comparison on full 2015-2026 across 5 scenarios (baseline / +DXY / +EEM / +SBV-regime / +all) with canonical metrics (CAGR, Sharpe_rf3, MaxDD, total return, transitions, time-in-state, SELL count, MA50 breakdown share)
+- [ ] **VAL-02**: OOS test validation (2025-2026 held-out) with HARD gate — MaxDD < -20% AND CAGR ≥ reconciled baseline; script returns exit code reflecting gate verdict
+- [ ] **VAL-03**: Walk-forward stability gate — median degradation < 30% across all rolling windows for the selected scenario; failure blocks acceptance
+- [ ] **VAL-04**: v6.0 parity regression test — signal log byte-exact match when macro filter disabled; automated in CI-friendly test suite
+- [ ] **VAL-05**: Production Candidate recommendation committed as literal string in `output/v10_validation_report.txt` (literal "v10 macro filter accepted as production" on pass, "v6.0 retained as production" on fail)
 
-## Future Requirements (v10.0+)
+### Docs & Dashboard (conditional on VAL-02 pass)
 
-- SBV open market operations data (liquidity signal for VN market) — chưa thu thập được
-- MA10 "3-phiên exit" buffer — 49% BUY exits từ MA10 có thể cải thiện thêm
-- FTD BUY signal refinement — 60 BUY signals hiện tại chưa phải bottleneck nhưng có thể tối ưu
-- Instrument simulation: VN30F1 futures (short-able, có leverage) vs ETF E1VFVN30 (long-only) vs cash index
+- [ ] **DOC-01**: Update `docs/rules_mdm_hybrid.md` with macro filter rules and policy tables per CLAUDE.md code-docs sync rule (only if VAL-02 passes)
+- [ ] **DOC-02**: Update `dashboard/data/` signal log and liquidity overlay with v10 output (only if VAL-02 passes); re-deploy dashboard
+- [ ] **DOC-03**: v10.0 audit report appended to `.planning/MILESTONES.md` with result summary (pass or fail), key metrics, and lessons learned
+
+## v2 Requirements (deferred to future milestones)
+
+### Additional Alpha Sources
+- **ALPHA-01**: Foreign flow integration (VNM ETF flow or HOSE foreign-buy daily net) — v11.0 candidate
+- **ALPHA-02**: Statistical Jump Model (Shu 2024) for regime classification — research track
+- **ALPHA-03**: Volatility targeting (Moreira-Muir 2017) — mixed evidence, defer unless v10.0 fails
+
+### Automation
+- **AUTO-01**: Auto-refresh liquidity proxy weekly (scheduled job)
+- **AUTO-02**: Auto-append new SBV policy events from press release RSS
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| MA10 buffer | Diagnostic cho thấy 49% BUY exits từ MA10 — có value nhưng defer để scope gọn |
-| BUY signal changes (FTD, 52w, MA50 breakout) | 60 BUY signals không phải bottleneck — SELL whipsaw là target chính |
-| Joint grid search (ATR × DD simultaneously) | 1944 combos tốn compute — sequential 90-run đủ cho first pass |
-| F1 futures / ETF simulation | Scope instrument sẽ mở rộng sau — milestone này giữ VN30 cash index giả định |
-| SBV data | Chưa thu thập được — defer |
-| Change in fail-safe mechanism | Fail-safe đã validated trong v6.0 — không touch |
-| Live trading / paper trading | Research/backtest only — per project OOS rule |
+| Changes to `strategies/canslim/`, `strategies/portfolio/` | v7.0 scope — portfolio/stock selection is a different problem |
+| Changes to `vn30_vsa/` | Independent strategy, not part of MDM reverse-engineering |
+| Real-time / live signal generation | Core Value is research & backtesting only |
+| Changes to fail-safe logic | Validated in Phase 23 (v6.0); v6.0 parity must hold |
+| SBV OMO raw data scraping | Not publicly available as daily CSV; proxies (DXY/EEM/SBV-events) are the chosen path |
+| ATR Buffer / Refined DD retuning | v9.0 REJECTED on walk-forward evidence — don't revisit without new evidence |
+| New ML models (Jump Model, neural nets) | Out of scope — v10.0 focused on explicit rule-based macro filter |
+| CASH policy rework (hold vs liquidate) | Flagged in PROJECT.md Context for future milestone — not v10.0 |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ATR-01 | Phase 38 | Complete |
-| ATR-02 | Phase 38 | Complete |
-| ATR-03 | Phase 38 | Complete |
-| ATR-04 | Phase 38 | Complete |
-| DD-01 | Phase 39 | Complete |
-| DD-02 | Phase 39 | Complete |
-| DD-03 | Phase 39 | Complete |
-| DD-04 | Phase 39 | Complete |
-| SWEEP-01 | Phase 40 | Complete |
-| SWEEP-02 | Phase 40 | Complete |
-| SWEEP-03 | Phase 40 | Complete |
-| SWEEP-04 | Phase 40 | Complete |
-| VAL-01 | Phase 41 | Complete |
-| VAL-02 | Phase 41 | Complete |
-| VAL-03 | Phase 41 | Complete |
-| VAL-04 | Phase 41 | Complete |
-| DOC-01 | Phase 42 | Pending |
-| DOC-02 | Phase 42 | Pending |
-| DOC-03 | Phase 42 | Pending |
+| BASE-01 | Phase ? | Pending |
+| BASE-02 | Phase ? | Pending |
+| BASE-03 | Phase ? | Pending |
+| LIQ-01 | Phase ? | Pending |
+| LIQ-02 | Phase ? | Pending |
+| LIQ-03 | Phase ? | Pending |
+| MACRO-01 | Phase ? | Pending |
+| MACRO-02 | Phase ? | Pending |
+| MACRO-03 | Phase ? | Pending |
+| MACRO-04 | Phase ? | Pending |
+| MACRO-05 | Phase ? | Pending |
+| WF-01 | Phase ? | Pending |
+| WF-02 | Phase ? | Pending |
+| WF-03 | Phase ? | Pending |
+| VAL-01 | Phase ? | Pending |
+| VAL-02 | Phase ? | Pending |
+| VAL-03 | Phase ? | Pending |
+| VAL-04 | Phase ? | Pending |
+| VAL-05 | Phase ? | Pending |
+| DOC-01 | Phase ? | Pending |
+| DOC-02 | Phase ? | Pending |
+| DOC-03 | Phase ? | Pending |
 
 **Coverage:**
-- v9.0 requirements: 19 total
-- Mapped to phases: 19 ✓
-- Unmapped: 0
+- v1 requirements: 22 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 22 (will be filled by roadmapper)
 
 ---
-*Requirements defined: 2026-04-15*
-*Last updated: 2026-04-15 after roadmap creation (Phases 38-42)*
+*Requirements defined: 2026-04-21*
+*Last updated: 2026-04-21 after initial v10.0 definition*
