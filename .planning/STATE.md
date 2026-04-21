@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
-status: executing
-stopped_at: Completed 41-01-PLAN.md
-last_updated: "2026-04-21T03:53:30.505Z"
+status: verifying
+stopped_at: Completed 41-02-PLAN.md
+last_updated: "2026-04-21T04:03:59.885Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 4
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 Phase: 41 (ab-walk-forward-validation) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-21
 
 Progress: [██████████] All 3 Phase 40 plans shipped (100%)
@@ -157,13 +157,30 @@ CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 | :--- | :---: | :---: | :---: | :--- |
 | 41-01 | ~8 min | 2 | 1 created (validate_v9.py) + 1 stub artifact (v9_ab_comparison.txt) | `7648e71`, `481d587` |
 
+### Phase 41 Plan 02 Decisions (shipped 2026-04-21)
+
+- **All 3 v9 scenarios FAIL VAL-03 on VN30 2015-2026 full period.** CAGR gaps +1.47pp (+DD), +2.57pp (+both), +2.72pp (+ATR) below the 11.5% gate. Sharpe_rf3 all below baseline 0.461 (0.369-0.417). MaxDD all worse than -25% (-29% to -33%). Failure-mode analysis triggers D-21 fallback: **Production Candidate = v6.0 HybridEngine + fail-safe retention.** Phase 42 docs/dashboard describe v6.0 as production; v9 modules stay as feature-flagged-off research code.
+- **Walk-forward degradation +67% to +96%** on all v9 scenarios — in-sample Phase 40 winners do not generalize to 2022-2026. +ATR CAGR collapses 14.14% train → 0.51% test (+96.4% degradation). Baseline at +35.4% is the only scenario within the 50% threshold. Indicates Phase 40 grid search overfit 2015-2021 badly.
+- **+DD is closest-to-criterion (CAGR 10.03%, 1.47pp below gate), not +ATR (CAGR 8.78%, 2.72pp below).** This INVERTS Phase 40 Stage-2 zero-alpha finding where DD provided no advantage over ATR-only on 2015-2021 train window. Full-period evidence: DD beats ATR-only by +1.25pp CAGR and +0.048 Sharpe. Hypothesis: 2022-2026 OOS regime is hostile to ATR buffer widening, which increased CASH% from 38.8% (baseline) to 46.5% (+ATR), starving the book of exposure during Vietnam's 2023-2024 recovery.
+- **Whipsaw reduction confirmed but costly.** ATR Buffer cuts SELL count from 105 (baseline) to 59 (-43.8%) or 57 (+both, -45.7%), validating the whipsaw-reduction hypothesis. But whipsaw reduction shifted capital from BUY to CASH (not BUY to fewer-SELLs-in-BUY), costing ~2pp absolute CAGR. DD alone (+DD) makes essentially no whipsaw change (SELL 106 vs 105, +1.0%) — Refined DD rule as configured does not meaningfully gate the MA50-breakdown path.
+- **MA50-breakdown share is 100% in all scenarios on current engine**, vs baseline v6.0 reference of 84%. Engine/signal-log labels may have drifted since v6.0 — or the Phase 38 ATR buffer zone emits the same "SELL signal: ATR buffer zone" label which Plan 41-01 compute_metrics counts as MA50-breakdown (baseline uses neither ATR buffer nor refined DD yet still shows 100%, so this is engine drift not mislabeling).
+- **Baseline Sharpe_rf3 = 0.461 on current engine** vs project_best_model.md memory "v6.0 CAGR 11.5%, MaxDD -28.2%" (baseline CAGR here is 10.70%, 0.8pp gap). Current engine may have drifted from shipped v6.0 — v10.0 should reconcile before declaring a new production candidate. For Phase 41 verdict, current-engine baseline is the pairwise reference (D-15 fidelity).
+- **One minor spec-compliance fix during execution:** Plan embedded text had "UPPER-BOUND estimate" (caps) but acceptance criterion grep and D-07 CONTEXT.md spec used lowercase. Adjusted to "upper-bound estimate" to match — Rule 1 bug fix. Committed in Task 2 (`92afd4f`).
+- **Phase 42 inputs ready:** `output/v9_ab_comparison.txt` (committed recommendation literal) + `output/v9_ab_scenarios.csv` (17-column machine-readable metrics table including walk-forward train/test CAGR + degradation + whipsaw deltas). Phase 42 DOC-01/02/03 (rules doc, dashboard JSON, audit report) can consume these directly without re-running engine unless signal_log emission is needed.
+
+### Phase 41 Plan 02 Metrics
+
+| Plan | Duration | Tasks | Files | Commits |
+| :--- | :---: | :---: | :---: | :--- |
+| 41-02 | ~6 min | 2 | 1 modified (validate_v9.py) + 2 created (v9_ab_comparison.txt, v9_ab_scenarios.csv, both gitignored) | `e2eaafa`, `92afd4f` |
+
 ### Blockers/Concerns
 
-None.
+None for Phase 42. Concerns feed into v10.0 planning: (1) walk-forward degradation indicates Phase 40 in-sample overfitting — v10.0 should widen train window or use walk-forward CV in the grid search itself, (2) current engine baseline (CAGR 10.70%, Sharpe 0.461) drifted from shipped v6.0 memory (CAGR 11.5%, MaxDD -28.2%) — reconcile before declaring any new production candidate.
 
 ## Session Continuity
 
-Last session: 2026-04-21T03:53:30.498Z
-Stopped at: Completed 41-01-PLAN.md
+Last session: 2026-04-21T04:03:59.879Z
+Stopped at: Completed 41-02-PLAN.md
 Resume file: None
 Next command: Phase 40 complete (all 3 plans shipped) — run `/gsd:verify-phase 40` to validate, then `/gsd:transition` to start Phase 41 (A/B + walk-forward validation) consuming the 4 best-artifact files

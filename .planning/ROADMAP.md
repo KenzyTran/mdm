@@ -455,7 +455,7 @@ Plans:
 - [x] **Phase 39: Refined Distribution Day Module** - Dual-threshold DD rule (large_drop + vol>MA20 OR small_drop + top-percentile volume), parameterized and A/B-gated (completed 2026-04-16)
 - [x] **Phase 40: Grid Search Sweeps** - Sequential ATR sweep (36 runs) then DD sweep on locked ATR (54 runs), selection by max Sharpe with MaxDD ≤ -30% constraint
  (completed 2026-04-16)
-- [ ] **Phase 41: A/B & Walk-Forward Validation** - 4-scenario A/B (baseline/+ATR/+DD/+both) on 2015-2026, walk-forward Train 2015-2021 / Test 2022-2026, whipsaw reduction report
+- [x] **Phase 41: A/B & Walk-Forward Validation** - 4-scenario A/B (baseline/+ATR/+DD/+both) on 2015-2026, walk-forward Train 2015-2021 / Test 2022-2026, whipsaw reduction report (completed 2026-04-21)
 - [ ] **Phase 42: Documentation & Dashboard** - Update rules_mdm_hybrid.md, v9 dashboard JSON, v9.0 audit report with conclusion vs baseline
 
 ## Phase Details
@@ -782,11 +782,11 @@ Plans:
   2. Walk-forward validation trains on 2015-2021 and tests on 2022-2026, showing CAGR degradation from train to test < 50% of the train value (documented if breached)
   3. Combined model meets milestone success criterion — CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 — or a failure-mode writeup explains the gap
   4. Transition-count diagnostic quantifies whipsaw reduction: SELL signals drop from the 124 baseline, and the MA50-breakdown share of SELL signals drops from the 84% baseline
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 41-01-PLAN.md — Scaffold analysis/validate_v9.py (constants, load_locked_params, run_engine, compute_metrics, build_scenario_configs, main stub) (VAL-01, VAL-04)
-- [ ] 41-02-PLAN.md — Wire VAL-01 A/B + VAL-02 walk-forward + VAL-04 whipsaw + VAL-03 verdict + DD-only caveat + Production Candidate + CSV writer (VAL-01, VAL-02, VAL-03, VAL-04)
+- [x] 41-02-PLAN.md — Wire VAL-01 A/B + VAL-02 walk-forward + VAL-04 whipsaw + VAL-03 verdict + DD-only caveat + Production Candidate + CSV writer (VAL-01, VAL-02, VAL-03, VAL-04)
 
 ### Phase 42: Documentation & Dashboard
 **Goal**: v9.0 rules, dashboard, and audit report are published so the new model is reproducible and comparable to prior milestones
@@ -847,7 +847,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 38. ATR Buffer Zone Module | v9.0 | 3/3 | Complete    | 2026-04-15 |
 | 39. Refined Distribution Day Module | v9.0 | 3/3 | Complete    | 2026-04-16 |
 | 40. Grid Search Sweeps | v9.0 | 3/3 | Complete    | 2026-04-16 |
-| 41. A/B & Walk-Forward Validation | v9.0 | 1/2 | In Progress|  |
+| 41. A/B & Walk-Forward Validation | v9.0 | 2/2 | Complete   | 2026-04-21 |
 | 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
 
 
