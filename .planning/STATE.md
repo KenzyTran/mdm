@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
-status: planning
-stopped_at: Phase 42 context gathered
-last_updated: "2026-04-21T09:38:43.785Z"
-last_activity: 2026-04-21 — ROADMAP.md created, all 22 requirements mapped to phases 42-47
+status: executing
+stopped_at: Completed 42-02-PLAN.md (seeded v10 baseline drift audit doc)
+last_updated: "2026-04-21T10:22:00.887Z"
+last_activity: 2026-04-21 -- Phase 42 execution started
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce v6.0 HybridEngine MaxDD from -28.6% to < -20% via VN-native macro filter (DXY/EEM/SBV regime), after reconciling baseline drift (shipped 11.5% → measured 10.70%).
-**Current focus:** Phase 42 — Baseline Reconciliation
+**Current focus:** Phase 42 — baseline-reconciliation
 
 ## Current Position
 
-Phase: 42 of 47 (Baseline Reconciliation) — first v10.0 phase
-Plan: — (ready to plan)
-Status: Ready to plan
-Last activity: 2026-04-21 — ROADMAP.md created, all 22 requirements mapped to phases 42-47
+Phase: 42 (baseline-reconciliation) — EXECUTING
+Plan: 1 of 6
+Status: Executing Phase 42
+Last activity: 2026-04-21 -- Phase 42 execution started
 
 Progress: [░░░░░░░░░░] 0% (v10.0: 0/6 phases complete)
 
@@ -86,6 +86,7 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Milestone v10.0 start]: Walk-forward CV INSIDE grid search (Phase 41 lesson)
 - [Milestone v10.0 start]: HARD gate MaxDD < -20% AND CAGR ≥ baseline — fail = reject, retain v6.0
 - [Roadmap creation 2026-04-21]: Dependency order BASE → LIQ → MACRO → WF → VAL → DOC locked (baseline-first principle)
+- [Phase 42]: Plan 42-02: Pinned v6.0 ship commit 37cfdc248f8fc1d2aaaf0ec484147b9fa16b4e5a and HEAD 3601679cdba9c3ea674904e6f8a9aa24273cb6ad as bisect anchors; 256 commits in range, 8 engine-touching
 
 ### Pending Todos
 
@@ -97,7 +98,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-21T09:38:43.780Z
-Stopped at: Phase 42 context gathered
-Resume file: .planning/phases/42-baseline-reconciliation/42-CONTEXT.md
+Last session: 2026-04-21T10:22:00.882Z
+Stopped at: Completed 42-02-PLAN.md (seeded v10 baseline drift audit doc)
+Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
