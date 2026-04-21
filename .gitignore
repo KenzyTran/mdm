@@ -8,11 +8,13 @@ __pycache__/
 .env
 
 # Data (large CSVs excluded, signals and moved files whitelisted)
-data/
+data/*
 !data/signals/
 !data/vn30_price.csv
 !data/vnindex_price.csv
 !data/optimization_results.csv
+!data/vn_liquidity_proxy.csv
+!data/sbv_policy_events.csv
 
 # Generated output
 output/
