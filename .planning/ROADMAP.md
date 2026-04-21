@@ -10,7 +10,8 @@
 - ✅ **v6.0 MDM Fail-Safe & Signal Refinement** - Phases 23-27 (shipped 2026-04-02)
 - ✅ **v7.0 CANSLIM + MDM on VN100** - Phases 28-34 + 999.1 (shipped 2026-04-10)
 - ✅ **v8.0 Momentum Stock Selection** - Phases 35-37 (shipped 2026-04-13)
-- **v9.0 VN30 MDM Whipsaw Reduction** - Phases 38-42 (in progress)
+- ✅ **v9.0 VN30 MDM Whipsaw Reduction** - Phases 38-41 (shipped 2026-04-21, extensions REJECTED)
+- 🚧 **v10.0 VN Macro Filter + Baseline Reconciliation** - Phases 42-47 (in progress)
 
 ## Phases
 
@@ -446,17 +447,30 @@ Plans:
 </details>
 
 
-### v9.0 VN30 MDM Whipsaw Reduction (In Progress)
+<details>
+<summary>❌ v9.0 VN30 MDM Whipsaw Reduction (Phases 38-41) — SHIPPED 2026-04-21 (extensions REJECTED, v6.0 retained)</summary>
 
-**Milestone Goal:** Giảm whipsaw trong HybridEngine + fail-safe trên VN30 bằng ATR Buffer Zone (MA50 violation) và Refined Distribution Day (grid-searched), để beat baseline v6.0 (CAGR 11.5%, MaxDD -28.2%, Return +238.8%).
+**Milestone outcome:** All 3 v9 scenarios (+ATR, +DD, +both) FAIL walk-forward on 2015-2026 (degradation +67% to +96%). v6.0 HybridEngine + fail-safe retained as production (D-21 fallback). v9 modules stay feature-flagged-off as research code.
 
-- [x] **Phase 38: ATR Buffer Zone Module** - VT = SMA50 − k×ATR_N with m-day consecutive close rule, parameterized and A/B-gated
- (completed 2026-04-15)
-- [x] **Phase 39: Refined Distribution Day Module** - Dual-threshold DD rule (large_drop + vol>MA20 OR small_drop + top-percentile volume), parameterized and A/B-gated (completed 2026-04-16)
-- [x] **Phase 40: Grid Search Sweeps** - Sequential ATR sweep (36 runs) then DD sweep on locked ATR (54 runs), selection by max Sharpe with MaxDD ≤ -30% constraint
- (completed 2026-04-16)
-- [x] **Phase 41: A/B & Walk-Forward Validation** - 4-scenario A/B (baseline/+ATR/+DD/+both) on 2015-2026, walk-forward Train 2015-2021 / Test 2022-2026, whipsaw reduction report (completed 2026-04-21)
-- [ ] **Phase 42: Documentation & Dashboard** - Update rules_mdm_hybrid.md, v9 dashboard JSON, v9.0 audit report with conclusion vs baseline
+- [x] **Phase 38: ATR Buffer Zone Module** - VT = SMA50 − k×ATR_N with m-day consecutive close rule (completed 2026-04-15)
+- [x] **Phase 39: Refined Distribution Day Module** - Dual-threshold DD rule (completed 2026-04-16)
+- [x] **Phase 40: Grid Search Sweeps** - Sequential ATR (36) + DD (54) sweeps on 2015-2021 train (completed 2026-04-16)
+- [x] **Phase 41: A/B & Walk-Forward Validation** - 4-scenario A/B + Train 2015-2021 / Test 2022-2026 walk-forward (completed 2026-04-21)
+
+**Key learning (fed into v10.0):** (a) grid search must rolling-validate inside the sweep, not post-hoc; (b) engine baseline drifted from shipped v6.0 memory (CAGR 11.5% → measured 10.70%) — reconcile before declaring any new production candidate.
+
+</details>
+
+### 🚧 v10.0 VN Macro Filter + Baseline Reconciliation (In Progress)
+
+**Milestone Goal:** Giảm MaxDD của v6.0 HybridEngine + fail-safe từ -28.6% xuống **dưới -20%** trên VN30 2015-2026 bằng VN-native macro filter (DXY/EEM 20d z-scores + SBV regime), **sau khi** reconcile baseline drift. HARD gate: MaxDD < -20% AND CAGR ≥ reconciled baseline AND walk-forward degradation < 30%. Fail gate = reject, giữ v6.0.
+
+- [ ] **Phase 42: Baseline Reconciliation** - Forensic audit + fix-forward of engine drift (CAGR 11.5% → 10.70%) + regression-test determinism so v10 tunes on a clean baseline (BASE-01, BASE-02, BASE-03)
+- [ ] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03)
+- [ ] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05)
+- [ ] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
+- [ ] **Phase 46: A/B + OOS Validation (HARD Gate)** - 5-scenario A/B on 2015-2026 + 2025-2026 OOS with HARD gate (MaxDD < -20% AND CAGR ≥ reconciled baseline) + v6.0 parity regression + committed Production Candidate verdict (VAL-01, VAL-02, VAL-03, VAL-04, VAL-05)
+- [ ] **Phase 47: Docs & Dashboard** - Conditional on VAL-02 pass: ship rules doc + dashboard JSON + v10.0 milestone audit. On fail: retain v6.0 and publish rejection audit only (DOC-01, DOC-02, DOC-03)
 
 ## Phase Details
 
@@ -788,22 +802,86 @@ Plans:
 - [x] 41-01-PLAN.md — Scaffold analysis/validate_v9.py (constants, load_locked_params, run_engine, compute_metrics, build_scenario_configs, main stub) (VAL-01, VAL-04)
 - [x] 41-02-PLAN.md — Wire VAL-01 A/B + VAL-02 walk-forward + VAL-04 whipsaw + VAL-03 verdict + DD-only caveat + Production Candidate + CSV writer (VAL-01, VAL-02, VAL-03, VAL-04)
 
-### Phase 42: Documentation & Dashboard
-**Goal**: v9.0 rules, dashboard, and audit report are published so the new model is reproducible and comparable to prior milestones
-**Depends on**: Phase 41
+### Phase 42: Baseline Reconciliation
+**Goal**: Current HybridEngine + fail-safe on VN30 reproduces shipped v6.0 CAGR within ±0.3pp so v10.0 macro work tunes on a clean baseline (not on drift)
+**Depends on**: Phase 41 (v9.0 rejected, v6.0 confirmed as reference model)
+**Requirements**: BASE-01, BASE-02, BASE-03
+**Success Criteria** (what must be TRUE):
+  1. `docs/audits/v10_baseline_drift.md` exists with the exact commit hash(es) that changed CAGR from 11.5% to 10.70% and/or SELL count from 124 to 105, plus per-commit diff and root cause narrative
+  2. Running `HybridEngine + fail-safe` on VN30 2015-2026 via the current codebase reproduces shipped v6.0 CAGR within ±0.3pp (fix-forward preferred; if drift is intentional/unsafe-to-revert, audit documents explicit justification)
+  3. `tests/test_baseline_determinism.py` runs the engine 3x on identical inputs and asserts CAGR varies by ≤ 0.1pp (test is committed and passes in CI)
+  4. A single "reconciled baseline" tuple (CAGR, MaxDD, Sharpe_rf3, SELL count) is published in the audit doc and quoted by every downstream phase as the gate reference
+**Plans**: TBD
+**Canonical refs**: `output/v9_ab_comparison.txt` (measured baseline 10.70%), `.planning/MILESTONES.md` v9.0 entry (shipped 11.5% memory), `strategies/mdm_hybrid/mdm_hybrid_engine.py` (engine under audit)
+
+### Phase 43: Canonical Liquidity Data Pipeline
+**Goal**: `data/vn_liquidity_proxy.csv` and `data/sbv_policy_events.csv` are reproducible canonical inputs, regeneratable on demand, with publication-lag handling documented so MACRO phase cannot accidentally look ahead
+**Depends on**: Phase 42
+**Requirements**: LIQ-01, LIQ-02, LIQ-03
+**Success Criteria** (what must be TRUE):
+  1. `analysis/build_liquidity_proxy.py --start <date> --end <date>` regenerates `data/vn_liquidity_proxy.csv` (DXY, EEM, VNM, USD/VND, US10Y daily close) and exits 0; yfinance 401 retries and missing-column errors are handled, not silenced
+  2. `data/sbv_policy_events.csv` has schema `date, rate_change_pct, new_refinance_rate_pct, direction` with all public SBV rate actions 2014-2026 curated from Reuters/SBV press/Vietnam News, documented sources per row
+  3. `docs/liquidity_proxy_spec.md` specifies per-series publication-lag policy (DXY/EEM: US-close → VN next session via `merge_asof` backward; SBV events: event-day+1 on-close available) and lists any look-ahead traps ruled out
+  4. Running the macro filter pipeline end-to-end with these canonical inputs requires no manual edits to the CSVs; appending a new SBV event is a one-row CSV edit, no code change
+**Plans**: TBD
+**Canonical refs**: `docs/research/liquidity_proxy_correlation.md` (quick task 260421-lb4 GO verdict), existing `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` (productionize, do not re-create from scratch)
+
+### Phase 44: Macro Filter Module
+**Goal**: A feature-gated `MacroFilter` adds DXY/EEM z-score + SBV regime signals to HybridEngine decisions, with byte-exact v6.0 parity when disabled (regression locked)
+**Depends on**: Phase 43
+**Requirements**: MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05
+**Success Criteria** (what must be TRUE):
+  1. `DXY 20d z-score` column is computed from the canonical liquidity proxy and merged into daily VN30 trading dates via `pd.merge_asof` backward (no look-ahead), verified by a unit test on a known date
+  2. `EEM 20d z-score` is computed the same way alongside DXY, both available as columns on the engine's daily DataFrame
+  3. `SBV regime` classifier labels each trading day as `easing / neutral / tightening` based on most recent rate event with a configurable 90-day decay; unit test covers transitions across a known event sequence
+  4. `MacroFilter` is integrated into `HybridEngine` state pipeline and controlled by `macro_filter_enabled` flag in `MDMV2Config`; running the engine on VN30 2015-2026 with the flag `False` produces a signal log byte-exact to the reconciled v6.0 baseline from Phase 42 (regression test locks this invariant — VAL-04 alignment)
+  5. Filter policy is implemented: DXY easing suppresses SELL, DXY tightening amplifies SELL, SBV tightening regime forces half-position or full CASH; exact thresholds (`dxy_z_threshold`, `sbv_tightening_position_frac`) are exposed as config fields ready for the Phase 45 grid search
+**Plans**: TBD
+**Canonical refs**: `strategies/mdm_hybrid/mdm_hybrid_engine.py` (engine to modify), `docs/research/liquidity_proxy_correlation.md` (DXY -0.19 / EEM +0.19 / SBV 55.76pp spread evidence), Phase 42 reconciled baseline (v6.0 parity target)
+
+### Phase 45: Walk-Forward Grid Search
+**Goal**: Macro filter thresholds are selected by a rolling-window grid search whose acceptance rule is `median degradation < 30%` across walk-forward years — overfitting is ruled out INSIDE the sweep, not after
+**Depends on**: Phase 44
+**Requirements**: WF-01, WF-02, WF-03
+**Success Criteria** (what must be TRUE):
+  1. `analysis/walkforward_grid.py` runs the macro parameter grid with train window 2015-2018 and annual walk-forward evaluations for 2019/2020/2021/2022/2023/2024, holding 2025-2026 out as untouched OOS (script refuses to read any 2025+ data during search, asserted by a date-range guard)
+  2. Per parameter combo, the script computes train CAGR and each walk-forward year's CAGR, then a `median_degradation` metric across the walk-forward years; any combo with `median_degradation ≥ 30%` is marked rejected (not silently dropped)
+  3. `output/v10_grid_results.csv` contains, per combo, the config fields plus per-window metrics (CAGR, Sharpe_rf3, MaxDD) and the accept/reject decision; top-N accepted combos have a locked-params JSON sibling (`output/v10_grid_best.json`) reproducible from the CSV
+  4. Selection never considers 2025-2026 data — verified by a test that runs the selection against synthetic 2025-labeled data and asserts it's excluded
+**Plans**: TBD
+**Canonical refs**: `.planning/MILESTONES.md` v9.0 entry (walk-forward-only-post-hoc lesson), Phase 41 degradation table (+67% to +96% = what v10 must not repeat), Phase 44 config fields (search space inputs)
+
+### Phase 46: A/B + OOS Validation (HARD Gate)
+**Goal**: v10 macro filter is accepted as production only if it passes all three HARD-gate criteria (OOS MaxDD < -20%, CAGR ≥ reconciled baseline, walk-forward median degradation < 30%) with v6.0 parity regression green; otherwise v6.0 retained as production
+**Depends on**: Phase 45
+**Requirements**: VAL-01, VAL-02, VAL-03, VAL-04, VAL-05
+**Success Criteria** (what must be TRUE):
+  1. 5-scenario A/B report (baseline / +DXY / +EEM / +SBV-regime / +all) runs on full VN30 2015-2026 producing canonical metrics per scenario (CAGR, Sharpe_rf3, MaxDD, total return, transitions, time-in-state, SELL count, MA50-breakdown share) in `output/v10_ab_comparison.txt` + machine-readable `output/v10_ab_scenarios.csv`
+  2. OOS test on held-out 2025-2026 window applies the HARD gate (MaxDD < -20% AND CAGR ≥ reconciled baseline from Phase 42); `output/v10_validation_report.txt` contains exit-code reflective verdict (exit 0 pass, exit 1 fail)
+  3. Walk-forward stability gate re-checks the selected scenario's median degradation across Phase 45's rolling windows; `< 30%` required; failure blocks acceptance with explicit reason logged
+  4. v6.0 parity regression test (`macro_filter_enabled=False` → byte-exact v6.0 signal log match) is included in the validation run and must be green; failure blocks acceptance regardless of any gain on the other criteria
+  5. Production Candidate recommendation committed as a literal string in `output/v10_validation_report.txt`: `"v10 macro filter accepted as production"` on full pass, `"v6.0 retained as production"` on any fail — grep-matchable, drives Phase 47 branching
+**Plans**: TBD
+**Canonical refs**: `analysis/validate_v9.py` (pattern for A/B + walk-forward + CSV + verdict string, adapt to v10), Phase 42 reconciled baseline (gate reference), Phase 45 `output/v10_grid_best.json` (scenarios under test)
+
+### Phase 47: Docs & Dashboard
+**Goal**: Ship the v10.0 milestone — pass path updates rules + dashboard + audit to install v10 as production; fail path keeps v6.0 and publishes a rejection audit with lessons for v11.0
+**Depends on**: Phase 46
 **Requirements**: DOC-01, DOC-02, DOC-03
 **Success Criteria** (what must be TRUE):
-  1. `docs/rules_mdm_hybrid.md` reflects the new ATR buffer zone rule and the refined dual-threshold DD definition, with parameter defaults and toggles documented
-  2. Dashboard `dashboard/data/` includes v9 model JSON (equity curve + signal log) so the comparison view renders v9 alongside v6.0 and v7.0
-  3. `docs/audits/v9_0_report.md` contains baseline vs v9 metrics, sweep winners, whipsaw diagnostic, and a clear accepted/rejected conclusion with evidence
+  1. Phase execution branches on the Phase 46 verdict string: on `"v10 macro filter accepted as production"` DOC-01 and DOC-02 run; on `"v6.0 retained as production"` DOC-01 and DOC-02 are explicitly skipped with a recorded reason, DOC-03 still runs (rejection audit)
+  2. (Conditional on pass) `docs/rules_mdm_hybrid.md` reflects macro filter rules + policy tables (DXY thresholds, EEM thresholds, SBV regime decay) with code-docs sync per CLAUDE.md rule; notebooks and `dashboard/data/` carry v10 equity curve + signal log + liquidity overlay; dashboard is re-deployed
+  3. (Always) `.planning/MILESTONES.md` is appended with a v10.0 entry summarizing outcome (pass or fail), key metrics vs reconciled baseline, walk-forward table, and lessons learned (specifically how the rolling-window grid search in Phase 45 avoided or confirmed the Phase 41 overfit failure mode)
+  4. PROJECT.md "Current Milestone" section is updated to reflect shipped state, and `project_best_model.md` memory is updated (if v10 passes) or explicitly confirmed unchanged (if v10 fails)
 **Plans**: TBD
 **UI hint**: yes
+**Canonical refs**: `docs/rules_mdm_hybrid.md` (doc under update), `dashboard/` (existing S3 bucket mdm-trading-dashboard ap-southeast-1), `.planning/MILESTONES.md` (milestone archive)
 
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
+Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 -> 46 -> 47
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -848,7 +926,12 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 39. Refined Distribution Day Module | v9.0 | 3/3 | Complete    | 2026-04-16 |
 | 40. Grid Search Sweeps | v9.0 | 3/3 | Complete    | 2026-04-16 |
 | 41. A/B & Walk-Forward Validation | v9.0 | 2/2 | Complete    | 2026-04-21 |
-| 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
+| 42. Baseline Reconciliation | v10.0 | 0/0 | Not started | - |
+| 43. Canonical Liquidity Data Pipeline | v10.0 | 0/0 | Not started | - |
+| 44. Macro Filter Module | v10.0 | 0/0 | Not started | - |
+| 45. Walk-Forward Grid Search | v10.0 | 0/0 | Not started | - |
+| 46. A/B + OOS Validation (HARD Gate) | v10.0 | 0/0 | Not started | - |
+| 47. Docs & Dashboard | v10.0 | 0/0 | Not started | - |
 
 
 ## Backlog

@@ -75,34 +75,42 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BASE-01 | Phase ? | Pending |
-| BASE-02 | Phase ? | Pending |
-| BASE-03 | Phase ? | Pending |
-| LIQ-01 | Phase ? | Pending |
-| LIQ-02 | Phase ? | Pending |
-| LIQ-03 | Phase ? | Pending |
-| MACRO-01 | Phase ? | Pending |
-| MACRO-02 | Phase ? | Pending |
-| MACRO-03 | Phase ? | Pending |
-| MACRO-04 | Phase ? | Pending |
-| MACRO-05 | Phase ? | Pending |
-| WF-01 | Phase ? | Pending |
-| WF-02 | Phase ? | Pending |
-| WF-03 | Phase ? | Pending |
-| VAL-01 | Phase ? | Pending |
-| VAL-02 | Phase ? | Pending |
-| VAL-03 | Phase ? | Pending |
-| VAL-04 | Phase ? | Pending |
-| VAL-05 | Phase ? | Pending |
-| DOC-01 | Phase ? | Pending |
-| DOC-02 | Phase ? | Pending |
-| DOC-03 | Phase ? | Pending |
+| BASE-01 | Phase 42 | Pending |
+| BASE-02 | Phase 42 | Pending |
+| BASE-03 | Phase 42 | Pending |
+| LIQ-01 | Phase 43 | Pending |
+| LIQ-02 | Phase 43 | Pending |
+| LIQ-03 | Phase 43 | Pending |
+| MACRO-01 | Phase 44 | Pending |
+| MACRO-02 | Phase 44 | Pending |
+| MACRO-03 | Phase 44 | Pending |
+| MACRO-04 | Phase 44 | Pending |
+| MACRO-05 | Phase 44 | Pending |
+| WF-01 | Phase 45 | Pending |
+| WF-02 | Phase 45 | Pending |
+| WF-03 | Phase 45 | Pending |
+| VAL-01 | Phase 46 | Pending |
+| VAL-02 | Phase 46 | Pending |
+| VAL-03 | Phase 46 | Pending |
+| VAL-04 | Phase 46 | Pending |
+| VAL-05 | Phase 46 | Pending |
+| DOC-01 | Phase 47 | Pending |
+| DOC-02 | Phase 47 | Pending |
+| DOC-03 | Phase 47 | Pending |
 
 **Coverage:**
 - v1 requirements: 22 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 22 (will be filled by roadmapper)
+- Mapped to phases: 22 ✓
+- Unmapped: 0
+
+**Phase distribution:**
+- Phase 42 (Baseline Reconciliation): 3 reqs (BASE-01..03)
+- Phase 43 (Liquidity Data Pipeline): 3 reqs (LIQ-01..03)
+- Phase 44 (Macro Filter Module): 5 reqs (MACRO-01..05)
+- Phase 45 (Walk-Forward Grid Search): 3 reqs (WF-01..03)
+- Phase 46 (A/B + OOS Validation): 5 reqs (VAL-01..05)
+- Phase 47 (Docs & Dashboard): 3 reqs (DOC-01..03)
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after initial v10.0 definition*
+*Last updated: 2026-04-21 after roadmap creation (all 22 requirements mapped to phases 42-47)*
