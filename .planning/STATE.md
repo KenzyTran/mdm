@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: VN30 MDM Whipsaw Reduction
-status: planning
-stopped_at: Phase 41 context gathered
-last_updated: "2026-04-16T09:54:27.662Z"
-last_activity: 2026-04-16
+status: executing
+stopped_at: Completed 41-01-PLAN.md
+last_updated: "2026-04-21T03:53:30.505Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce whipsaw on VN30 index timing via ATR Buffer Zone + Refined Distribution Day.
-**Current focus:** Phase 40 — grid-search-sweeps
+**Current focus:** Phase 41 — ab-walk-forward-validation
 
 ## Current Position
 
-Phase: 40
-Plan: Not started
-Status: Phase complete — ready for verifier / Phase 41 planning
-Last activity: 2026-04-16
+Phase: 41 (ab-walk-forward-validation) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-04-21
 
 Progress: [██████████] All 3 Phase 40 plans shipped (100%)
 
@@ -141,13 +141,29 @@ CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 period.
 | :--- | :---: | :---: | :---: | :--- |
 | 40-03 | ~7 min | 2 | 1 (created) + 6 gitignored runtime artifacts | `23807f8`, `abd900b` |
 
+### Phase 41 Plan 01 Decisions (shipped 2026-04-21)
+
+- `analysis/validate_v9.py` scaffold split into two atomic tasks: Task 1 ships skeleton (imports, 7 module constants, `load_locked_params`, `run_engine`); Task 2 appends `compute_metrics`, `build_scenario_configs`, and stub `main()`. Plan 41-02 inherits a running end-to-end pipeline rather than starting from import-error recovery — frees Plan 02 context budget for report-shaping + CSV writing + production candidate decision logic.
+- `compute_metrics` extends Phase 40 `sweep_v9_atr.py::compute_metrics` with one new key: `total_return_pct`. Preserves Phase 40 schema for CSV-readers while adding A/B table readability (pairwise +ATR vs baseline total-return deltas).
+- `load_locked_params` returns a **tuple of two dicts** (atr_params, dd_params) rather than a merged single dict. Rationale: `v9_dd_best.json` echoes `atr_buffer_*` params for provenance (since DD sweep ran under locked ATR=True), and the +ATR-only scenario MUST be driven from the atr_params dict — not from the dd_params provenance echo. Separate dicts prevent accidental single-source-of-truth collapse.
+- Both `raise FileNotFoundError` messages carry the exact Phase 40 remediation command — downstream failures self-document the fix path.
+- D-06 compliance: `refined_dd_large_vol_rule` and `refined_dd_small_vol_lookback` stay at VN30_PRESET defaults (`'vol_ma20'` and 50) in ALL 4 scenarios. Never overridden in any `dataclasses.replace` call. Acceptance-criteria grep confirmed `0` matches for both field names.
+- Runtime data-coverage assert uses `>= pd.Timestamp('2025-12-01')` — lets the loader return any 2025 or 2026 cutoff without failing while catching truncated-data regressions before VAL-01 runs blind.
+- Stub `main()` runs end-to-end with exit 0; `output/v9_ab_comparison.txt` produced with locked-params echo + scenario list; VN30 data confirmed at 2803 rows spanning 2015-01-05 -> 2026-03-31.
+
+### Phase 41 Plan 01 Metrics
+
+| Plan | Duration | Tasks | Files | Commits |
+| :--- | :---: | :---: | :---: | :--- |
+| 41-01 | ~8 min | 2 | 1 created (validate_v9.py) + 1 stub artifact (v9_ab_comparison.txt) | `7648e71`, `481d587` |
+
 ### Blockers/Concerns
 
 None.
 
 ## Session Continuity
 
-Last session: 2026-04-16T09:54:27.644Z
-Stopped at: Phase 41 context gathered
-Resume file: .planning/phases/41-ab-walk-forward-validation/41-CONTEXT.md
+Last session: 2026-04-21T03:53:30.498Z
+Stopped at: Completed 41-01-PLAN.md
+Resume file: None
 Next command: Phase 40 complete (all 3 plans shipped) — run `/gsd:verify-phase 40` to validate, then `/gsd:transition` to start Phase 41 (A/B + walk-forward validation) consuming the 4 best-artifact files

@@ -28,10 +28,10 @@
 
 ### A/B + Walk-Forward Validation
 
-- [ ] **VAL-01**: A/B report with 4 scenarios (baseline / +ATR only / +DD only / +both) on full period 2015-2026, output `output/v9_ab_comparison.txt` với CAGR, Sharpe, MaxDD, transitions, time-in-state
+- [x] **VAL-01**: A/B report with 4 scenarios (baseline / +ATR only / +DD only / +both) on full period 2015-2026, output `output/v9_ab_comparison.txt` với CAGR, Sharpe, MaxDD, transitions, time-in-state
 - [ ] **VAL-02**: Walk-forward validation — Train 2015-2021, Test 2022-2026, CAGR degradation < 50% threshold
 - [ ] **VAL-03**: Combined model beats baseline v6.0 on CAGR (≥ 11.5%) AND (Sharpe > baseline OR MaxDD < -25%); document if fails
-- [ ] **VAL-04**: Transition count report — measure whipsaw reduction (target: SELL signals reduce from 124 baseline, MA50-breakdown share drops from 84%)
+- [x] **VAL-04**: Transition count report — measure whipsaw reduction (target: SELL signals reduce from 124 baseline, MA50-breakdown share drops from 84%)
 
 ### Documentation & Dashboard
 
@@ -74,10 +74,10 @@
 | SWEEP-02 | Phase 40 | Complete |
 | SWEEP-03 | Phase 40 | Complete |
 | SWEEP-04 | Phase 40 | Complete |
-| VAL-01 | Phase 41 | Pending |
+| VAL-01 | Phase 41 | Complete |
 | VAL-02 | Phase 41 | Pending |
 | VAL-03 | Phase 41 | Pending |
-| VAL-04 | Phase 41 | Pending |
+| VAL-04 | Phase 41 | Complete |
 | DOC-01 | Phase 42 | Pending |
 | DOC-02 | Phase 42 | Pending |
 | DOC-03 | Phase 42 | Pending |

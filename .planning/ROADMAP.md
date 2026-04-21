@@ -782,10 +782,10 @@ Plans:
   2. Walk-forward validation trains on 2015-2021 and tests on 2022-2026, showing CAGR degradation from train to test < 50% of the train value (documented if breached)
   3. Combined model meets milestone success criterion — CAGR ≥ 11.5% AND (Sharpe > baseline OR MaxDD < -25%) on full 2015-2026 — or a failure-mode writeup explains the gap
   4. Transition-count diagnostic quantifies whipsaw reduction: SELL signals drop from the 124 baseline, and the MA50-breakdown share of SELL signals drops from the 84% baseline
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 41-01-PLAN.md — Scaffold analysis/validate_v9.py (constants, load_locked_params, run_engine, compute_metrics, build_scenario_configs, main stub) (VAL-01, VAL-04)
+- [x] 41-01-PLAN.md — Scaffold analysis/validate_v9.py (constants, load_locked_params, run_engine, compute_metrics, build_scenario_configs, main stub) (VAL-01, VAL-04)
 - [ ] 41-02-PLAN.md — Wire VAL-01 A/B + VAL-02 walk-forward + VAL-04 whipsaw + VAL-03 verdict + DD-only caveat + Production Candidate + CSV writer (VAL-01, VAL-02, VAL-03, VAL-04)
 
 ### Phase 42: Documentation & Dashboard
@@ -847,7 +847,7 @@ Phases execute in numeric order: 35 -> 36 -> 37 -> 38 -> 39 -> 40 -> 41 -> 42
 | 38. ATR Buffer Zone Module | v9.0 | 3/3 | Complete    | 2026-04-15 |
 | 39. Refined Distribution Day Module | v9.0 | 3/3 | Complete    | 2026-04-16 |
 | 40. Grid Search Sweeps | v9.0 | 3/3 | Complete    | 2026-04-16 |
-| 41. A/B & Walk-Forward Validation | v9.0 | 0/0 | Not started | - |
+| 41. A/B & Walk-Forward Validation | v9.0 | 1/2 | In Progress|  |
 | 42. Documentation & Dashboard | v9.0 | 0/0 | Not started | - |
 
 
