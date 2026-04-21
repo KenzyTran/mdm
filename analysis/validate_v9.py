@@ -61,6 +61,10 @@ DD_BEST_JSON = os.path.join(os.path.dirname(__file__), '..', 'output', 'v9_dd_be
 REPORT_TXT = os.path.join(os.path.dirname(__file__), '..', 'output', 'v9_ab_comparison.txt')
 SCENARIOS_CSV = os.path.join(os.path.dirname(__file__), '..', 'output', 'v9_ab_scenarios.csv')
 
+# Scenario iteration order: monotone complexity (D-05). Reused by A/B table,
+# walk-forward loop, whipsaw diagnostic, VAL-03 verdict, CSV writer.
+SCENARIO_ORDER = ['baseline', '+ATR', '+DD', '+both']
+
 
 def load_locked_params() -> tuple[dict, dict]:
     """Read Phase 40 locked winners from JSON artifacts.
@@ -307,9 +311,87 @@ def main():
     scenarios = build_scenario_configs(atr_params, dd_params)
     log(f'\nScenarios built: {list(scenarios.keys())}')
 
-    # Plan 41-02 wires VAL-01 (A/B), VAL-02 (walk-forward), VAL-04 (whipsaw),
-    # VAL-03 verdict, production candidate section, and CSV writer here.
-    log('\n[Plan 41-02 to fill: A/B table, walk-forward, whipsaw, production candidate]')
+    # ── VAL-01: A/B COMPARISON (full period 2015-2026) ──────────────────
+    log('\n' + '─' * 70)
+    log('VAL-01: A/B COMPARISON — 4 scenarios on full period 2015-2026')
+    log('─' * 70)
+
+    # Run engine once per scenario on FULL data; cache results for walk-forward reuse
+    full_results: dict[str, pd.DataFrame] = {}
+    full_metrics: dict[str, dict] = {}
+    for name in SCENARIO_ORDER:
+        log(f'  Running {name}...')
+        cfg = scenarios[name]
+        try:
+            res = run_engine(df_full, cfg)
+            full_results[name] = res
+            full_metrics[name] = compute_metrics(res)
+        except Exception as exc:
+            # Fail-loud per Phase 40 D-10: capture traceback in report but keep going
+            log(f'  ERROR in {name}: {type(exc).__name__}: {exc}')
+            log(traceback.format_exc())
+            full_results[name] = None
+            full_metrics[name] = {k: float('nan') for k in [
+                'sharpe_rf3', 'cagr_pct', 'max_dd_pct', 'total_return_pct',
+                'transitions', 'sell_count', 'ma50_breakdown_sell_share',
+                'buy_count', 'buy_pct', 'cash_pct', 'sell_pct',
+            ]}
+
+    # Buy & Hold VN30 reference (D-17)
+    bh_total_ret = (df_full['close'].iloc[-1] / df_full['close'].iloc[0] - 1) * 100
+    bh_years = (df_full['date'].iloc[-1] - df_full['date'].iloc[0]).days / 365.25
+    bh_cagr = ((1 + bh_total_ret / 100) ** (1 / bh_years) - 1) * 100 if bh_years > 0 else 0.0
+    # B&H MaxDD on close series
+    bh_eq = df_full['close'].values / df_full['close'].iloc[0]
+    bh_peak = np.maximum.accumulate(bh_eq)
+    bh_maxdd = ((bh_eq - bh_peak) / bh_peak).min() * 100
+
+    # A/B table (D-17: B&H row included)
+    log(f'\n{"Scenario":<12s} {"TotRet":>9s} {"CAGR":>8s} {"MaxDD":>8s} {"Sharpe":>8s} '
+        f'{"Trans":>6s} {"BUY%":>6s} {"CASH%":>6s} {"SELL%":>6s}')
+    log('-' * 80)
+    for name in SCENARIO_ORDER:
+        m = full_metrics[name]
+        log(f'{name:<12s} {m["total_return_pct"]:>+8.1f}% {m["cagr_pct"]:>7.2f}% '
+            f'{m["max_dd_pct"]:>7.2f}% {m["sharpe_rf3"]:>8.3f} '
+            f'{m["transitions"]:>6d} {m["buy_pct"]:>5.1f}% '
+            f'{m["cash_pct"]:>5.1f}% {m["sell_pct"]:>5.1f}%')
+    log(f'{"B&H VN30":<12s} {bh_total_ret:>+8.1f}% {bh_cagr:>7.2f}% {bh_maxdd:>7.2f}% '
+        f'{"—":>8s} {"—":>6s} {"100.0":>5s}% {"0.0":>5s}% {"0.0":>5s}%')
+
+    # ── VAL-04: WHIPSAW DIAGNOSTIC ──────────────────────────────────────
+    log('\n' + '─' * 70)
+    log('VAL-04: WHIPSAW DIAGNOSTIC — SELL count + MA50-breakdown share')
+    log(f'Baseline v6.0 reference: 124 SELL signals, 84% MA50-breakdown share')
+    log('─' * 70)
+
+    baseline_sell = full_metrics['baseline']['sell_count']
+    baseline_ma50_share = full_metrics['baseline']['ma50_breakdown_sell_share']
+
+    log(f'\n{"Scenario":<12s} {"SELL#":>6s} {"MA50%":>8s} {"BUY#":>6s} '
+        f'{"dSELL":>7s} {"dMA50":>8s}')
+    log('-' * 55)
+    for name in SCENARIO_ORDER:
+        m = full_metrics[name]
+        sell_delta = m['sell_count'] - baseline_sell
+        ma50_share_pct = (m['ma50_breakdown_sell_share'] * 100
+                         if not np.isnan(m['ma50_breakdown_sell_share']) else float('nan'))
+        baseline_ma50_share_pct = (baseline_ma50_share * 100
+                                   if not np.isnan(baseline_ma50_share) else float('nan'))
+        ma50_delta = (ma50_share_pct - baseline_ma50_share_pct
+                     if not (np.isnan(ma50_share_pct) or np.isnan(baseline_ma50_share_pct))
+                     else float('nan'))
+        log(f'{name:<12s} {m["sell_count"]:>6d} {ma50_share_pct:>7.1f}% '
+            f'{m["buy_count"]:>6d} {sell_delta:>+7d} {ma50_delta:>+7.1f}%')
+
+    log('\nWhipsaw reduction evidence:')
+    for name in ['+ATR', '+DD', '+both']:
+        m = full_metrics[name]
+        sell_drop = baseline_sell - m['sell_count']
+        if baseline_sell > 0:
+            sell_drop_pct = sell_drop / baseline_sell * 100
+            log(f'  {name}: SELL count {m["sell_count"]} vs baseline {baseline_sell} '
+                f'({sell_drop:+d}, {sell_drop_pct:+.1f}%)')
 
     # Save report (partial until Plan 41-02 completes it)
     os.makedirs(os.path.dirname(REPORT_TXT), exist_ok=True)
