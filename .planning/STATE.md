@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
-status: ready_to_plan
-stopped_at: ROADMAP.md created — Phase 42 (Baseline Reconciliation) ready to plan
-last_updated: "2026-04-21T09:00:00.000Z"
-last_activity: 2026-04-21
+status: planning
+stopped_at: Phase 42 context gathered
+last_updated: "2026-04-21T09:38:43.785Z"
+last_activity: 2026-04-21 — ROADMAP.md created, all 22 requirements mapped to phases 42-47
 progress:
-  total_phases: 6
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 4
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
   percent: 0
 ---
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0% (v10.0: 0/6 phases complete)
 ### HARD gate (milestone acceptance)
 
 All three must hold simultaneously for v10.0 acceptance:
+
 1. OOS (2025-2026) MaxDD < -20%
 2. OOS CAGR ≥ reconciled baseline from Phase 42
 3. Walk-forward median degradation < 30% across rolling windows
@@ -80,6 +81,7 @@ v6.0 parity regression (VAL-04) must stay green throughout. Any fail → retain 
 ### Decisions
 
 See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
+
 - [Milestone v10.0 start]: VN-native macro proxies (DXY/EEM/SBV), not US/Fed — evidence-based from quick task 260421-lb4
 - [Milestone v10.0 start]: Walk-forward CV INSIDE grid search (Phase 41 lesson)
 - [Milestone v10.0 start]: HARD gate MaxDD < -20% AND CAGR ≥ baseline — fail = reject, retain v6.0
@@ -95,7 +97,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-21T09:00:00.000Z
-Stopped at: ROADMAP.md + REQUIREMENTS.md + STATE.md populated for v10.0; Phase 42 ready to plan
-Resume file: None
+Last session: 2026-04-21T09:38:43.780Z
+Stopped at: Phase 42 context gathered
+Resume file: .planning/phases/42-baseline-reconciliation/42-CONTEXT.md
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
