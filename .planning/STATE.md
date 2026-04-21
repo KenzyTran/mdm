@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 42-02-PLAN.md (seeded v10 baseline drift audit doc)
-last_updated: "2026-04-21T10:22:00.887Z"
+stopped_at: Completed 42-01-PLAN.md (BASE-01 evidence producer)
+last_updated: "2026-04-21T10:24:19.423Z"
 last_activity: 2026-04-21 -- Phase 42 execution started
 progress:
   total_phases: 4
@@ -87,6 +87,8 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Milestone v10.0 start]: HARD gate MaxDD < -20% AND CAGR ≥ baseline — fail = reject, retain v6.0
 - [Roadmap creation 2026-04-21]: Dependency order BASE → LIQ → MACRO → WF → VAL → DOC locked (baseline-first principle)
 - [Phase 42]: Plan 42-02: Pinned v6.0 ship commit 37cfdc248f8fc1d2aaaf0ec484147b9fa16b4e5a and HEAD 3601679cdba9c3ea674904e6f8a9aa24273cb6ad as bisect anchors; 256 commits in range, 8 engine-touching
+- [Phase 42]: Plan 42-01: CAGR-only bisect gate at 11.4 (tight) chosen over composite SELL+MaxDD gate; design-note inline block documents rationale vs D-09 parity band 11.2-11.8 (HEAD acceptance tolerance, wider)
+- [Phase 42]: Plan 42-01: sys.stdout.reconfigure() replaces io.TextIOWrapper(sys.stdout.buffer) wrapping in bisect script (Windows I/O-closed-file bug auto-fixed per Rule 1); future Phase 42 plans should adopt this pattern when copying from validate_v9.py
 
 ### Pending Todos
 
@@ -98,7 +100,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-21T10:22:00.882Z
-Stopped at: Completed 42-02-PLAN.md (seeded v10 baseline drift audit doc)
+Last session: 2026-04-21T10:24:19.415Z
+Stopped at: Completed 42-01-PLAN.md (BASE-01 evidence producer)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
