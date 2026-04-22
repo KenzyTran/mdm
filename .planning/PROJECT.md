@@ -115,7 +115,7 @@ Tất cả 3 scenario v9 (+ATR, +DD, +both) fail gate CAGR ≥ 11.5% trên full 
 ### Active (v10.0)
 
 - [ ] Baseline drift forensics — find commit(s) causing CAGR drift 11.5% → 10.70% and SELL count 124 → 105; fix forward
-- [ ] Canonical liquidity proxy data pipeline — regenerable `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` with publication-lag handling
+- [x] Canonical liquidity proxy data pipeline — regenerable `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` with publication-lag handling (Phase 43, LIQ-01/02/03 validated 2026-04-22)
 - [ ] VN macro filter module — DXY 20d z-score + EEM 20d z-score + SBV regime (90-day decay), feature-gated with v6.0 parity when off
 - [ ] Walk-forward-native grid search — rolling windows inside grid search, accept params only if median degradation < 30%
 - [ ] A/B validation (baseline / +DXY / +EEM / +SBV-regime / +all) + OOS with HARD gate (MaxDD < -20% AND CAGR ≥ baseline)
@@ -293,4 +293,4 @@ CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.
 - ✓ Phase 42 Baseline Reconciliation — bisect identified `f80394f` (Phase 38-02) as single drift commit; reconciled via `v60_strict_mode` preset flag (D-07 step 2). At reconciled HEAD: CAGR 11.47%, SELL 124, MaxDD -28.17% — all three D-09 parity bands pass. Canonical tuple published at `output/v10_reconciled_baseline.json` (schema_version: 1); 3/3 determinism tests green.
 
 ---
-*Last updated: 2026-04-22 after Phase 42 Baseline Reconciliation complete (BASE-01/02/03)*
+*Last updated: 2026-04-22 after Phase 43 Canonical Liquidity Data Pipeline complete (LIQ-01/02/03)*
