@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 43-02-PLAN.md (LIQ-02 closed; data/sbv_policy_events.csv 5-col schema frozen at commit d85a1cb; 12 rows cited to Reuters/SBV press/Vietnam News per D-06; first 4 cols byte-exact preserved)
-last_updated: "2026-04-22T08:06:28.396Z"
+stopped_at: Completed 43-01-PLAN.md (LIQ-01 closed; build_liquidity_proxy.py hardened with argparse + retry + schema guard, CSV byte-identical regeneration confirms D-01 preservation)
+last_updated: "2026-04-22T08:07:21.148Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 4
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 43 (canonical-liquidity-data-pipeline) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-22
 
@@ -100,6 +100,9 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 42]: Plan 42-06: Closed BASE-03 with tests/test_baseline_determinism.py (274 lines, 3 tests under @pytest.mark.regression class TestBaselineDeterminism). M5 byte-exact primary assertions (len(set(cagrs))==1 etc.) with D-17 thresholds as informative fallback messages only. Byte-exact results DataFrame equality via results_1.equals(results_2) across 2 fresh engines. Co-wave-4-tolerant downstream-JSON guard with pytest.skip fallback. Stdout-safe lazy import of analysis.validate_v9.compute_metrics via orphan-wrapper parking. All 3 tests PASSED on reconciled-HEAD commit 8c6722b in 38.67s.
 - [Phase 43]: Plan 43-02: D-06 schema applied to data/sbv_policy_events.csv (5 cols: date, rate_change_pct, new_refinance_rate_pct, direction, source). 12 rows preserved byte-exact; source cites Reuters on 12/12, SBV press on 10/12, Vietnam News on 3/12. No neutral rows (derived downstream). LIQ-02 closed.
 - [Phase 43]: Plan 43-02: D-07 conservatism honored. Candidate 2014 refinance cuts (2014-03-18, 2014-10-29) investigated but not appended — no clean Reuters/Vietnam News/SBV citation located in this short pass; omit-rather-than-invert rule applies. Canonical row count stays 12 until a future backfill plan sources these cleanly.
+- [Phase 43]: Plan 43-01: Empty-DataFrame treated as transient ValueError (silent yfinance rate-limit surrogate) and retried; missing-'Close'-column is NON-transient and raises RuntimeError immediately per D-05 — two distinct error classes so schema drift surfaces loudly and rate-limits auto-recover
+- [Phase 43]: Plan 43-01: HTTPError retry is CODE-filtered — only 401/403/429 retry, all other HTTP statuses re-raise. Prevents retry storms on real backend outages (500s) masquerading as rate-limits
+- [Phase 43]: Plan 43-01: data/vn_liquidity_proxy.csv regeneration was byte-identical to HEAD (zero git diff) — confirms D-01 productionize-not-recreate held; yfinance deterministic over identical date range + ticker set at this point in time
 
 ### Pending Todos
 
@@ -111,7 +114,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-22T08:06:28.387Z
-Stopped at: Completed 43-02-PLAN.md (LIQ-02 closed; data/sbv_policy_events.csv 5-col schema frozen at commit d85a1cb; 12 rows cited to Reuters/SBV press/Vietnam News per D-06; first 4 cols byte-exact preserved)
+Last session: 2026-04-22T08:07:09.580Z
+Stopped at: Completed 43-01-PLAN.md (LIQ-01 closed; build_liquidity_proxy.py hardened with argparse + retry + schema guard, CSV byte-identical regeneration confirms D-01 preservation)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
