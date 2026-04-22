@@ -76,6 +76,18 @@ class MDMV2Config:
     # Hypothesis metadata (per D-08)
     name: str = "default"
 
+    # v6.0 Strict Mode (Phase 42 BASE-02, D-07 step 2)
+    # When True, restores v6.0-shipped semantics by branch-guarding the
+    # drift-introducing code path identified by Phase 42 bisect (commit
+    # f80394f, Phase 38-02): the CASH→SELL elif chain in
+    # V2PositionManager.process_day() is re-flattened so that the
+    # cash_deterioration SELL branch remains reachable when close >= MA50.
+    # Default False preserves current v7/v8/v9 behavior (including the ATR
+    # buffer feature surface); v10.0 macro baseline runs and the Phase 42
+    # determinism regression test set this True.
+    # See docs/audits/v10_baseline_drift.md and 42-CONTEXT.md D-07 for rationale.
+    v60_strict_mode: bool = False
+
     def __post_init__(self):
         """Validate parameters."""
         assert self.correction_threshold < 0, "Correction threshold must be negative"
@@ -159,6 +171,7 @@ VN30_PRESET = MDMV2Config(
     refined_dd_large_vol_rule='vol_ma20',
     refined_dd_small_vol_percentile=5,
     refined_dd_small_vol_lookback=50,
+    v60_strict_mode=False,
     name="vn30",
 )
 
@@ -195,5 +208,6 @@ NASDAQ_PRESET = MDMV2Config(
     refined_dd_large_vol_rule='vol_ma20',
     refined_dd_small_vol_percentile=5,
     refined_dd_small_vol_lookback=50,
+    v60_strict_mode=False,
     name="nasdaq",
 )

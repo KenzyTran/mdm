@@ -647,3 +647,71 @@ Chạy sau khi lock ATR buffer config từ Phase 38:
 - `refined_dd_small_vol_percentile ∈ [3, 5, 10]` (3 giá trị)
 
 Tổng: **54 combos**. In-sample 2015-2021, metric: max Sharpe với MaxDD ≤ -30% (tie-break theo CAGR).
+
+---
+
+## XVIII. V60_STRICT_MODE (Phase 42 BASE-02, D-07 step 2)
+
+*Thêm ở Phase 42: feature-flag bảo toàn v6.0 CASH→SELL semantics để khắc phục drift do commit `f80394f` (Phase 38-02) gây ra.*
+
+### 1. Mục tiêu
+
+Phase 42 bisect (`docs/audits/v10_baseline_drift.md`) phát hiện commit `f80394f` (Phase 38-02) vô tình reparent flat `elif` chain thành outer-elif + nested-if, khiến nhánh `cash_deterioration` SELL không còn reachable khi `close >= MA50`. Hệ quả: SELL count 124 → 105 (-19), CAGR 11.47% → 10.70% (-0.77pp), MaxDD -28.17% → -28.63% (-0.46pp) trên VN30 2015-2026.
+
+`v60_strict_mode=True` kích hoạt nhánh branch-guarded trong `V2PositionManager.process_day()` để phục hồi flat elif chain như v6.0. Mặc định `False` giữ nguyên hành vi v7/v8/v9 (bao gồm ATR buffer feature). Do đó đây là fix-forward theo waterfall D-07 step 2, không động chạm fail-safe logic (D-11).
+
+### 2. Cấu hình (MDMV2Config)
+
+| Tham số | Kiểu | Mặc định | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `v60_strict_mode` | bool | `False` | Feature gate. `True` = phục hồi v6.0 CASH→SELL flat elif chain; `False` = giữ hành vi post-f80394f (v7/v8/v9, có ATR buffer branch). |
+
+- `VN30_PRESET` và `NASDAQ_PRESET` đều ship `v60_strict_mode=False` (hành vi mặc định hiện tại).
+- v10.0 macro baseline run (phase 42 reconciled baseline, phase 44 parity regression, phase 46 HARD gate) set `True`.
+- Phase 42 determinism regression test (`tests/test_baseline_determinism.py`) set `True`.
+- Bisect reconciliation check (`analysis/bisect_v10_baseline.py`) set `True`.
+
+### 3. Affected code
+
+Chỉ một điểm duy nhất: `strategies/mdm_hybrid/position_manager.py` — hàm `V2PositionManager.process_day()`, nhánh `current_state == V2MarketState.CASH`. Branch-guard:
+
+```python
+if is_ftd:
+    ...
+elif getattr(self.config, 'v60_strict_mode', False):
+    # Flat elif chain (v6.0 semantics)
+    if self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
+        ...                                          # MA50 breakdown SELL
+    elif self.position.days_in_cash >= self.config.cash_deterioration_days:
+        ...                                          # cash_deterioration SELL (REACHABLE)
+elif self.config.ma50_sell_enabled and ma50 is not None:
+    # Post-f80394f path (nested-if, atr_buffer support)
+    ...
+elif self.position.days_in_cash >= self.config.cash_deterioration_days:
+    # UNREACHABLE when ma50 is not None (documented drift, v7/v8 default)
+    ...
+```
+
+### 4. Strict vs default — so sánh nhanh
+
+| Trạng thái | Pre-drift (strict) path | Post-drift (default) path |
+| :--- | :--- | :--- |
+| `close < MA50` và `ma50_sell_enabled` | MA50 breakdown SELL | MA50 breakdown SELL (trong nested-if) |
+| `close >= MA50` và `days_in_cash >= cash_deterioration_days` | cash_deterioration SELL | Không fire (nhánh bị shadow bởi outer-elif) |
+| `atr_buffer_enabled=True` | Bỏ qua ATR buffer (flat v6.0 only) | ATR buffer m-day streak logic |
+
+### 5. Backward Compatibility
+
+- `v60_strict_mode=False` mặc định giữ nguyên engine signal log đã test bởi `tests/test_phase38_backward_compat.py` và `tests/test_phase39_backward_compat.py` (các fixture parquet không bị ảnh hưởng).
+- Khi `atr_buffer_enabled=True`, chỉ chạy khi `v60_strict_mode=False` — hai feature là mutually exclusive theo thiết kế (strict mode intentionally ignores ATR buffer to achieve v6.0 byte-parity in control flow).
+- Fail-safe logic (`_check_fail_safe` tương đương, nhánh `current_state == V2MarketState.SELL`) không bị sửa đổi (D-11 compliance).
+
+### 6. Interaction với các Phase khác
+
+- **Phase 44 (MACRO):** parity regression (`MACRO-04`) so sánh `macro_filter_enabled=False` signal log với reconciled-HEAD signal log — reconciled-HEAD chạy với `v60_strict_mode=True`.
+- **Phase 45 (WF grid search):** walk-forward baseline dùng `v60_strict_mode=True`; các kết hợp sweep giữ nguyên flag này.
+- **Phase 46 (VAL HARD gate):** OOS run mặc định set `v60_strict_mode=True` để so sánh đúng với reconciled baseline (`output/v10_reconciled_baseline.json`).
+
+### 7. Determinism (Phase 42 BASE-03)
+
+`tests/test_baseline_determinism.py` dùng preset với `v60_strict_mode=True` (D-22). Test gồm `test_numeric_variance_across_3_runs` và `test_signal_log_byte_exact` — cả hai chạy trong strict mode để khoá baseline reconciled.

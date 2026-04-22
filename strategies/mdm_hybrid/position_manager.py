@@ -277,6 +277,30 @@ class V2PositionManager:
             if is_ftd:
                 self.enter_buy(ftd_price, date, low, signal_type)
                 action = f"BUY at {ftd_price:.2f} ({signal_type})"
+            elif getattr(self.config, 'v60_strict_mode', False):
+                # v6.0 Strict Mode (Phase 42 BASE-02, D-07 step 2)
+                # Flat elif chain — restores v6.0 CASH→SELL semantics by keeping
+                # the cash_deterioration branch reachable when close >= MA50.
+                # This path is byte-identical (in control flow) to the pre-f80394f
+                # v6.0 implementation and ignores the atr_buffer feature.
+                # Check for CASH -> SELL: MA50 breakdown
+                if self.config.ma50_sell_enabled and ma50 is not None and close < ma50:
+                    self.enter_sell(
+                        date,
+                        f"MA50 breakdown (close {close:.2f} < MA50 {ma50:.2f})",
+                        price=close,
+                        fail_safe_threshold=prev_high,
+                    )
+                    action = f"SELL signal: MA50 breakdown"
+                # Check for CASH -> SELL: deterioration
+                elif self.position.days_in_cash >= self.config.cash_deterioration_days:
+                    self.enter_sell(
+                        date,
+                        f"Cash deterioration ({self.position.days_in_cash} days)",
+                        price=close,
+                        fail_safe_threshold=prev_high,
+                    )
+                    action = f"SELL signal: cash deterioration"
             # Check for CASH -> SELL: MA50 breakdown or ATR buffer zone streak
             elif self.config.ma50_sell_enabled and ma50 is not None:
                 if getattr(self.config, 'atr_buffer_enabled', False):

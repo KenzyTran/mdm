@@ -138,10 +138,14 @@ def main() -> int:
         # D-04: v6.0-equivalent preset. VN30_PRESET already has atr_buffer=False
         # and refined_dd=False, but we restate explicitly via dataclasses.replace
         # — bisect runs across commits where VN30_PRESET defaults MAY differ.
+        # Phase 42-04: set v60_strict_mode=True to exercise the v6.0-strict path
+        # (D-07 step 2) that restores the flat CASH→SELL elif chain — this
+        # reconciliation-check path requires the strict-mode branch-guard.
         cfg = replace(
             VN30_PRESET,
             atr_buffer_enabled=False,
             refined_dd_enabled=False,
+            v60_strict_mode=True,
         )
 
         # Load data + precompute indicators (matches validate_v9.py:301-303).
