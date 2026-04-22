@@ -8,7 +8,7 @@
 ### Baseline Reconciliation
 
 - [x] **BASE-01**: Forensic audit — identify commit(s) causing baseline CAGR drift from v6.0 shipped (11.5%) to current measured (10.70%) and SELL count drift (124 → 105); produce `docs/audits/v10_baseline_drift.md` with commit hashes, diffs, and root cause
-- [ ] **BASE-02**: Reconciled baseline — fix forward (preferred) so current `HybridEngine + fail-safe` run matches v6.0 shipped CAGR within ±0.3pp, OR document drift with explicit justification if fix is unsafe/unnecessary
+- [x] **BASE-02**: Reconciled baseline — fix forward (preferred) so current `HybridEngine + fail-safe` run matches v6.0 shipped CAGR within ±0.3pp, OR document drift with explicit justification if fix is unsafe/unnecessary
 - [ ] **BASE-03**: Regression test — engine run determinism verified (same inputs → CAGR ±0.1pp across 3 runs); test committed under `tests/test_baseline_determinism.py`
 
 ### Liquidity Data Pipeline
@@ -76,7 +76,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | BASE-01 | Phase 42 | Complete |
-| BASE-02 | Phase 42 | Pending |
+| BASE-02 | Phase 42 | Complete |
 | BASE-03 | Phase 42 | Pending |
 | LIQ-01 | Phase 43 | Pending |
 | LIQ-02 | Phase 43 | Pending |
