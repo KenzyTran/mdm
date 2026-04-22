@@ -465,7 +465,7 @@ Plans:
 
 **Milestone Goal:** Giảm MaxDD của v6.0 HybridEngine + fail-safe từ -28.6% xuống **dưới -20%** trên VN30 2015-2026 bằng VN-native macro filter (DXY/EEM 20d z-scores + SBV regime), **sau khi** reconcile baseline drift. HARD gate: MaxDD < -20% AND CAGR ≥ reconciled baseline AND walk-forward degradation < 30%. Fail gate = reject, giữ v6.0.
 
-- [ ] **Phase 42: Baseline Reconciliation** - Forensic audit + fix-forward of engine drift (CAGR 11.5% → 10.70%) + regression-test determinism so v10 tunes on a clean baseline (BASE-01, BASE-02, BASE-03)
+- [x] **Phase 42: Baseline Reconciliation** - Forensic audit + fix-forward of engine drift (CAGR 11.5% → 10.70%) + regression-test determinism so v10 tunes on a clean baseline (BASE-01, BASE-02, BASE-03) (completed 2026-04-22)
 - [ ] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03)
 - [ ] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05)
 - [ ] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
@@ -811,7 +811,7 @@ Plans:
   2. Running `HybridEngine + fail-safe` on VN30 2015-2026 via the current codebase reproduces shipped v6.0 CAGR within ±0.3pp (fix-forward preferred; if drift is intentional/unsafe-to-revert, audit documents explicit justification)
   3. `tests/test_baseline_determinism.py` runs the engine 3x on identical inputs and asserts CAGR varies by ≤ 0.1pp (test is committed and passes in CI)
   4. A single "reconciled baseline" tuple (CAGR, MaxDD, Sharpe_rf3, SELL count) is published in the audit doc and quoted by every downstream phase as the gate reference
-**Plans:** 5/6 plans executed
+**Plans:** 6/6 plans complete
 
 Plans:
 - [x] 42-01-PLAN.md — Scaffold analysis/bisect_v10_baseline.py (git-bisect CAGR gate, exit 0/1/125) (BASE-01)
@@ -819,7 +819,7 @@ Plans:
 - [x] 42-03-PLAN.md — Execute git bisect, populate Bisect Log table + Root-Cause Narrative (BASE-01)
 - [x] 42-04-PLAN.md — Fix-forward waterfall: selective revert → v60_strict_mode preset → accept-and-document; write Reconciliation Outcome (BASE-02)
 - [x] 42-05-PLAN.md — Write analysis/publish_v10_baseline.py → output/v10_reconciled_baseline.json + audit-doc Reconciled Baseline section (BASE-02)
-- [ ] 42-06-PLAN.md — tests/test_baseline_determinism.py: 3-run numeric variance + byte-exact signal log (BASE-03)
+- [x] 42-06-PLAN.md — tests/test_baseline_determinism.py: 3-run numeric variance + byte-exact signal log (BASE-03)
 
 **Canonical refs**: `output/v9_ab_comparison.txt` (measured baseline 10.70%), `.planning/MILESTONES.md` v9.0 entry (shipped 11.5% memory), `strategies/mdm_hybrid/mdm_hybrid_engine.py` (engine under audit)
 
@@ -935,7 +935,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 | 39. Refined Distribution Day Module | v9.0 | 3/3 | Complete    | 2026-04-16 |
 | 40. Grid Search Sweeps | v9.0 | 3/3 | Complete    | 2026-04-16 |
 | 41. A/B & Walk-Forward Validation | v9.0 | 2/2 | Complete    | 2026-04-21 |
-| 42. Baseline Reconciliation | v10.0 | 5/6 | In Progress|  |
+| 42. Baseline Reconciliation | v10.0 | 6/6 | Complete   | 2026-04-22 |
 | 43. Canonical Liquidity Data Pipeline | v10.0 | 0/0 | Not started | - |
 | 44. Macro Filter Module | v10.0 | 0/0 | Not started | - |
 | 45. Walk-Forward Grid Search | v10.0 | 0/0 | Not started | - |

@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: "Completed 42-05-PLAN.md (BASE-02 closer; output/v10_reconciled_baseline.json published with schema_version=1 and 18 D-12 fields; ## Reconciled Baseline audit section populated with M1 byte-identical values)"
-last_updated: "2026-04-22T06:58:50.075Z"
+stopped_at: Completed 42-06-PLAN.md (BASE-03 closed; tests/test_baseline_determinism.py committed at 8c6722b; 3/3 tests PASS on reconciled-HEAD — byte-exact determinism gate + downstream-JSON regression guard)
+last_updated: "2026-04-22T07:06:41.921Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 4
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 42 (baseline-reconciliation) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
@@ -97,6 +97,7 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 42]: Plan 42-04: D-11 fail-safe-logic no-fly zone honored — only kwarg pass-throughs (fail_safe_threshold=prev_high) appear in the diff, no decision-logic changes. DECISION-LOGIC grep (fail_safe_exit|fail_safe_enabled|fail_safe_threshold > 0|close > self.position.fail_safe) returns empty on git diff 3601679c..HEAD.
 - [Phase 42]: Plan 42-05: Published reconciled v10.0 baseline (BASE-02 closer) — output/v10_reconciled_baseline.json with schema_version=1 and 18 D-12 fields (cagr_pct=11.47, sharpe_rf3=0.502414, sell_count=124, total_return_pct=238.78, max_dd_pct=-28.17, outcome=fixed_by_preset). Force-added past output/ gitignore so Phases 43-47 load without re-running publisher (D-14). Single formatter json.dumps used for both JSON and audit-doc cells ensures byte-identical floats (M1); 8 float fields verified inline + externally. B2 parser with three ValueError paths enforces strict Label-line contract.
 - [Phase 42]: Plan 42-05: schema_version is a TABLE-EXCLUDED field in audit doc's ## Reconciled Baseline (present in prose as 'Schema version: **1** (D-15)'). Intentional split: the table is the canonical 18-field tuple, schema_version is metadata about the tuple. Implemented via AUDIT_FIELD_ORDER constant omitting schema_version while build_tuple dict includes it.
+- [Phase 42]: Plan 42-06: Closed BASE-03 with tests/test_baseline_determinism.py (274 lines, 3 tests under @pytest.mark.regression class TestBaselineDeterminism). M5 byte-exact primary assertions (len(set(cagrs))==1 etc.) with D-17 thresholds as informative fallback messages only. Byte-exact results DataFrame equality via results_1.equals(results_2) across 2 fresh engines. Co-wave-4-tolerant downstream-JSON guard with pytest.skip fallback. Stdout-safe lazy import of analysis.validate_v9.compute_metrics via orphan-wrapper parking. All 3 tests PASSED on reconciled-HEAD commit 8c6722b in 38.67s.
 
 ### Pending Todos
 
@@ -108,7 +109,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-22T06:58:50.069Z
-Stopped at: Completed 42-05-PLAN.md (BASE-02 closer; output/v10_reconciled_baseline.json published with schema_version=1 and 18 D-12 fields; ## Reconciled Baseline audit section populated with M1 byte-identical values)
+Last session: 2026-04-22T07:06:41.915Z
+Stopped at: Completed 42-06-PLAN.md (BASE-03 closed; tests/test_baseline_determinism.py committed at 8c6722b; 3/3 tests PASS on reconciled-HEAD — byte-exact determinism gate + downstream-JSON regression guard)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
