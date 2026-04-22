@@ -289,5 +289,8 @@ This document evolves at phase transitions and milestone boundaries.
 **Key finding from v7.0:**
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
+**v10.0 progress (as of Phase 42 complete):**
+- ✓ Phase 42 Baseline Reconciliation — bisect identified `f80394f` (Phase 38-02) as single drift commit; reconciled via `v60_strict_mode` preset flag (D-07 step 2). At reconciled HEAD: CAGR 11.47%, SELL 124, MaxDD -28.17% — all three D-09 parity bands pass. Canonical tuple published at `output/v10_reconciled_baseline.json` (schema_version: 1); 3/3 determinism tests green.
+
 ---
-*Last updated: 2026-04-21 after starting milestone v10.0 (VN Macro Filter + Baseline Reconciliation)*
+*Last updated: 2026-04-22 after Phase 42 Baseline Reconciliation complete (BASE-01/02/03)*
