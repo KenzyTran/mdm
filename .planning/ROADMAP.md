@@ -467,7 +467,7 @@ Plans:
 
 - [x] **Phase 42: Baseline Reconciliation** - Forensic audit + fix-forward of engine drift (CAGR 11.5% → 10.70%) + regression-test determinism so v10 tunes on a clean baseline (BASE-01, BASE-02, BASE-03)
  (completed 2026-04-22)
-- [ ] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03)
+- [x] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03) (completed 2026-04-22)
 - [ ] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05)
 - [ ] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
 - [ ] **Phase 46: A/B + OOS Validation (HARD Gate)** - 5-scenario A/B on 2015-2026 + 2025-2026 OOS with HARD gate (MaxDD < -20% AND CAGR ≥ reconciled baseline) + v6.0 parity regression + committed Production Candidate verdict (VAL-01, VAL-02, VAL-03, VAL-04, VAL-05)
@@ -837,7 +837,7 @@ Plans:
 Plans:
 - [x] 43-01-PLAN.md — Harden analysis/build_liquidity_proxy.py with --start/--end CLI, yfinance 401/retry loop, missing-column guard (LIQ-01)
 - [x] 43-02-PLAN.md — Freeze data/sbv_policy_events.csv 5-column schema with inline source citations per row (LIQ-02)
-- [ ] 43-03-PLAN.md — Write docs/liquidity_proxy_spec.md: publication-lag policy + merge_asof contract + look-ahead traps (LIQ-03)
+- [x] 43-03-PLAN.md — Write docs/liquidity_proxy_spec.md: publication-lag policy + merge_asof contract + look-ahead traps (LIQ-03)
 **Canonical refs**: `docs/research/liquidity_proxy_correlation.md` (quick task 260421-lb4 GO verdict), existing `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` (productionize, do not re-create from scratch)
 
 ### Phase 44: Macro Filter Module
@@ -941,7 +941,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 | 40. Grid Search Sweeps | v9.0 | 3/3 | Complete    | 2026-04-16 |
 | 41. A/B & Walk-Forward Validation | v9.0 | 2/2 | Complete    | 2026-04-21 |
 | 42. Baseline Reconciliation | v10.0 | 6/6 | Complete    | 2026-04-22 |
-| 43. Canonical Liquidity Data Pipeline | v10.0 | 2/3 | In Progress|  |
+| 43. Canonical Liquidity Data Pipeline | v10.0 | 3/3 | Complete   | 2026-04-22 |
 | 44. Macro Filter Module | v10.0 | 0/0 | Not started | - |
 | 45. Walk-Forward Grid Search | v10.0 | 0/0 | Not started | - |
 | 46. A/B + OOS Validation (HARD Gate) | v10.0 | 0/0 | Not started | - |
@@ -954,7 +954,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Context:
 - Bug found during Phase 33 review

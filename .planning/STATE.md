@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
-status: executing
-stopped_at: Completed 43-01-PLAN.md (LIQ-01 closed; build_liquidity_proxy.py hardened with argparse + retry + schema guard, CSV byte-identical regeneration confirms D-01 preservation)
-last_updated: "2026-04-22T08:07:21.148Z"
+status: verifying
+stopped_at: Completed 43-03-PLAN.md (LIQ-03 closed; docs/liquidity_proxy_spec.md shipped with 7 sections, 5 look-ahead traps, and exact merge_asof contract for Phase 44)
+last_updated: "2026-04-22T08:14:14.802Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 4
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 Phase: 43 (canonical-liquidity-data-pipeline) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-22
 
 Progress: [░░░░░░░░░░] 0% (v10.0: 0/6 phases complete)
@@ -103,6 +103,9 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 43]: Plan 43-01: Empty-DataFrame treated as transient ValueError (silent yfinance rate-limit surrogate) and retried; missing-'Close'-column is NON-transient and raises RuntimeError immediately per D-05 — two distinct error classes so schema drift surfaces loudly and rate-limits auto-recover
 - [Phase 43]: Plan 43-01: HTTPError retry is CODE-filtered — only 401/403/429 retry, all other HTTP statuses re-raise. Prevents retry storms on real backend outages (500s) masquerading as rate-limits
 - [Phase 43]: Plan 43-01: data/vn_liquidity_proxy.csv regeneration was byte-identical to HEAD (zero git diff) — confirms D-01 productionize-not-recreate held; yfinance deterministic over identical date range + ticker set at this point in time
+- [Phase 43]: Plan 43-03: Spec placed at repo-root docs/ (NOT docs/research/) per plan fence — docs/research is research evidence, docs/ is production contract. Any change to inputs/merge contract requires Phase 44 VAL-04 re-run.
+- [Phase 43]: Plan 43-03: Enumerated 5 look-ahead traps vs D-09 minimum of 3. Added (4) rolling-z-score-on-raw-CSV trap and (5) SBV direction='nearest' trap — both greppable failure modes Phase 44 reviewers can key off.
+- [Phase 43]: Plan 43-03: Code-Docs Sync pointer added to spec footer — future strategies/mdm_hybrid/macro_filter*.py changes MUST update docs/liquidity_proxy_spec.md in the same commit per CLAUDE.md Code-Docs Sync Rule.
 
 ### Pending Todos
 
@@ -114,7 +117,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-22T08:07:09.580Z
-Stopped at: Completed 43-01-PLAN.md (LIQ-01 closed; build_liquidity_proxy.py hardened with argparse + retry + schema guard, CSV byte-identical regeneration confirms D-01 preservation)
+Last session: 2026-04-22T08:14:14.796Z
+Stopped at: Completed 43-03-PLAN.md (LIQ-03 closed; docs/liquidity_proxy_spec.md shipped with 7 sections, 5 look-ahead traps, and exact merge_asof contract for Phase 44)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)

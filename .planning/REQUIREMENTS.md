@@ -15,7 +15,7 @@
 
 - [x] **LIQ-01**: Canonical `data/vn_liquidity_proxy.csv` (DXY, EEM, VNM, USD/VND, US10Y) regenerable via `analysis/build_liquidity_proxy.py`; script takes `--start` / `--end` CLI args, handles yfinance 401 retries
 - [x] **LIQ-02**: Canonical `data/sbv_policy_events.csv` curated from public sources (Reuters, SBV press releases, Vietnam News); columns `date, rate_change_pct, new_refinance_rate_pct, direction`; extensible as new events occur
-- [ ] **LIQ-03**: Publication-lag handling documented in `docs/liquidity_proxy_spec.md` — DXY/EEM same-day (US close → VN next session), SBV events event-day+1 (intra-session announcements available next day)
+- [x] **LIQ-03**: Publication-lag handling documented in `docs/liquidity_proxy_spec.md` — DXY/EEM same-day (US close → VN next session), SBV events event-day+1 (intra-session announcements available next day)
 
 ### Macro Filter Module
 
@@ -80,7 +80,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BASE-03 | Phase 42 | Complete |
 | LIQ-01 | Phase 43 | Complete |
 | LIQ-02 | Phase 43 | Complete |
-| LIQ-03 | Phase 43 | Pending |
+| LIQ-03 | Phase 43 | Complete |
 | MACRO-01 | Phase 44 | Pending |
 | MACRO-02 | Phase 44 | Pending |
 | MACRO-03 | Phase 44 | Pending |
