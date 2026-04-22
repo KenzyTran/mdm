@@ -4,7 +4,7 @@ milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
 stopped_at: Completed 42-06-PLAN.md (BASE-03 closed; tests/test_baseline_determinism.py committed at 8c6722b; 3/3 tests PASS on reconciled-HEAD — byte-exact determinism gate + downstream-JSON regression guard)
-last_updated: "2026-04-22T07:06:41.921Z"
+last_updated: "2026-04-22T07:27:33.428Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 4
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 42 (baseline-reconciliation) — EXECUTING
-Plan: 5 of 6
+Phase: 42
+Plan: Not started
 Status: Ready to execute
 Last activity: 2026-04-22
 
