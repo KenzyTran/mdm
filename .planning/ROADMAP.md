@@ -465,7 +465,8 @@ Plans:
 
 **Milestone Goal:** Giảm MaxDD của v6.0 HybridEngine + fail-safe từ -28.6% xuống **dưới -20%** trên VN30 2015-2026 bằng VN-native macro filter (DXY/EEM 20d z-scores + SBV regime), **sau khi** reconcile baseline drift. HARD gate: MaxDD < -20% AND CAGR ≥ reconciled baseline AND walk-forward degradation < 30%. Fail gate = reject, giữ v6.0.
 
-- [x] **Phase 42: Baseline Reconciliation** - Forensic audit + fix-forward of engine drift (CAGR 11.5% → 10.70%) + regression-test determinism so v10 tunes on a clean baseline (BASE-01, BASE-02, BASE-03) (completed 2026-04-22)
+- [x] **Phase 42: Baseline Reconciliation** - Forensic audit + fix-forward of engine drift (CAGR 11.5% → 10.70%) + regression-test determinism so v10 tunes on a clean baseline (BASE-01, BASE-02, BASE-03)
+ (completed 2026-04-22)
 - [ ] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03)
 - [ ] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05)
 - [ ] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
@@ -832,7 +833,11 @@ Plans:
   2. `data/sbv_policy_events.csv` has schema `date, rate_change_pct, new_refinance_rate_pct, direction` with all public SBV rate actions 2014-2026 curated from Reuters/SBV press/Vietnam News, documented sources per row
   3. `docs/liquidity_proxy_spec.md` specifies per-series publication-lag policy (DXY/EEM: US-close → VN next session via `merge_asof` backward; SBV events: event-day+1 on-close available) and lists any look-ahead traps ruled out
   4. Running the macro filter pipeline end-to-end with these canonical inputs requires no manual edits to the CSVs; appending a new SBV event is a one-row CSV edit, no code change
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 43-01-PLAN.md — Harden analysis/build_liquidity_proxy.py with --start/--end CLI, yfinance 401/retry loop, missing-column guard (LIQ-01)
+- [ ] 43-02-PLAN.md — Freeze data/sbv_policy_events.csv 5-column schema with inline source citations per row (LIQ-02)
+- [ ] 43-03-PLAN.md — Write docs/liquidity_proxy_spec.md: publication-lag policy + merge_asof contract + look-ahead traps (LIQ-03)
 **Canonical refs**: `docs/research/liquidity_proxy_correlation.md` (quick task 260421-lb4 GO verdict), existing `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` (productionize, do not re-create from scratch)
 
 ### Phase 44: Macro Filter Module
