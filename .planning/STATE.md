@@ -4,7 +4,7 @@ milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: verifying
 stopped_at: Completed 43-03-PLAN.md (LIQ-03 closed; docs/liquidity_proxy_spec.md shipped with 7 sections, 5 look-ahead traps, and exact merge_asof contract for Phase 44)
-last_updated: "2026-04-22T08:14:14.802Z"
+last_updated: "2026-04-22T08:19:25.357Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 4
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 
 ## Current Position
 
-Phase: 43 (canonical-liquidity-data-pipeline) — EXECUTING
-Plan: 3 of 3
+Phase: 43
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-22
 
