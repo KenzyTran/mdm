@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 42-01-PLAN.md (BASE-01 evidence producer)
-last_updated: "2026-04-21T10:24:19.423Z"
-last_activity: 2026-04-21 -- Phase 42 execution started
+stopped_at: Completed 42-03-PLAN.md (BASE-01 bisect + root-cause narrative; offending commit f80394f identified)
+last_updated: "2026-04-21T10:41:54.557Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 4
   completed_phases: 4
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 42 (baseline-reconciliation) — EXECUTING
-Plan: 1 of 6
-Status: Executing Phase 42
-Last activity: 2026-04-21 -- Phase 42 execution started
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-04-21
 
 Progress: [░░░░░░░░░░] 0% (v10.0: 0/6 phases complete)
 
@@ -89,6 +89,9 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 42]: Plan 42-02: Pinned v6.0 ship commit 37cfdc248f8fc1d2aaaf0ec484147b9fa16b4e5a and HEAD 3601679cdba9c3ea674904e6f8a9aa24273cb6ad as bisect anchors; 256 commits in range, 8 engine-touching
 - [Phase 42]: Plan 42-01: CAGR-only bisect gate at 11.4 (tight) chosen over composite SELL+MaxDD gate; design-note inline block documents rationale vs D-09 parity band 11.2-11.8 (HEAD acceptance tolerance, wider)
 - [Phase 42]: Plan 42-01: sys.stdout.reconfigure() replaces io.TextIOWrapper(sys.stdout.buffer) wrapping in bisect script (Windows I/O-closed-file bug auto-fixed per Rule 1); future Phase 42 plans should adopt this pattern when copying from validate_v9.py
+- [Phase 42]: Plan 42-03: git bisect converged on f80394f68b98925c47f0c66b9df1099576878ca0 (Phase 38-02 feat) as single-commit source of CAGR 11.47->10.70 drift; position_manager.py elif-chain reparent made cash_deterioration SELL elif unreachable when close >= ma50
+- [Phase 42]: Plan 42-03: D-11 (no fail-safe changes) ruled INAPPLICABLE to offending commit — f80394f modifies CASH->SELL branches not fail-safe; plan 42-04 eligible for D-07 step-1 selective revert
+- [Phase 42]: Plan 42-03: /tmp-resident self-contained bisect gate pattern — inline compute_metrics + use os.getcwd() for sys.path — enables bisect across commits predating the gate's originating analysis module. Future BASE-class phases reuse this pattern.
 
 ### Pending Todos
 
@@ -100,7 +103,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-21T10:24:19.415Z
-Stopped at: Completed 42-01-PLAN.md (BASE-01 evidence producer)
+Last session: 2026-04-21T10:41:54.546Z
+Stopped at: Completed 42-03-PLAN.md (BASE-01 bisect + root-cause narrative; offending commit f80394f identified)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
