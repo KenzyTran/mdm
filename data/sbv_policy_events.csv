@@ -1,13 +1,13 @@
-date,rate_change_pct,new_refinance_rate_pct,direction
-2017-07-10,-0.25,6.25,easing
-2019-09-16,-0.25,6.00,easing
-2019-11-19,-0.50,6.00,easing
-2020-03-17,-1.00,5.00,easing
-2020-05-13,-0.50,4.50,easing
-2020-10-01,-0.50,4.00,easing
-2022-09-23,1.00,5.00,tightening
-2022-10-25,1.00,6.00,tightening
-2023-03-15,-1.00,6.00,easing
-2023-04-03,-0.50,5.50,easing
-2023-05-25,-0.50,5.00,easing
-2023-06-19,-0.50,4.50,easing
+date,rate_change_pct,new_refinance_rate_pct,direction,source
+2017-07-10,-0.25,6.25,easing,"Reuters 2017-07-07 Vietnam central bank cuts refinance rate to 6.25%"
+2019-09-16,-0.25,6.00,easing,"Reuters 2019-09-13 Vietnam central bank cuts policy rates for first time in two years"
+2019-11-19,-0.50,6.00,easing,"Vietnam News 2019-11-19 SBV lowers deposit rate ceilings; Reuters 2019-11-18 SBV rate action"
+2020-03-17,-1.00,5.00,easing,"SBV press release Decision 418/QD-NHNN 2020-03-16; Reuters 2020-03-17 Vietnam cuts rates as coronavirus hits economy"
+2020-05-13,-0.50,4.50,easing,"SBV press release Decision 918/QD-NHNN 2020-05-12; Reuters 2020-05-12 Vietnam central bank cuts policy rates second time"
+2020-10-01,-0.50,4.00,easing,"SBV press release Decision 1728/QD-NHNN 2020-09-30; Reuters 2020-09-30 Vietnam cuts policy rates third time this year"
+2022-09-23,1.00,5.00,tightening,"Reuters 2022-09-22 Vietnam raises policy rates for first time since 2011; SBV press release Decision 1606/QD-NHNN"
+2022-10-25,1.00,6.00,tightening,"Reuters 2022-10-24 Vietnam raises interest rates by 100bp; Vietnam News 2022-10-25 SBV hikes refinance rate to 6%"
+2023-03-15,-1.00,6.00,easing,"SBV press release 2023-03-14 discount-rate cut to 3.5%; Reuters 2023-03-15 Vietnam central bank cuts some rates, pivots to easing"
+2023-04-03,-0.50,5.50,easing,"Reuters 2023-03-31 Vietnam central bank cuts interest rates second time in March; Vietnam News 2023-04-03 SBV refinance rate to 5.5%"
+2023-05-25,-0.50,5.00,easing,"Reuters 2023-05-23 Vietnam central bank cuts refinance rate to 5%; SBV press release Decision 950/QD-NHNN 2023-05-23"
+2023-06-19,-0.50,4.50,easing,"Reuters 2023-06-16 Vietnam cuts interest rates for fourth time; SBV press release Decision 1123/QD-NHNN 2023-06-16"
