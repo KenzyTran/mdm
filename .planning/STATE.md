@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 42-04-PLAN.md (BASE-02 fix-forward; v60_strict_mode preset flag landed — CAGR 11.47 / SELL 124 / MaxDD -28.17 parity restored)
-last_updated: "2026-04-22T06:39:52.141Z"
+stopped_at: "Completed 42-05-PLAN.md (BASE-02 closer; output/v10_reconciled_baseline.json published with schema_version=1 and 18 D-12 fields; ## Reconciled Baseline audit section populated with M1 byte-identical values)"
+last_updated: "2026-04-22T06:58:50.075Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 4
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 42 (baseline-reconciliation) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
@@ -95,6 +95,8 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 42]: Plan 42-04: STEP 1 selective revert attempted but produced non-self-contained diff (pure git revert removes violation_threshold kwarg that d322a17 wired into mdm_hybrid_engine.py:412 caller); rolled back and escalated to STEP 2 per plan's exit rule
 - [Phase 42]: Plan 42-04: STEP 2 landing — added v60_strict_mode: bool = False to MDMV2Config with branch-guard in V2PositionManager.process_day() CASH-state block that restores the flat v6.0 elif chain when True. Parity verified: CAGR 11.4700 / SELL 124 / MaxDD -28.1700 on VN30 2015-2026 (all three D-09 bands PASS). Label: fixed_by_preset.
 - [Phase 42]: Plan 42-04: D-11 fail-safe-logic no-fly zone honored — only kwarg pass-throughs (fail_safe_threshold=prev_high) appear in the diff, no decision-logic changes. DECISION-LOGIC grep (fail_safe_exit|fail_safe_enabled|fail_safe_threshold > 0|close > self.position.fail_safe) returns empty on git diff 3601679c..HEAD.
+- [Phase 42]: Plan 42-05: Published reconciled v10.0 baseline (BASE-02 closer) — output/v10_reconciled_baseline.json with schema_version=1 and 18 D-12 fields (cagr_pct=11.47, sharpe_rf3=0.502414, sell_count=124, total_return_pct=238.78, max_dd_pct=-28.17, outcome=fixed_by_preset). Force-added past output/ gitignore so Phases 43-47 load without re-running publisher (D-14). Single formatter json.dumps used for both JSON and audit-doc cells ensures byte-identical floats (M1); 8 float fields verified inline + externally. B2 parser with three ValueError paths enforces strict Label-line contract.
+- [Phase 42]: Plan 42-05: schema_version is a TABLE-EXCLUDED field in audit doc's ## Reconciled Baseline (present in prose as 'Schema version: **1** (D-15)'). Intentional split: the table is the canonical 18-field tuple, schema_version is metadata about the tuple. Implemented via AUDIT_FIELD_ORDER constant omitting schema_version while build_tuple dict includes it.
 
 ### Pending Todos
 
@@ -106,7 +108,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-22T06:39:52.136Z
-Stopped at: Completed 42-04-PLAN.md (BASE-02 fix-forward; v60_strict_mode preset flag landed — CAGR 11.47 / SELL 124 / MaxDD -28.17 parity restored)
+Last session: 2026-04-22T06:58:50.069Z
+Stopped at: Completed 42-05-PLAN.md (BASE-02 closer; output/v10_reconciled_baseline.json published with schema_version=1 and 18 D-12 fields; ## Reconciled Baseline audit section populated with M1 byte-identical values)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
