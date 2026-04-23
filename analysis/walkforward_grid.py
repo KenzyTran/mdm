@@ -89,6 +89,48 @@ class SummaryError(RuntimeError):
     """Raised when any of the top-3 accepted combos in a stage has NaN eval-year metrics (D-18)."""
 
 
+def load_vn30_data(df_override: "pd.DataFrame | None" = None) -> pd.DataFrame:
+    """Load VN30 2015-01-01..2024-12-31, run indicators, assert OOS fence.
+
+    Args:
+        df_override: If provided, skip DataLoader + build_indicator_dataframe
+            and use this DataFrame directly. Used by the Plan 02 pytest to
+            inject synthetic frames with 2025-labeled rows (D-15).
+
+    Returns:
+        Post-indicator DataFrame guaranteed to have date.max() < OOS_FENCE.
+
+    Raises:
+        AssertionError: With message containing 'OOS leak' if max(date) >=
+            OOS_FENCE. Caught by the D-15 regression test.
+    """
+    if df_override is not None:
+        df = df_override
+    else:
+        df = DataLoader('vn30').load(start_date=TRAIN_START, end_date=EVAL_END)
+        df = build_indicator_dataframe(df)
+    # D-14 runtime assert — STRICT < (not <=) because OOS_FENCE is the exclusion boundary for 2025
+    assert df['date'].max() < pd.Timestamp(OOS_FENCE), (
+        f"OOS leak: max date {df['date'].max()} crossed OOS_FENCE {OOS_FENCE}"
+    )
+    return df
+
+
+def _load_reconciled_baseline_cagr() -> float:
+    """Return cagr_pct from output/v10_reconciled_baseline.json for context print only.
+
+    D-Claude-4: Phase 45 does NOT gate on the reconciled baseline (Phase 46 does).
+    This is purely informational for the main() banner. Any read failure returns
+    NaN and continues — never blocks the sweep.
+    """
+    try:
+        with open(RECONCILED_BASELINE, 'r', encoding='utf-8') as fh:
+            payload = json.load(fh)
+        return float(payload['cagr_pct'])
+    except (FileNotFoundError, KeyError, ValueError, json.JSONDecodeError):
+        return float('nan')
+
+
 def main() -> None:
     raise NotImplementedError("main() orchestrator lands in Task 5")
 
