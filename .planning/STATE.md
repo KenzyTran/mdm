@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
-status: verifying
-stopped_at: "Phase 45 context gathered (4 areas discussed: search space staged sweep + 6 policy fields + 3 vals; walk-forward single full-period run + slice; per-year median degradation + sanity floor; 3 stage winners + 3 runners-up JSON)"
-last_updated: "2026-04-23T07:55:34.149Z"
+status: executing
+stopped_at: Completed 45-01-walkforward-grid-script-PLAN.md (analysis/walkforward_grid.py 685 lines, 5 commits 6ccb5cb..9180905)
+last_updated: "2026-04-23T08:37:10.133Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 4
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce v6.0 HybridEngine MaxDD from -28.6% to < -20% via VN-native macro filter (DXY/EEM/SBV regime), after reconciling baseline drift (shipped 11.5% → measured 10.70%).
-**Current focus:** Phase 44 — macro-filter-module
+**Current focus:** Phase 45 — walk-forward-grid-search
 
 ## Current Position
 
-Phase: 44
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 45 (walk-forward-grid-search) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-04-23
 
 Progress: [░░░░░░░░░░] 0% (v10.0: 0/6 phases complete)
@@ -110,6 +110,11 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 44]: Plan 44-02: Wave 2 foundation lands 10 D-15 macro config fields on MDMV2Config + both presets, strategies/mdm_hybrid/macro_filter.py with MacroVerdict frozen dataclass (D-04 stacking requires orthogonal fields, not enum) + add_macro_columns no-look-ahead helper (merge_asof backward + z-score after merge + +1 BusinessDay SBV shift per spec §5/§6), and tests/test_macro_filter.py (18 tests, 11 immediate pass, 7 skip until Plan 03 MacroFilter class) + tests/test_macro_filter_v6_parity.py (2 regression stubs with v60_strict_mode=True Pitfall 8 guard); MacroFilter class deliberately deferred to Plan 03 alongside engine wiring to avoid dead code; empty-SBV-CSV Rule 2 defensive fix bundled with Task 3 commit (pd.read_csv on empty returns object dtypes, BusinessDay shift collapses to float64 breaking merge_asof dtype alignment); baseline determinism remains green (3/3 PASS) so MACRO-04 parity target still achievable
 - [Phase 44]: Plan 44-03: MacroFilter class lands + HybridEngine wired via 6 insertion points (import, __init__ conditional instantiation, precompute gate around add_macro_columns, per-row macro_verdict computation, effective_dd_threshold passed to process_day, VETO_SELL handling AFTER IndicatorFilter with restore-from-snapshot + MACRO_VETO_SELL diagnostic). Dual-layer D-09 short-circuit live (engine gate + class first-line guard). BUY-branch DD elif restructured to resolve dd_threshold once via override-or-default pattern (byte-identical when None). Override params (effective_dd_threshold, effective_max_multiplier) default None so pre-Phase-44 byte-exact parity is automatic (Pattern 5 invariant). snapshot = None safeguard at engine line 252 preserved + INSERTION 6 guard no-ops VETO_SELL when two_phase_enabled=False (crash-proof verified). All 18 MacroFilter unit tests + 2 parity regressions + 3 baseline_determinism + 22 hybrid_engine (1 deselected pre-existing) + 3 mdm_regression all PASS.
 - [Phase 44]: Plan 44-04: Parity regression sign-off lands — 5/5 tests in tests/test_macro_filter_v6_parity.py PASS under @pytest.mark.regression (macro-off byte-exact parity via df.equals + macro-on determinism + macro-on D-09 column presence + macro-on vs off observable effect defense). Phase 44 VALIDATION.md flipped to status=approved + nyquist_compliant=true + wave_0_complete=true; Per-Task Verification Map renumbered wholesale from planner placeholders (44-01-* → 44-02-*, 44-02-* → 44-03-*, 44-03-* → 44-04-*) to match actual executed plan/wave structure (closes plan-checker WARNING 2). No deviations; no engine changes needed (Plan 03 wiring was correct end-to-end). Baseline determinism 3/3, macro_filter unit 18/18, hybrid_engine 22/22 (1 deselected pre-existing NASDAQ failure). All 5 Phase 44 ROADMAP success criteria objectively met; all 5 MACRO-XX requirements regression-proven complete.
+- [Phase 45]: Plan 45-01: D-14 OOS fence enforced at runtime via strict < assertion with 'OOS leak' substring match for Plan 02 pytest grep; EVAL_END=2024-12-31 inclusive; no CLI overrides (reproducibility absolute)
+- [Phase 45]: Plan 45-01: D-16 discipline honored — compute_metrics IMPORTED from analysis.validate_v9, zero reimplementation; drift risk across Phase 41/42/45 metric formulas eliminated by construction
+- [Phase 45]: Plan 45-01: MACRO_CONFIG_FIELDS module-level 10-tuple is single source of truth for CSV COL_ORDER + JSON _config_tuple + run_combo row seeding; prevents the 10-field list from drifting across three call sites (Claude discretion refinement beyond planner suggestion)
+- [Phase 45]: Plan 45-01: JSON payload uses Python float('nan') in median_eval_max_dd_pct for all-NaN year edge case (json.dump emits literal NaN — acceptable since D-11 consumer is Phase 46 pandas/numpy, not strict JSON parser); chose signal-preserving NaN over None cast
+- [Phase 45]: Plan 45-01: df_override injection hook on load_vn30_data enables Plan 02 pytest to raise AssertionError on synthetic 2025 frames without network-bound DataLoader call; reusable pattern for future OOS-guard tests
 
 ### Pending Todos
 
@@ -121,7 +126,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-23T07:55:34.142Z
-Stopped at: Phase 45 context gathered (4 areas discussed: search space staged sweep + 6 policy fields + 3 vals; walk-forward single full-period run + slice; per-year median degradation + sanity floor; 3 stage winners + 3 runners-up JSON)
-Resume file: .planning/phases/45-walk-forward-grid-search/45-CONTEXT.md
+Last session: 2026-04-23T08:37:10.127Z
+Stopped at: Completed 45-01-walkforward-grid-script-PLAN.md (analysis/walkforward_grid.py 685 lines, 5 commits 6ccb5cb..9180905)
+Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)

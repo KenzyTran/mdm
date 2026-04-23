@@ -871,7 +871,7 @@ Plans:
   4. Selection never considers 2025-2026 data — verified by a test that runs the selection against synthetic 2025-labeled data and asserts it's excluded
 **Plans**: 3 plans
 Plans:
-- [ ] 45-01-walkforward-grid-script-PLAN.md — analysis/walkforward_grid.py staged sweep orchestrator (27+9+3 combos, OOS fence, D-11 JSON + D-06 CSV, compute_metrics reuse)
+- [x] 45-01-walkforward-grid-script-PLAN.md — analysis/walkforward_grid.py staged sweep orchestrator (27+9+3 combos, OOS fence, D-11 JSON + D-06 CSV, compute_metrics reuse)
 - [ ] 45-02-oos-guard-pytest-PLAN.md — tests/test_walkforward_oos_guard.py with 2 @pytest.mark.regression tests per D-15 (synthetic 2025-leak detection)
 - [ ] 45-03-execute-sweep-commit-artifacts-PLAN.md — run sweep, human-verify results, commit output/v10_grid_results.csv + output/v10_grid_best.json
 **Canonical refs**: `.planning/MILESTONES.md` v9.0 entry (walk-forward-only-post-hoc lesson), Phase 41 degradation table (+67% to +96% = what v10 must not repeat), Phase 44 config fields (search space inputs)
@@ -954,7 +954,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 | 42. Baseline Reconciliation | v10.0 | 6/6 | Complete    | 2026-04-22 |
 | 43. Canonical Liquidity Data Pipeline | v10.0 | 3/3 | Complete    | 2026-04-22 |
 | 44. Macro Filter Module | v10.0 | 4/4 | Complete    | 2026-04-23 |
-| 45. Walk-Forward Grid Search | v10.0 | 0/0 | Not started | - |
+| 45. Walk-Forward Grid Search | v10.0 | 1/3 | In Progress|  |
 | 46. A/B + OOS Validation (HARD Gate) | v10.0 | 0/0 | Not started | - |
 | 47. Docs & Dashboard | v10.0 | 0/0 | Not started | - |
 
@@ -965,7 +965,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 4/4 plans complete
+**Plans:** 1/3 plans executed
 
 Context:
 - Bug found during Phase 33 review

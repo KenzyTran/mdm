@@ -27,9 +27,9 @@
 
 ### Walk-Forward Discipline
 
-- [ ] **WF-01**: Rolling-window grid search infrastructure — train window 2015-2018, annual walk-forward evaluations 2019/2020/2021/2022/2023/2024, held-out test 2025-2026; implementation in `analysis/walkforward_grid.py`
-- [ ] **WF-02**: Median degradation metric computed per parameter combo across rolling windows (train CAGR vs each walk-forward year CAGR); param combo accepted only if median degradation < 30%
-- [ ] **WF-03**: Grid search dashboard — `output/v10_grid_results.csv` with per-scenario median CAGR/Sharpe/MaxDD/degradation, sortable, reproducible from locked params JSON
+- [x] **WF-01**: Rolling-window grid search infrastructure — train window 2015-2018, annual walk-forward evaluations 2019/2020/2021/2022/2023/2024, held-out test 2025-2026; implementation in `analysis/walkforward_grid.py`
+- [x] **WF-02**: Median degradation metric computed per parameter combo across rolling windows (train CAGR vs each walk-forward year CAGR); param combo accepted only if median degradation < 30%
+- [x] **WF-03**: Grid search dashboard — `output/v10_grid_results.csv` with per-scenario median CAGR/Sharpe/MaxDD/degradation, sortable, reproducible from locked params JSON
 
 ### Validation
 
@@ -86,9 +86,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MACRO-03 | Phase 44 | Complete |
 | MACRO-04 | Phase 44 | Complete |
 | MACRO-05 | Phase 44 | Complete |
-| WF-01 | Phase 45 | Pending |
-| WF-02 | Phase 45 | Pending |
-| WF-03 | Phase 45 | Pending |
+| WF-01 | Phase 45 | Complete |
+| WF-02 | Phase 45 | Complete |
+| WF-03 | Phase 45 | Complete |
 | VAL-01 | Phase 46 | Pending |
 | VAL-02 | Phase 46 | Pending |
 | VAL-03 | Phase 46 | Pending |
