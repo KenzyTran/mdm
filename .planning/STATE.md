@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 45-01-walkforward-grid-script-PLAN.md (analysis/walkforward_grid.py 685 lines, 5 commits 6ccb5cb..9180905)
-last_updated: "2026-04-23T08:37:10.133Z"
+stopped_at: Completed 45-02-oos-guard-pytest-PLAN.md (tests/test_walkforward_oos_guard.py 210 lines, commit bf0b5e8 — 2 regression tests PASS in 0.12s; full 10-test regression suite PASS in 87s)
+last_updated: "2026-04-23T08:45:12.660Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 4
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 45 (walk-forward-grid-search) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-23
 
@@ -115,6 +115,8 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 45]: Plan 45-01: MACRO_CONFIG_FIELDS module-level 10-tuple is single source of truth for CSV COL_ORDER + JSON _config_tuple + run_combo row seeding; prevents the 10-field list from drifting across three call sites (Claude discretion refinement beyond planner suggestion)
 - [Phase 45]: Plan 45-01: JSON payload uses Python float('nan') in median_eval_max_dd_pct for all-NaN year edge case (json.dump emits literal NaN — acceptable since D-11 consumer is Phase 46 pandas/numpy, not strict JSON parser); chose signal-preserving NaN over None cast
 - [Phase 45]: Plan 45-01: df_override injection hook on load_vn30_data enables Plan 02 pytest to raise AssertionError on synthetic 2025 frames without network-bound DataLoader call; reusable pattern for future OOS-guard tests
+- [Phase 45]: Plan 45-02: stdout-safe lazy-import shim adopted for tests/test_walkforward_oos_guard.py (copied from test_baseline_determinism.py precedent) because analysis.walkforward_grid transitively imports analysis.validate_v9 which rewrites sys.stdout at module-load time — direct 'from analysis.walkforward_grid import ...' breaks pytest collection with 'ValueError: I/O operation on closed file'
+- [Phase 45]: Plan 45-02: 2 @pytest.mark.regression tests ship in 0.12s total (well under 2s budget) — test_assert_fires_on_2025_data verifies df_override hook raises AssertionError with 'OOS leak' substring; test_selection_excludes_2025_when_present verifies select_winner filters by accepted==True gate (not by rank) even when a poisoned row carries 999.0 CAGR; schema-level '2025 not in EVAL_YEARS' assert catches future maintainer drift
 
 ### Pending Todos
 
@@ -126,7 +128,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-23T08:37:10.127Z
-Stopped at: Completed 45-01-walkforward-grid-script-PLAN.md (analysis/walkforward_grid.py 685 lines, 5 commits 6ccb5cb..9180905)
+Last session: 2026-04-23T08:45:12.654Z
+Stopped at: Completed 45-02-oos-guard-pytest-PLAN.md (tests/test_walkforward_oos_guard.py 210 lines, commit bf0b5e8 — 2 regression tests PASS in 0.12s; full 10-test regression suite PASS in 87s)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
