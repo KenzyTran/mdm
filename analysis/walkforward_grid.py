@@ -131,6 +131,227 @@ def _load_reconciled_baseline_cagr() -> float:
         return float('nan')
 
 
+# ── D-03 grid values (exact per CONTEXT.md; defaults sit at the center cell) ─
+DXY_EASING_Z = [-1.5, -1.0, -0.5]                        # default -1.0
+DXY_TIGHTENING_Z = [0.5, 1.0, 1.5]                        # default +1.0
+DXY_TIGHTENING_DD = [2, 3, 4]                             # default 3
+EEM_EASING_Z = [0.5, 1.0, 1.5]                            # default +1.0
+EEM_TIGHTENING_Z = [-1.5, -1.0, -0.5]                     # default -1.0
+SBV_STOP_LOSS_MAX_MULT = [1.0, 1.5, 2.0]                  # default 1.5 (bounded <= stop_loss_max_multiplier=2.5)
+
+
+def build_combo_grid(stage: str, locked_overrides: dict) -> list:
+    """Build the list of override dicts for a given stage (D-01 staged sweep).
+
+    Each returned override dict is passed to
+    `replace(VN30_PRESET, macro_filter_enabled=True, **overrides)` — VN30_PRESET
+    supplies defaults for any field NOT in the dict (notably the LOCKED windows
+    dxy_window_days=20, eem_window_days=20, sbv_decay_days=90 per D-02).
+
+    Args:
+        stage: One of 'stage1_dxy', 'stage2_eem', 'stage3_all_three'.
+        locked_overrides: Field overrides inherited from prior-stage winners.
+            - Stage 1 (root): ignored (pass {}).
+            - Stage 2: must include the 3 Stage-1 DXY winner fields.
+            - Stage 3: must include Stage-1 (3 DXY) + Stage-2 (2 EEM) winner fields.
+
+    Returns:
+        List of override dicts (27 / 9 / 3 entries for stages 1 / 2 / 3).
+
+    Raises:
+        ValueError: Unknown stage name.
+    """
+    if stage == 'stage1_dxy':
+        combos = []
+        for dxy_e, dxy_t, dxy_dd in itertools.product(DXY_EASING_Z, DXY_TIGHTENING_Z, DXY_TIGHTENING_DD):
+            combos.append({
+                'dxy_easing_z_threshold': float(dxy_e),
+                'dxy_tightening_z_threshold': float(dxy_t),
+                'dxy_tightening_dd_threshold': int(dxy_dd),
+            })
+        assert len(combos) == 27, f"stage1 expected 27, got {len(combos)}"
+        return combos
+
+    if stage == 'stage2_eem':
+        combos = []
+        for eem_e, eem_t in itertools.product(EEM_EASING_Z, EEM_TIGHTENING_Z):
+            overrides = dict(locked_overrides)
+            overrides.update({
+                'eem_easing_z_threshold': float(eem_e),
+                'eem_tightening_z_threshold': float(eem_t),
+            })
+            combos.append(overrides)
+        assert len(combos) == 9, f"stage2 expected 9, got {len(combos)}"
+        return combos
+
+    if stage == 'stage3_all_three':
+        combos = []
+        for sbv_mult in SBV_STOP_LOSS_MAX_MULT:
+            overrides = dict(locked_overrides)
+            overrides.update({
+                'sbv_tightening_stop_loss_max_multiplier': float(sbv_mult),
+            })
+            combos.append(overrides)
+        assert len(combos) == 3, f"stage3 expected 3, got {len(combos)}"
+        return combos
+
+    raise ValueError(f"Unknown stage: {stage}")
+
+
+# Canonical macro config field tuple (10 fields per Phase 44 D-15) — written into
+# each CSV row + JSON entry so Phase 46 can dataclasses.replace without lookups.
+MACRO_CONFIG_FIELDS = [
+    'dxy_easing_z_threshold',
+    'dxy_tightening_z_threshold',
+    'dxy_tightening_dd_threshold',
+    'eem_easing_z_threshold',
+    'eem_tightening_z_threshold',
+    'sbv_tightening_stop_loss_max_multiplier',
+    'dxy_window_days',
+    'eem_window_days',
+    'sbv_decay_days',
+    'macro_filter_enabled',
+]
+
+
+def _init_row_nan_metrics(row: dict) -> None:
+    """Populate all metric / degradation / aggregate columns with NaN.
+
+    Used by the train_run_failed early-return path (D-10).
+    """
+    row['cagr_train_pct'] = float('nan')
+    row['sharpe_rf3_train'] = float('nan')
+    row['max_dd_train_pct'] = float('nan')
+    for y in EVAL_YEARS:
+        row[f'cagr_eval_{y}_pct'] = float('nan')
+        row[f'sharpe_rf3_eval_{y}'] = float('nan')
+        row[f'max_dd_eval_{y}_pct'] = float('nan')
+        row[f'degradation_{y}'] = float('nan')
+        row[f'error_year_{y}'] = ''
+    row['median_degradation'] = float('nan')
+    row['median_eval_cagr_pct'] = float('nan')
+    row['eval_years_count'] = 0
+
+
+def run_combo(df: pd.DataFrame, overrides: dict, stage: str, combo_id: int) -> dict:
+    """Run one combo: single engine pass on 2015-2024 + train slice + 6 per-year eval slices.
+
+    Implements D-04 (single-run-and-slice), D-08 (signed per-year degradation),
+    D-09 (AND-gate accept), D-10 (NaN / insufficient-coverage handling), D-16
+    (compute_metrics reused verbatim via import).
+
+    Args:
+        df: Full post-indicator VN30 DataFrame 2015-2024 (from load_vn30_data).
+        overrides: dict suitable for replace(VN30_PRESET, macro_filter_enabled=True, **overrides).
+        stage: 'stage1_dxy' | 'stage2_eem' | 'stage3_all_three'.
+        combo_id: Sequential id within the stage (0-indexed).
+
+    Returns:
+        Row dict with D-06 schema (config + train + 18 eval-year + 6 degradation +
+        3 aggregate + accept + 7 error columns).
+    """
+    cfg = replace(VN30_PRESET, macro_filter_enabled=True, **overrides)
+
+    # Seed row with full 10-field macro tuple (Phase 46 replays via dataclasses.replace)
+    row: dict = {
+        'stage': stage,
+        'combo_id': int(combo_id),
+        'config_name': f"{stage}-c{int(combo_id)}",
+        # Config fields lifted directly from cfg so locked + overridden fields are both present
+        'dxy_easing_z_threshold': float(cfg.dxy_easing_z_threshold),
+        'dxy_tightening_z_threshold': float(cfg.dxy_tightening_z_threshold),
+        'dxy_tightening_dd_threshold': int(cfg.dxy_tightening_dd_threshold),
+        'eem_easing_z_threshold': float(cfg.eem_easing_z_threshold),
+        'eem_tightening_z_threshold': float(cfg.eem_tightening_z_threshold),
+        'sbv_tightening_stop_loss_max_multiplier': float(cfg.sbv_tightening_stop_loss_max_multiplier),
+        'dxy_window_days': int(cfg.dxy_window_days),
+        'eem_window_days': int(cfg.eem_window_days),
+        'sbv_decay_days': int(cfg.sbv_decay_days),
+        'macro_filter_enabled': bool(cfg.macro_filter_enabled),
+        'error_train': '',
+    }
+
+    # ── D-04 single full-period run (2015-2024) ────────────────────────
+    try:
+        engine = HybridEngine(HybridConfig(v2_config=cfg, two_phase_enabled=True, filter_enabled=False))
+        results = engine.run(df.copy())
+    except Exception as exc:
+        row['error_train'] = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()[:200]}"
+        _init_row_nan_metrics(row)
+        row['accepted'] = False
+        row['rejection_reason'] = 'train_run_failed'
+        return row
+
+    # ── Train slice: date <= TRAIN_END (D-04) ───────────────────────────
+    train_slice = results[results['date'] <= pd.Timestamp(TRAIN_END)].copy().reset_index(drop=True)
+    try:
+        train_m = compute_metrics(train_slice)
+        row['cagr_train_pct'] = float(train_m['cagr_pct'])
+        row['sharpe_rf3_train'] = float(train_m['sharpe_rf3'])
+        row['max_dd_train_pct'] = float(train_m['max_dd_pct'])
+    except Exception as exc:
+        row['error_train'] = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()[:200]}"
+        _init_row_nan_metrics(row)
+        row['accepted'] = False
+        row['rejection_reason'] = 'train_metrics_failed'
+        return row
+
+    # ── Per-year eval slices (D-04) ─────────────────────────────────────
+    valid_eval_cagrs: list = []
+    degradations: list = []
+    for y in EVAL_YEARS:
+        year_slice = results[results['date'].dt.year == y].copy().reset_index(drop=True)
+        try:
+            ym = compute_metrics(year_slice)
+            row[f'cagr_eval_{y}_pct'] = float(ym['cagr_pct'])
+            row[f'sharpe_rf3_eval_{y}'] = float(ym['sharpe_rf3'])
+            row[f'max_dd_eval_{y}_pct'] = float(ym['max_dd_pct'])
+            row[f'error_year_{y}'] = ''
+            # D-08 signed degradation
+            cagr_t = row['cagr_train_pct']
+            cagr_y = row[f'cagr_eval_{y}_pct']
+            if cagr_t != 0 and not np.isnan(cagr_t) and not np.isnan(cagr_y):
+                deg = (cagr_t - cagr_y) / abs(cagr_t)
+                row[f'degradation_{y}'] = float(deg)
+                degradations.append(float(deg))
+                valid_eval_cagrs.append(float(cagr_y))
+            else:
+                row[f'degradation_{y}'] = float('nan')
+        except Exception as exc:
+            row[f'error_year_{y}'] = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()[:200]}"
+            row[f'cagr_eval_{y}_pct'] = float('nan')
+            row[f'sharpe_rf3_eval_{y}'] = float('nan')
+            row[f'max_dd_eval_{y}_pct'] = float('nan')
+            row[f'degradation_{y}'] = float('nan')
+
+    row['eval_years_count'] = int(len(valid_eval_cagrs))
+    row['median_eval_cagr_pct'] = float(np.median(valid_eval_cagrs)) if valid_eval_cagrs else float('nan')
+    row['median_degradation'] = float(np.median(degradations)) if degradations else float('nan')
+
+    # ── D-09 accept gate + D-10 coverage guard ──────────────────────────
+    if row['eval_years_count'] < 5:
+        row['accepted'] = False
+        row['rejection_reason'] = f"insufficient_eval_coverage {row['eval_years_count']}/6"
+    elif np.isnan(row['median_degradation']):
+        row['accepted'] = False
+        row['rejection_reason'] = 'median_degradation_nan'
+    elif row['median_degradation'] >= DEGRADATION_THRESHOLD:
+        row['accepted'] = False
+        row['rejection_reason'] = (
+            f"median_degradation {row['median_degradation']:.3f} >= {DEGRADATION_THRESHOLD:.2f}"
+        )
+    elif row['median_eval_cagr_pct'] <= MEDIAN_CAGR_FLOOR:
+        row['accepted'] = False
+        row['rejection_reason'] = (
+            f"median_eval_cagr {row['median_eval_cagr_pct']:.2f}% <= {MEDIAN_CAGR_FLOOR:.1f}%"
+        )
+    else:
+        row['accepted'] = True
+        row['rejection_reason'] = ''
+
+    return row
+
+
 def main() -> None:
     raise NotImplementedError("main() orchestrator lands in Task 5")
 
