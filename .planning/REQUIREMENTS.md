@@ -19,9 +19,9 @@
 
 ### Macro Filter Module
 
-- [ ] **MACRO-01**: DXY 20d z-score indicator computed from liquidity proxy, merged to daily VN30 trading dates via `pd.merge_asof` (backward direction, publication-lag aware)
-- [ ] **MACRO-02**: EEM 20d z-score indicator, same pipeline as DXY
-- [ ] **MACRO-03**: SBV regime classifier — labels each trading day as easing/neutral/tightening based on most recent rate change event with 90-day decay (user can tune decay window via config)
+- [x] **MACRO-01**: DXY 20d z-score indicator computed from liquidity proxy, merged to daily VN30 trading dates via `pd.merge_asof` (backward direction, publication-lag aware)
+- [x] **MACRO-02**: EEM 20d z-score indicator, same pipeline as DXY
+- [x] **MACRO-03**: SBV regime classifier — labels each trading day as easing/neutral/tightening based on most recent rate change event with 90-day decay (user can tune decay window via config)
 - [ ] **MACRO-04**: `MacroFilter` module integrated into HybridEngine state pipeline, feature-gated via `macro_filter_enabled` flag in `MDMV2Config`; v6.0 parity verified when flag is False (byte-exact signal log)
 - [x] **MACRO-05**: Filter policy — DXY easing VETOes SELL, DXY tightening lowers the effective DD threshold, SBV tightening shrinks `stop_loss_max_multiplier` (exact thresholds `dxy_easing_z_threshold`, `dxy_tightening_z_threshold`, `eem_easing_z_threshold`, `eem_tightening_z_threshold`, `dxy_tightening_dd_threshold`, `sbv_tightening_stop_loss_max_multiplier` grid-searched in WF-01; engine binary model preserved per Phase 44 D-05/D-06, fractional sizing deferred to v11+)
 
@@ -81,9 +81,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LIQ-01 | Phase 43 | Complete |
 | LIQ-02 | Phase 43 | Complete |
 | LIQ-03 | Phase 43 | Complete |
-| MACRO-01 | Phase 44 | Pending |
-| MACRO-02 | Phase 44 | Pending |
-| MACRO-03 | Phase 44 | Pending |
+| MACRO-01 | Phase 44 | Complete |
+| MACRO-02 | Phase 44 | Complete |
+| MACRO-03 | Phase 44 | Complete |
 | MACRO-04 | Phase 44 | Pending |
 | MACRO-05 | Phase 44 | Complete |
 | WF-01 | Phase 45 | Pending |

@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 44-01-doc-rewrite-macro05-PLAN.md (2/2 tasks, 2 commits ee0b80d + 46067c4)
-last_updated: "2026-04-23T04:23:06.468Z"
+stopped_at: Completed 44-02-foundation-config-helper-stubs-PLAN.md (3/3 tasks, 3 commits 3d532c2 + 15115f9 + 4358ccb)
+last_updated: "2026-04-23T04:40:21.032Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 4
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 44 (macro-filter-module) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-23
 
@@ -107,6 +107,7 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 43]: Plan 43-03: Enumerated 5 look-ahead traps vs D-09 minimum of 3. Added (4) rolling-z-score-on-raw-CSV trap and (5) SBV direction='nearest' trap — both greppable failure modes Phase 44 reviewers can key off.
 - [Phase 43]: Plan 43-03: Code-Docs Sync pointer added to spec footer — future strategies/mdm_hybrid/macro_filter*.py changes MUST update docs/liquidity_proxy_spec.md in the same commit per CLAUDE.md Code-Docs Sync Rule.
 - [Phase 44]: Plan 44-01: doc-only rewrite of MACRO-05 per D-05 landed as two atomic commits (ee0b80d ROADMAP, 46067c4 REQUIREMENTS) BEFORE Wave-2 code work; 6 canonical threshold field names (dxy_easing_z_threshold, dxy_tightening_z_threshold, eem_easing_z_threshold, eem_tightening_z_threshold, dxy_tightening_dd_threshold, sbv_tightening_stop_loss_max_multiplier) now frozen in both ROADMAP.md:852 and REQUIREMENTS.md:26 — Phase 45 planner cannot race on stale dxy_z_threshold/sbv_tightening_position_frac text
+- [Phase 44]: Plan 44-02: Wave 2 foundation lands 10 D-15 macro config fields on MDMV2Config + both presets, strategies/mdm_hybrid/macro_filter.py with MacroVerdict frozen dataclass (D-04 stacking requires orthogonal fields, not enum) + add_macro_columns no-look-ahead helper (merge_asof backward + z-score after merge + +1 BusinessDay SBV shift per spec §5/§6), and tests/test_macro_filter.py (18 tests, 11 immediate pass, 7 skip until Plan 03 MacroFilter class) + tests/test_macro_filter_v6_parity.py (2 regression stubs with v60_strict_mode=True Pitfall 8 guard); MacroFilter class deliberately deferred to Plan 03 alongside engine wiring to avoid dead code; empty-SBV-CSV Rule 2 defensive fix bundled with Task 3 commit (pd.read_csv on empty returns object dtypes, BusinessDay shift collapses to float64 breaking merge_asof dtype alignment); baseline determinism remains green (3/3 PASS) so MACRO-04 parity target still achievable
 
 ### Pending Todos
 
@@ -118,7 +119,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-23T04:23:06.456Z
-Stopped at: Completed 44-01-doc-rewrite-macro05-PLAN.md (2/2 tasks, 2 commits ee0b80d + 46067c4)
+Last session: 2026-04-23T04:40:21.018Z
+Stopped at: Completed 44-02-foundation-config-helper-stubs-PLAN.md (3/3 tasks, 3 commits 3d532c2 + 15115f9 + 4358ccb)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
