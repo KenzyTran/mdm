@@ -467,7 +467,8 @@ Plans:
 
 - [x] **Phase 42: Baseline Reconciliation** - Forensic audit + fix-forward of engine drift (CAGR 11.5% → 10.70%) + regression-test determinism so v10 tunes on a clean baseline (BASE-01, BASE-02, BASE-03)
  (completed 2026-04-22)
-- [x] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03) (completed 2026-04-22)
+- [x] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03)
+ (completed 2026-04-22)
 - [ ] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05)
 - [ ] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
 - [ ] **Phase 46: A/B + OOS Validation (HARD Gate)** - 5-scenario A/B on 2015-2026 + 2025-2026 OOS with HARD gate (MaxDD < -20% AND CAGR ≥ reconciled baseline) + v6.0 parity regression + committed Production Candidate verdict (VAL-01, VAL-02, VAL-03, VAL-04, VAL-05)
@@ -850,7 +851,12 @@ Plans:
   3. `SBV regime` classifier labels each trading day as `easing / neutral / tightening` based on most recent rate event with a configurable 90-day decay; unit test covers transitions across a known event sequence
   4. `MacroFilter` is integrated into `HybridEngine` state pipeline and controlled by `macro_filter_enabled` flag in `MDMV2Config`; running the engine on VN30 2015-2026 with the flag `False` produces a signal log byte-exact to the reconciled v6.0 baseline from Phase 42 (regression test locks this invariant — VAL-04 alignment)
   5. Filter policy is implemented: DXY easing suppresses SELL, DXY tightening amplifies SELL, SBV tightening regime forces half-position or full CASH; exact thresholds (`dxy_z_threshold`, `sbv_tightening_position_frac`) are exposed as config fields ready for the Phase 45 grid search
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 44-01-doc-rewrite-macro05-PLAN.md — Atomic doc rewrite of MACRO-05 spec per D-05 (ROADMAP SC-5 + REQUIREMENTS) lands first
+- [ ] 44-02-foundation-config-helper-stubs-PLAN.md — MDMV2Config 10 D-15 fields + add_macro_columns helper + MacroVerdict dataclass + test stubs
+- [ ] 44-03-engine-integration-PLAN.md — MacroFilter class + position_manager/stop_loss override params + HybridEngine 6 insertion points
+- [ ] 44-04-parity-regression-signoff-PLAN.md — MACRO-04 / VAL-04 byte-exact parity regression + macro-on determinism + effect-proof tests
 **Canonical refs**: `strategies/mdm_hybrid/mdm_hybrid_engine.py` (engine to modify), `docs/research/liquidity_proxy_correlation.md` (DXY -0.19 / EEM +0.19 / SBV 55.76pp spread evidence), Phase 42 reconciled baseline (v6.0 parity target)
 
 ### Phase 45: Walk-Forward Grid Search
