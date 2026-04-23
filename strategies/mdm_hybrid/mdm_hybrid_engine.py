@@ -24,6 +24,7 @@ from .stop_loss import StopLossChecker, StopLossResult
 from .position_manager import V2PositionManager, V2MarketState
 from .config import HybridConfig, MDMV2Config
 from .indicator_filter import IndicatorFilter, Verdict
+from .macro_filter import MacroFilter, MacroVerdict, add_macro_columns
 
 
 class HybridEngine:
@@ -52,6 +53,13 @@ class HybridEngine:
 
         self.results: Optional[pd.DataFrame] = None
         self.indicator_filter = IndicatorFilter(self.config.filter_config) if self.config.filter_enabled else None
+
+        # Phase 44 D-09 — instantiate MacroFilter only when feature enabled
+        self.macro_filter = (
+            MacroFilter(self.config)
+            if self.config.v2_config.macro_filter_enabled
+            else None
+        )
 
         # DD5 high locked for short stop loss (Phase 17, RISK-03/SHORT-03)
         self._dd5_high_locked = 0.0
@@ -176,6 +184,16 @@ class HybridEngine:
                 df,
                 lookback=self.config.v2_config.refined_dd_small_vol_lookback,
                 percentile=self.config.v2_config.refined_dd_small_vol_percentile,
+            )
+
+        # Macro Filter columns (Phase 44, MACRO-01/02/03)
+        # Only when enabled -- D-09: no side effects when disabled (protects MACRO-04 / VAL-04)
+        if self.config.v2_config.macro_filter_enabled:
+            df = add_macro_columns(
+                df,
+                dxy_window_days=self.config.v2_config.dxy_window_days,
+                eem_window_days=self.config.v2_config.eem_window_days,
+                sbv_decay_days=self.config.v2_config.sbv_decay_days,
             )
 
         # Add EMA/MACD indicator columns for filter evaluation (per D-03, Phase 13)
@@ -350,6 +368,16 @@ class HybridEngine:
             current_atr = row['atr'] if 'atr' in row and pd.notna(row['atr']) else None
             current_atr_baseline = row['atr_baseline'] if 'atr_baseline' in row and pd.notna(row['atr_baseline']) else None
 
+            # Phase 44 D-02/D-03/D-08: compute MacroVerdict ONCE per row.
+            # Verdict.effective_max_multiplier flows to stop_loss check below.
+            # Verdict.effective_dd_threshold flows to position_manager.process_day below.
+            # Verdict.veto_sell handled at INSERTION 6 (after IndicatorFilter block).
+            macro_verdict = (
+                self.macro_filter.apply(row, current_state)
+                if self.macro_filter is not None
+                else MacroVerdict.pass_through()
+            )
+
             stop_loss_result = self.stop_loss_checker.check(
                 close, buy_price, buy_day_low,
                 ma50=ma50, prev_close=prev_close, prev_ma50=prev_ma50_val,
@@ -357,6 +385,7 @@ class HybridEngine:
                 signal_type=signal_type_held,
                 atr=current_atr,
                 atr_baseline=current_atr_baseline,
+                effective_max_multiplier=macro_verdict.effective_stop_loss_max_multiplier,
             )
 
             # 5. Short stop loss check (SELL state only, Phase 17 RISK-03/SHORT-03)
@@ -410,6 +439,7 @@ class HybridEngine:
                     ma50=ma50_val,
                     prev_high=prev_high,
                     violation_threshold=violation_threshold_val,   # NEW: ATR-02
+                    effective_dd_threshold=macro_verdict.effective_dd_threshold,   # Phase 44 D-02
                 )
 
                 # If FTD triggered, reset rally tracker
@@ -494,6 +524,29 @@ class HybridEngine:
             else:
                 # Filter disabled: default to full confidence
                 df.at[idx, 'confidence'] = 1.0
+
+            # Phase 44 D-01 / INSERTION 6: MacroFilter VETO_SELL handling
+            # Applies AFTER IndicatorFilter (D-08 hook order: macro overrules
+            # local indicator consensus). Only fires when state machine
+            # actually proposed a transition INTO SELL — D-01 explicitly says
+            # "block the SELL transition, keep current state HOLD/BUY unchanged".
+            # Snapshot may be None when two_phase_enabled=False; in that case
+            # the veto is a no-op (RESEARCH Open Q1 — current research recommends
+            # documenting this constraint; for now, silently no-op when snapshot
+            # is unavailable since macro_filter_enabled=True with two_phase=False
+            # is not a supported configuration in v10.0).
+            if (
+                macro_verdict.veto_sell
+                and new_state == V2MarketState.SELL
+                and current_state != V2MarketState.SELL
+                and snapshot is not None
+            ):
+                self._restore_components(snapshot)
+                new_state = self.position_manager.get_state()
+                action = ''
+                # Diagnostic — overwrites verdict column when present (D-09 signal log)
+                if self.config.two_phase_enabled and self.config.filter_enabled:
+                    df.at[idx, 'verdict'] = 'MACRO_VETO_SELL'
 
             # State history tracking (Phase 15, Plan 02 -- ADV-01)
             # Track only on state CHANGES, not every day
