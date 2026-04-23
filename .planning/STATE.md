@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: verifying
-stopped_at: "Completed 44-04-parity-regression-signoff-PLAN.md (1/1 tasks, 1 commit 5ab65be). Phase 44 regression-proven complete — all 5 MACRO-XX requirements Complete, all 5 ROADMAP SC met, VALIDATION approved, ready for /gsd:verify-work."
-last_updated: "2026-04-23T06:50:02.102Z"
+stopped_at: "Phase 45 context gathered (4 areas discussed: search space staged sweep + 6 policy fields + 3 vals; walk-forward single full-period run + slice; per-year median degradation + sanity floor; 3 stage winners + 3 runners-up JSON)"
+last_updated: "2026-04-23T07:55:34.149Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 4
@@ -121,7 +121,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-23T06:38:44.423Z
-Stopped at: Completed 44-04-parity-regression-signoff-PLAN.md (1/1 tasks, 1 commit 5ab65be). Phase 44 regression-proven complete — all 5 MACRO-XX requirements Complete, all 5 ROADMAP SC met, VALIDATION approved, ready for /gsd:verify-work.
-Resume file: None
+Last session: 2026-04-23T07:55:34.142Z
+Stopped at: Phase 45 context gathered (4 areas discussed: search space staged sweep + 6 policy fields + 3 vals; walk-forward single full-period run + slice; per-year median degradation + sanity floor; 3 stage winners + 3 runners-up JSON)
+Resume file: .planning/phases/45-walk-forward-grid-search/45-CONTEXT.md
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
