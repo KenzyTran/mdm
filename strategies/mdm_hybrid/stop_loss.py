@@ -33,7 +33,12 @@ class StopLossChecker:
         """Initialize."""
         self.config = config if config else MDMV2Config()
 
-    def _get_effective_stop_pct(self, atr: float = None, atr_baseline: float = None) -> float:
+    def _get_effective_stop_pct(
+        self,
+        atr: float = None,
+        atr_baseline: float = None,
+        effective_max_multiplier: float = None,   # Phase 44 D-03 — MacroFilter override
+    ) -> float:
         """Scale stop loss by ATR ratio when volatility_adaptive is enabled.
 
         Formula: effective_pct = base_pct * (current_atr / baseline_atr)
@@ -42,6 +47,9 @@ class StopLossChecker:
         Args:
             atr: Current ATR value.
             atr_baseline: Baseline ATR (rolling mean).
+            effective_max_multiplier: Phase 44 D-03 — MacroFilter override
+                for self.config.stop_loss_max_multiplier; None = use config
+                default. SBV tightening lowers this from 2.5 to 1.5.
 
         Returns:
             Effective stop loss percentage.
@@ -54,7 +62,15 @@ class StopLossChecker:
         ratio = atr / atr_baseline
         effective = self.config.stop_loss_pct * ratio
         min_pct = self.config.stop_loss_pct * self.config.stop_loss_min_multiplier
-        max_pct = self.config.stop_loss_pct * self.config.stop_loss_max_multiplier
+        # Phase 44 D-03: when effective_max_multiplier is None (default, or
+        # MacroFilter disabled / no SBV tightening), this reads
+        # self.config.stop_loss_max_multiplier — byte-identical to pre-change.
+        max_multiplier = (
+            effective_max_multiplier
+            if effective_max_multiplier is not None
+            else self.config.stop_loss_max_multiplier
+        )
+        max_pct = self.config.stop_loss_pct * max_multiplier
         return max(min_pct, min(max_pct, effective))
 
     def check(
@@ -70,6 +86,7 @@ class StopLossChecker:
         signal_type: str = "FTD",
         atr: float = None,
         atr_baseline: float = None,
+        effective_max_multiplier: float = None,   # Phase 44 D-03 — MacroFilter override
     ) -> StopLossResult:
         """
         Check if stop loss should be triggered.
@@ -116,7 +133,8 @@ class StopLossChecker:
             )
 
         # Rule 1: Stop loss from buy price (volatility-adaptive)
-        effective_pct = self._get_effective_stop_pct(atr, atr_baseline)
+        # Phase 44 D-03: pass effective_max_multiplier through to _get_effective_stop_pct
+        effective_pct = self._get_effective_stop_pct(atr, atr_baseline, effective_max_multiplier)
         if current_close < buy_price * (1 - effective_pct):
             return StopLossResult(
                 triggered=True,

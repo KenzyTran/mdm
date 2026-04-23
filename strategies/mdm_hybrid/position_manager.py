@@ -242,6 +242,7 @@ class V2PositionManager:
         ma50: float = None,
         prev_high: float = 0.0,
         violation_threshold: float = None,
+        effective_dd_threshold: int = None,   # Phase 44 D-02 — MacroFilter override; None = use config default
     ) -> Tuple[V2MarketState, str]:
         """
         Process a trading day and update state.
@@ -262,6 +263,9 @@ class V2PositionManager:
             ma50: Current 50-day MA
             prev_high: High of previous day (for fail-safe threshold)
             violation_threshold: ATR buffer zone threshold (ma50 - k*atr_buf); None during warm-up
+            effective_dd_threshold: Phase 44 D-02 — MacroFilter override
+                for self.config.dd_cash_threshold; None = use config default.
+                DXY/EEM tightening lowers this from 5 to 3 (default).
 
         Returns:
             Tuple of (new_state, action_taken)
@@ -347,15 +351,24 @@ class V2PositionManager:
             if stop_loss_triggered:
                 self.exit_to_cash(close, date, stop_loss_reason)
                 action = f"CASH exit at {close:.2f} ({stop_loss_reason})"
-            # Check DD threshold (on a DD day)
-            elif dd_count >= self.config.dd_cash_threshold and is_dd:
-                self.exit_to_cash(close, date, f"DD count {dd_count} >= threshold {self.config.dd_cash_threshold}")
-                action = f"CASH exit: DD count {dd_count}"
-            # Check MA10 consecutive below
-            elif (self.config.ma10_cash_enabled
-                  and self.position.ma10_below_count >= self.config.ma10_cash_consecutive):
-                self.exit_to_cash(close, date, f"Close below MA10 for {self.position.ma10_below_count} days")
-                action = f"CASH exit: MA10 below count {self.position.ma10_below_count}"
+            # Check DD threshold (on a DD day) — Phase 44 D-02 override
+            # When effective_dd_threshold is None (default, or MacroFilter
+            # disabled / no DXY-EEM tightening), this reads self.config.dd_cash_threshold
+            # and the comparison is byte-identical to the pre-Phase-44 code path.
+            else:
+                dd_threshold = (
+                    effective_dd_threshold
+                    if effective_dd_threshold is not None
+                    else self.config.dd_cash_threshold
+                )
+                if dd_count >= dd_threshold and is_dd:
+                    self.exit_to_cash(close, date, f"DD count {dd_count} >= threshold {dd_threshold}")
+                    action = f"CASH exit: DD count {dd_count}"
+                # Check MA10 consecutive below — keep existing logic
+                elif (self.config.ma10_cash_enabled
+                      and self.position.ma10_below_count >= self.config.ma10_cash_consecutive):
+                    self.exit_to_cash(close, date, f"Close below MA10 for {self.position.ma10_below_count} days")
+                    action = f"CASH exit: MA10 below count {self.position.ma10_below_count}"
 
         elif current_state == V2MarketState.SELL:
             # Fail-safe check: highest priority in SELL state (SAFE-02)
