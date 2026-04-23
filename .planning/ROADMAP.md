@@ -850,7 +850,7 @@ Plans:
   2. `EEM 20d z-score` is computed the same way alongside DXY, both available as columns on the engine's daily DataFrame
   3. `SBV regime` classifier labels each trading day as `easing / neutral / tightening` based on most recent rate event with a configurable 90-day decay; unit test covers transitions across a known event sequence
   4. `MacroFilter` is integrated into `HybridEngine` state pipeline and controlled by `macro_filter_enabled` flag in `MDMV2Config`; running the engine on VN30 2015-2026 with the flag `False` produces a signal log byte-exact to the reconciled v6.0 baseline from Phase 42 (regression test locks this invariant — VAL-04 alignment)
-  5. Filter policy is implemented: DXY easing suppresses SELL, DXY tightening amplifies SELL, SBV tightening regime forces half-position or full CASH; exact thresholds (`dxy_z_threshold`, `sbv_tightening_position_frac`) are exposed as config fields ready for the Phase 45 grid search
+  5. Filter policy is implemented: DXY easing VETOes SELL, DXY tightening lowers the effective DD threshold, SBV tightening shrinks `stop_loss_max_multiplier`; exact thresholds (`dxy_easing_z_threshold`, `dxy_tightening_z_threshold`, `eem_easing_z_threshold`, `eem_tightening_z_threshold`, `dxy_tightening_dd_threshold`, `sbv_tightening_stop_loss_max_multiplier`) are exposed as config fields ready for the Phase 45 grid search (per Phase 44 D-05 — engine binary model preserved, fractional sizing deferred to v11+)
 **Plans**: 4 plans
 Plans:
 - [ ] 44-01-doc-rewrite-macro05-PLAN.md — Atomic doc rewrite of MACRO-05 spec per D-05 (ROADMAP SC-5 + REQUIREMENTS) lands first
