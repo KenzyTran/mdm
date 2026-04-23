@@ -163,6 +163,20 @@ def add_macro_columns(
     # ── Step 3: SBV regime via shifted-date merge_asof + N-day decay ────
     sbv = pd.read_csv(sbv_events_path, parse_dates=['date'])
     sbv = sbv.sort_values('date').reset_index(drop=True)
+
+    # Edge case: empty SBV file (e.g., test fixture with no events before
+    # the series start). pd.read_csv on an empty file yields object dtypes
+    # and BusinessDay(1) on an empty datetime Series collapses to float64,
+    # which breaks merge_asof's dtype alignment. Short-circuit to an
+    # all-'neutral' regime when there are zero events.
+    if len(sbv) == 0:
+        sbv_merged = merged.copy()
+        sbv_merged['sbv_days_since_event'] = pd.Series(
+            pd.NA, index=sbv_merged.index, dtype='Int64'
+        )
+        sbv_merged['sbv_regime'] = 'neutral'
+        return sbv_merged
+
     # CRITICAL: shift first, then merge. Spec §6 trap #2 forbids same-day use.
     sbv['effective_date'] = sbv['date'] + pd.tseries.offsets.BusinessDay(1)
 
