@@ -352,6 +352,211 @@ def run_combo(df: pd.DataFrame, overrides: dict, stage: str, combo_id: int) -> d
     return row
 
 
+# ── D-12 ranking + parsimony tiebreak helpers ──────────────────────────
+STAGE_FIELDS = {
+    'stage1_dxy': ['dxy_easing_z_threshold', 'dxy_tightening_z_threshold', 'dxy_tightening_dd_threshold'],
+    'stage2_eem': ['eem_easing_z_threshold', 'eem_tightening_z_threshold'],
+    'stage3_all_three': ['sbv_tightening_stop_loss_max_multiplier'],
+}
+
+# VN30_PRESET macro defaults (duplicated here for clarity; see strategies/mdm_hybrid/config.py:97-109)
+# — Phase 44 D-15 center cells. Used by parsimony_distance.
+DEFAULTS = {
+    'dxy_easing_z_threshold': -1.0,
+    'dxy_tightening_z_threshold': 1.0,
+    'dxy_tightening_dd_threshold': 3,
+    'eem_easing_z_threshold': 1.0,
+    'eem_tightening_z_threshold': -1.0,
+    'sbv_tightening_stop_loss_max_multiplier': 1.5,
+}
+
+
+def parsimony_distance(row: dict, stage: str) -> int:
+    """D-12 parsimony tiebreak — count of searched fields that differ from VN30_PRESET default."""
+    return sum(1 for f in STAGE_FIELDS[stage] if row[f] != DEFAULTS[f])
+
+
+def median_eval_sharpe(row: dict) -> float:
+    """Median of per-year Sharpe_rf3 across non-NaN eval years (D-12 secondary rank key)."""
+    vals = [row[f'sharpe_rf3_eval_{y}'] for y in EVAL_YEARS if not np.isnan(row[f'sharpe_rf3_eval_{y}'])]
+    return float(np.median(vals)) if vals else float('-inf')
+
+
+def select_winner(stage_rows: list, stage: str) -> tuple:
+    """Rank accepted combos per D-12 and return (winner, top-3 runners-up).
+
+    D-12 ranking:
+      1. median_eval_cagr_pct descending (primary)
+      2. median_eval_sharpe_rf3 descending (risk-adjusted tiebreak, Phase 41 D-18 precedent)
+      3. parsimony_distance ascending (fewer non-default fields wins — simpler generalizes)
+      4. combo_id ascending (deterministic final tiebreak)
+
+    Args:
+        stage_rows: All row dicts for this stage (accepted + rejected).
+        stage: 'stage1_dxy' | 'stage2_eem' | 'stage3_all_three' (for STAGE_FIELDS lookup).
+
+    Returns:
+        (winner_row, runners_up_rows). If no accepted combos, returns (None, []).
+        runners_up is at most 3 entries (ranks 2, 3, 4).
+    """
+    accepted = [r for r in stage_rows if r.get('accepted') is True]
+    if not accepted:
+        return None, []
+    ranked = sorted(accepted, key=lambda r: (
+        -float(r['median_eval_cagr_pct']),    # primary desc
+        -median_eval_sharpe(r),                # tiebreak desc
+        parsimony_distance(r, stage),          # tiebreak asc
+        int(r['combo_id']),                    # deterministic last resort
+    ))
+    winner = ranked[0]
+    runners_up = ranked[1:4]     # top-3 runners-up per D-11 (ranks 2, 3, 4)
+    return winner, runners_up
+
+
+def write_results_csv(all_rows: list, path: str) -> None:
+    """Write output/v10_grid_results.csv with canonical column order (D-claude-1 suggestion).
+
+    All 39 rows (accepted + rejected) — ROADMAP SC-2 no silent drops.
+    """
+    col_order = (
+        ['stage', 'combo_id', 'config_name']
+        + MACRO_CONFIG_FIELDS
+        + ['cagr_train_pct', 'sharpe_rf3_train', 'max_dd_train_pct']
+        + [f'cagr_eval_{y}_pct' for y in EVAL_YEARS]
+        + [f'sharpe_rf3_eval_{y}' for y in EVAL_YEARS]
+        + [f'max_dd_eval_{y}_pct' for y in EVAL_YEARS]
+        + [f'degradation_{y}' for y in EVAL_YEARS]
+        + ['median_degradation', 'median_eval_cagr_pct', 'eval_years_count']
+        + ['accepted', 'rejection_reason']
+        + ['error_train']
+        + [f'error_year_{y}' for y in EVAL_YEARS]
+    )
+    df_out = pd.DataFrame(all_rows)
+    # Reorder + sanity-check all expected columns are present
+    missing = [c for c in col_order if c not in df_out.columns]
+    if missing:
+        raise RuntimeError(f"write_results_csv: missing expected columns: {missing}")
+    df_out = df_out[col_order]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    df_out.to_csv(path, index=False)
+
+
+def _native(v):
+    """Cast numpy scalars to native Python types for clean JSON output.
+
+    Lifted verbatim from analysis/select_v9_best.py:85-89.
+    """
+    try:
+        return v.item()
+    except AttributeError:
+        return v
+
+
+def _get_git_head() -> str:
+    """Return git HEAD short hash, or 'unknown' if git unavailable."""
+    try:
+        return subprocess.check_output(
+            ['git', 'rev-parse', 'HEAD'], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        return 'unknown'
+
+
+def _config_tuple(row: dict) -> dict:
+    """Extract full 10-field macro config from a row for dataclasses.replace replay (D-11)."""
+    return {
+        'dxy_easing_z_threshold': _native(row['dxy_easing_z_threshold']),
+        'dxy_tightening_z_threshold': _native(row['dxy_tightening_z_threshold']),
+        'dxy_tightening_dd_threshold': _native(row['dxy_tightening_dd_threshold']),
+        'eem_easing_z_threshold': _native(row['eem_easing_z_threshold']),
+        'eem_tightening_z_threshold': _native(row['eem_tightening_z_threshold']),
+        'sbv_tightening_stop_loss_max_multiplier': _native(row['sbv_tightening_stop_loss_max_multiplier']),
+        'dxy_window_days': _native(row['dxy_window_days']),
+        'eem_window_days': _native(row['eem_window_days']),
+        'sbv_decay_days': _native(row['sbv_decay_days']),
+        'macro_filter_enabled': True,
+    }
+
+
+def _metrics_tuple(row: dict) -> dict:
+    """Extract 5-metric summary for D-11 JSON entry."""
+    maxdd_vals = [row[f'max_dd_eval_{y}_pct'] for y in EVAL_YEARS if not np.isnan(row[f'max_dd_eval_{y}_pct'])]
+    return {
+        'train_cagr_pct': _native(row['cagr_train_pct']),
+        'median_eval_cagr_pct': _native(row['median_eval_cagr_pct']),
+        'median_degradation': _native(row['median_degradation']),
+        'median_eval_sharpe_rf3': _native(median_eval_sharpe(row)),
+        'median_eval_max_dd_pct': _native(float(np.median(maxdd_vals))) if maxdd_vals else float('nan'),
+    }
+
+
+def _entry(row: dict, rank: int) -> dict:
+    """One JSON entry (winner or runner-up) with config + metrics + rank."""
+    return {
+        'config': _config_tuple(row),
+        'metrics': _metrics_tuple(row),
+        'rank': int(rank),
+    }
+
+
+def _stage_payload(stage_block: dict, starting_rank: int = 1) -> dict:
+    """Serialize a single stage's {'winner': row_or_None, 'runners_up': list} into JSON shape."""
+    winner = stage_block.get('winner')
+    runners_up = stage_block.get('runners_up') or []
+    return {
+        'winner': _entry(winner, starting_rank) if winner is not None else None,
+        'runners_up': [_entry(r, starting_rank + 1 + i) for i, r in enumerate(runners_up)],
+    }
+
+
+def write_best_json(stages: dict, path: str) -> None:
+    """Write output/v10_grid_best.json per D-11 schema (schema_version=1).
+
+    Args:
+        stages: {'stage1_dxy': {'winner': row, 'runners_up': [...]},
+                 'stage2_eem': {...},
+                 'stage3_all_three': {...}}.
+        path: Output path (typically BEST_JSON).
+    """
+    payload = {
+        'schema_version': 1,
+        'generated_at': datetime.now(timezone.utc).isoformat(),
+        'engine_git_hash': _get_git_head(),
+        'train_window': f'{TRAIN_START}..{TRAIN_END}',
+        'eval_years': list(EVAL_YEARS),
+        'oos_holdout': f'{OOS_FENCE}..2026-12-31 (untouched)',
+        'ranking_metric': 'median_eval_cagr_pct',
+        'stage1_dxy': _stage_payload(stages['stage1_dxy'], starting_rank=1),
+        'stage2_eem': _stage_payload(stages['stage2_eem'], starting_rank=1),
+        'stage3_all_three': _stage_payload(stages['stage3_all_three'], starting_rank=1),
+    }
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, indent=2)
+
+
+def _top3_nan_guard(stage_name: str, stage_rows: list) -> None:
+    """D-18 — raise SummaryError if any top-3 accepted combo has NaN eval-year metric.
+
+    Mirrors Phase 40 D-10 top-5 safeguard: broken configs must not silently become winners.
+    Only fires when there ARE accepted combos (no-accepted stages print a warning in main()).
+    """
+    accepted = [r for r in stage_rows if r.get('accepted') is True]
+    if not accepted:
+        return
+    winner, runners_up = select_winner(stage_rows, stage_name)
+    top3 = [winner] + list(runners_up[:2])    # winner + 2 runners-up = top-3
+    for row in top3:
+        if row is None:
+            continue
+        for y in EVAL_YEARS:
+            if np.isnan(row[f'cagr_eval_{y}_pct']):
+                raise SummaryError(
+                    f"Stage {stage_name} top-3 winner '{row['config_name']}' has NaN "
+                    f"cagr_eval_{y}_pct — selection unsafe"
+                )
+
+
 def main() -> None:
     raise NotImplementedError("main() orchestrator lands in Task 5")
 
