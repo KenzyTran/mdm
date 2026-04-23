@@ -948,7 +948,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 | 41. A/B & Walk-Forward Validation | v9.0 | 2/2 | Complete    | 2026-04-21 |
 | 42. Baseline Reconciliation | v10.0 | 6/6 | Complete    | 2026-04-22 |
 | 43. Canonical Liquidity Data Pipeline | v10.0 | 3/3 | Complete    | 2026-04-22 |
-| 44. Macro Filter Module | v10.0 | 4/4 | Complete   | 2026-04-23 |
+| 44. Macro Filter Module | v10.0 | 4/4 | Complete    | 2026-04-23 |
 | 45. Walk-Forward Grid Search | v10.0 | 0/0 | Not started | - |
 | 46. A/B + OOS Validation (HARD Gate) | v10.0 | 0/0 | Not started | - |
 | 47. Docs & Dashboard | v10.0 | 0/0 | Not started | - |
