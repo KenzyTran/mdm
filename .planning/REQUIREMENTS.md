@@ -23,7 +23,7 @@
 - [ ] **MACRO-02**: EEM 20d z-score indicator, same pipeline as DXY
 - [ ] **MACRO-03**: SBV regime classifier — labels each trading day as easing/neutral/tightening based on most recent rate change event with 90-day decay (user can tune decay window via config)
 - [ ] **MACRO-04**: `MacroFilter` module integrated into HybridEngine state pipeline, feature-gated via `macro_filter_enabled` flag in `MDMV2Config`; v6.0 parity verified when flag is False (byte-exact signal log)
-- [ ] **MACRO-05**: Filter policy — DXY easing suppresses SELL, DXY tightening amplifies SELL, SBV tightening regime forces half-position or full CASH (exact thresholds `dxy_z_threshold`, `sbv_tightening_position_frac` grid-searched in WF-01)
+- [ ] **MACRO-05**: Filter policy — DXY easing VETOes SELL, DXY tightening lowers the effective DD threshold, SBV tightening shrinks `stop_loss_max_multiplier` (exact thresholds `dxy_easing_z_threshold`, `dxy_tightening_z_threshold`, `eem_easing_z_threshold`, `eem_tightening_z_threshold`, `dxy_tightening_dd_threshold`, `sbv_tightening_stop_loss_max_multiplier` grid-searched in WF-01; engine binary model preserved per Phase 44 D-05/D-06, fractional sizing deferred to v11+)
 
 ### Walk-Forward Discipline
 
