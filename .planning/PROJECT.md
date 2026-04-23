@@ -117,8 +117,8 @@ Tất cả 3 scenario v9 (+ATR, +DD, +both) fail gate CAGR ≥ 11.5% trên full 
 - [ ] Baseline drift forensics — find commit(s) causing CAGR drift 11.5% → 10.70% and SELL count 124 → 105; fix forward
 - [x] Canonical liquidity proxy data pipeline — regenerable `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` with publication-lag handling (Phase 43, LIQ-01/02/03 validated 2026-04-22)
 - [x] VN macro filter module — DXY 20d z-score + EEM 20d z-score + SBV regime (90-day decay), feature-gated with v6.0 parity when off (Phase 44, MACRO-01/02/03/04/05 validated 2026-04-23)
-- [ ] Walk-forward-native grid search — rolling windows inside grid search, accept params only if median degradation < 30%
-- [ ] A/B validation (baseline / +DXY / +EEM / +SBV-regime / +all) + OOS with HARD gate (MaxDD < -20% AND CAGR ≥ baseline)
+- [x] Walk-forward-native grid search — rolling windows inside grid search, accept params only if median degradation < 30% (Phase 45, WF-01/02/03 validated 2026-04-23; **0/39 combos accepted** — retain-v6.0 verdict for Phase 46)
+- [ ] A/B validation (baseline / +DXY / +EEM / +SBV-regime / +all) + OOS with HARD gate (MaxDD < -20% AND CAGR ≥ baseline) — enters retain-v6.0 branch per Phase 45 outcome
 - [ ] Docs + dashboard update — only if HARD gate passes
 
 ### Validated (v9.0) — shipped 2026-04-21 (results REJECTED, v6.0 retained)
@@ -289,10 +289,11 @@ This document evolves at phase transitions and milestone boundaries.
 **Key finding from v7.0:**
 CANSLIM stock selection alone (without MDM gate) achieves Sharpe=1.047, CAGR=16.4%, 109 trades. MDM gate reduces this to Sharpe=0.448 but also reduces MaxDD from ~40% to ~10%. MDM is a risk management tool, not an alpha generator for stock selection. This reframes the purpose of the MDM component — next milestone should investigate CASH policy (hold vs liquidate) to recover lost alpha.
 
-**v10.0 progress (as of Phase 44 complete):**
+**v10.0 progress (as of Phase 45 complete):**
 - ✓ Phase 42 Baseline Reconciliation — bisect identified `f80394f` (Phase 38-02) as single drift commit; reconciled via `v60_strict_mode` preset flag (D-07 step 2). At reconciled HEAD: CAGR 11.47%, SELL 124, MaxDD -28.17% — all three D-09 parity bands pass. Canonical tuple published at `output/v10_reconciled_baseline.json` (schema_version: 1); 3/3 determinism tests green.
 - ✓ Phase 43 Canonical Liquidity Data Pipeline — regenerable `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` with publication-lag handling (LIQ-01/02/03).
-- ✓ Phase 44 Macro Filter Module — `MacroFilter` (DXY/EEM 20d z-scores + SBV regime classifier, 90-day decay) wired into HybridEngine via 6 insertion points; byte-exact v6.0 parity when `macro_filter_enabled=False` (locked by regression test); policy stacking via frozen `MacroVerdict` dataclass (D-04). 10 config fields on `MDMV2Config` carried explicitly in both `base_v6_0` and `macro_aware_v1_0` presets (D-15). 18/18 unit + 5/5 parity tests green; MACRO-01..05 all Complete. Ready for Phase 45 walk-forward grid search.
+- ✓ Phase 44 Macro Filter Module — `MacroFilter` (DXY/EEM 20d z-scores + SBV regime classifier, 90-day decay) wired into HybridEngine via 6 insertion points; byte-exact v6.0 parity when `macro_filter_enabled=False` (locked by regression test); policy stacking via frozen `MacroVerdict` dataclass (D-04). 10 config fields on `MDMV2Config` carried explicitly in both `base_v6_0` and `macro_aware_v1_0` presets (D-15). 18/18 unit + 5/5 parity tests green; MACRO-01..05 all Complete.
+- ✓ Phase 45 Walk-Forward Grid Search — `analysis/walkforward_grid.py` (685 LOC) implements staged 27+9+3 sweep with OOS fence enforced via `OOS_FENCE='2025-01-01'` assert; `tests/test_walkforward_oos_guard.py` locks SC-4 with 2 `@pytest.mark.regression` tests. Sweep executed in 2m37s, full regression suite 13/13 green. **Verdict: 0 of 39 combos accepted** — all failed D-09 gate `median_degradation < 0.30` (range 0.410–0.645); train CAGR median 9.54% (below v6.0 baseline 11.47%) degrades to eval CAGR median 4.57% on walk-forward years. Full 10y compound returns: median +146.8%, best +163.4% (`stage1_dxy-c18`) vs v6.0 ~+197% @ 11.5% CAGR. MaxDD shallower: −14% median per year, worst −19.68% (2021) vs v6.0 −28.2% — but gain came at cost of halved CAGR. `output/v10_grid_best.json` intentionally not written (main() guard on zero-accepted). WF-01/02/03 Complete. **Phase 46 enters retain-v6.0 branch per user-approved interpretation.**
 
 ---
-*Last updated: 2026-04-23 after Phase 44 Macro Filter Module complete (MACRO-01/02/03/04/05)*
+*Last updated: 2026-04-23 after Phase 45 Walk-Forward Grid Search complete (WF-01/02/03) — 0/39 combos accepted, retain-v6.0 verdict*
