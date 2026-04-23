@@ -620,6 +620,24 @@ From tests/test_macro_filter.py (Plan 02 Task 3 — currently SKIPPED tests this
 
     Rationale: mirrors line 164 (atr_buffer) and line 173 (refined_dd) precompute gates. The gate is the engine half of the dual-layer D-09 short-circuit. Without it, even default-disabled config would add NaN-filled columns (Pitfall 1) and break parity.
 
+    **INSERTION 3.5 — PRESERVE the existing `snapshot = None` safeguard at line 234 (CRITICAL — do NOT remove during refactor):**
+
+    Re-read `strategies/mdm_hybrid/mdm_hybrid_engine.py` lines 233-236 to confirm the LIVE state of the snapshot initialization (verified 2026-04-23):
+    ```python
+                # Two-phase commit: snapshot before processing
+                snapshot = None                                    # ← line 234 — LOAD-BEARING; KEEP
+                if self.config.two_phase_enabled:                  # ← line 235
+                    snapshot = self._snapshot_components()         # ← line 236
+    ```
+
+    The `snapshot = None` initialization at line 234 is LOAD-BEARING for INSERTION 6 below — when `two_phase_enabled=False`, line 234 still runs, binding `snapshot` to `None` for the rest of the per-row loop body. INSERTION 6's guard (`and snapshot is not None`) then correctly evaluates without raising NameError.
+
+    If your edits anywhere in run() accidentally remove or move line 234 (e.g., during a refactor that consolidates the two-phase block), the engine will raise `NameError: name 'snapshot' is not defined` at INSERTION 6 whenever `macro_filter_enabled=True AND two_phase_enabled=False`. This is the crash scenario that the new acceptance criterion below explicitly tests.
+
+    **DO NOT** modify lines 233-236 in any way. **DO NOT** wrap them in an additional `if`. **DO NOT** indent them inside any other block. Verify line 234 is still `            snapshot = None` (12 leading spaces, no prefix `if`) AFTER all 6 INSERTIONs land.
+
+    If for any reason the live file no longer has `snapshot = None` on its own line BEFORE the `if self.config.two_phase_enabled:` check, ADD it back at the top of the per-row loop body with the same indentation, immediately before the `if self.config.two_phase_enabled:` line. The contract is: `snapshot` MUST always be bound to either `None` or the snapshot dict before any code below INSERTION 4 runs.
+
     **INSERTION 4 — Per-row macro_verdict computation (BEFORE the existing stop_loss check at the current line 353):**
 
     Find the existing stop_loss check call (currently lines 349-360, with the actual call at line 353):
@@ -779,6 +797,8 @@ From tests/test_macro_filter.py (Plan 02 Task 3 — currently SKIPPED tests this
     - All MacroFilter unit tests still pass: `uv run pytest tests/test_macro_filter.py -v 2>&1 | grep -c "PASSED"` returns at least 14
     - Existing hybrid engine tests pass: `uv run pytest tests/test_hybrid_engine.py -x` exits 0
     - Smoke test for enabled path doesn't crash: `uv run python -c "from dataclasses import replace; from core.data_loader import DataLoader; from core.indicators import build_indicator_dataframe; from strategies.mdm_hybrid.mdm_hybrid_engine import HybridEngine; from strategies.mdm_hybrid.config import HybridConfig, VN30_PRESET; cfg = replace(VN30_PRESET, macro_filter_enabled=True, v60_strict_mode=True); df = DataLoader('vn30').load('2020-01-01', '2020-06-30'); df = build_indicator_dataframe(df); engine = HybridEngine(HybridConfig(v2_config=cfg, two_phase_enabled=True, filter_enabled=False)); result = engine.run(df); print('rows:', len(result), 'has_dxy_z:', 'dxy_z' in result.columns); assert 'dxy_z' in result.columns; print('PASS')"` exits 0 with PASS (engine doesn't crash with macro on; columns present)
+    - **CRASH-PROOF (INSERTION 3.5 / BLOCKER fix):** The `snapshot = None` safeguard at engine line 234 is preserved AFTER all edits — verify with `grep -nP "^            snapshot = None\s*$" strategies/mdm_hybrid/mdm_hybrid_engine.py` returns at least 1 line (the bare `snapshot = None` on its own line, BEFORE the `if self.config.two_phase_enabled:` check)
+    - **CRASH-PROOF acceptance test (macro-on + two_phase-off must not raise NameError):** `uv run python -c "from strategies.mdm_hybrid.config import VN30_PRESET, HybridConfig; from strategies.mdm_hybrid.mdm_hybrid_engine import HybridEngine; from dataclasses import replace; from models.data_loader import DataLoader; v2 = replace(VN30_PRESET, macro_filter_enabled=True, v60_strict_mode=True); cfg = HybridConfig(v2_config=v2, two_phase_enabled=False, filter_enabled=False); df = DataLoader('vn30').load('2024-01-02', '2024-03-31'); eng = HybridEngine(cfg); eng.run(df); print('OK')" 2>&1 | grep -q "OK"` — proves the engine does NOT raise NameError at INSERTION 6 when `two_phase_enabled=False AND macro_filter_enabled=True` (the configuration that would have crashed if line 234's `snapshot = None` had been removed; INSERTION 6's `and snapshot is not None` guard correctly no-ops the veto)
   </acceptance_criteria>
   <done>HybridEngine wired with all 6 insertion points; dual-layer D-09 short-circuit verified (parity test passes); MacroFilter unit tests pass; smoke test confirms macro-on path runs end-to-end without crashing.</done>
 </task>

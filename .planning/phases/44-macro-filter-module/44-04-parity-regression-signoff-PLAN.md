@@ -6,6 +6,7 @@ wave: 4
 depends_on: ["44-03"]
 files_modified:
   - tests/test_macro_filter_v6_parity.py
+  - .planning/phases/44-macro-filter-module/44-VALIDATION.md
 autonomous: true
 requirements: [MACRO-04]
 must_haves:
@@ -16,11 +17,16 @@ must_haves:
     - "Smoke test for macro_filter_enabled=True confirms the engine runs end-to-end on full VN30 2015-2026 without crashing AND produces the expected new columns"
     - "Test suite is run with @pytest.mark.regression marker so it can be invoked separately from the unit suite (matches Phase 42 D-17 precedent)"
     - "All Phase 44 deliverables are now committed and verified — parity invariant locked"
+    - "VALIDATION.md frontmatter shows nyquist_compliant=true, wave_0_complete=true, status=approved (closes plan-checker WARNING 2)"
+    - "VALIDATION.md per-task verification map has correct task IDs (44-02-* / 44-03-* / 44-04-*) — no stale 44-01-* placeholder IDs remain"
   artifacts:
     - path: "tests/test_macro_filter_v6_parity.py"
       provides: "Final parity regression test suite for MACRO-04 / VAL-04"
       contains: "test_signal_log_byte_exact_with_macro_off"
       min_lines: 100
+    - path: ".planning/phases/44-macro-filter-module/44-VALIDATION.md"
+      provides: "Phase 44 validation sign-off — frontmatter flipped to approved + task IDs renumbered to match actual plan structure"
+      contains: "nyquist_compliant: true"
   key_links:
     - from: "tests/test_macro_filter_v6_parity.py::TestMacroFilterV6Parity"
       to: "Plan 03 engine integration (HybridEngine with macro_filter_enabled=False)"
@@ -261,6 +267,50 @@ DataLoader contract (verified via test_baseline_determinism.py:180):
     DO NOT change `_build_macro_off_cfg` or `_run_once` — Plan 02 Task 3 created them, Plan 03 verified them.
     DO NOT add `output/v10_reconciled_baseline.json` consumption — RESEARCH §State of the Art explicitly says the parity test does NOT need it (the JSON is for Phase 46 HARD gate). Adding it here would couple Phase 44 unnecessarily to Phase 42's JSON shape.
     DO NOT import `analysis.validate_v9` — Pitfall 7 forbids module-top import. The test uses `df.equals()`, not `compute_metrics`.
+
+    **VALIDATION.md UPDATE STEP (Phase 44 sign-off bookkeeping — closes WARNING 2 from plan-checker):**
+
+    After all 5 parity tests PASS, update `.planning/phases/44-macro-filter-module/44-VALIDATION.md` to lock in the validated state. The current draft has stale frontmatter (`nyquist_compliant: false`, `wave_0_complete: false`, `status: draft`) AND placeholder task IDs (`44-01-01..04` for MACRO-01/02/03 unit tests that are actually created in Plan 02 Wave 2, NOT Plan 01).
+
+    Make EXACTLY these edits to `.planning/phases/44-macro-filter-module/44-VALIDATION.md`:
+
+    1. **Frontmatter flips** — replace the three lines:
+       ```yaml
+       status: draft
+       nyquist_compliant: false
+       wave_0_complete: false
+       ```
+       with:
+       ```yaml
+       status: approved
+       nyquist_compliant: true
+       wave_0_complete: true
+       ```
+
+    2. **Per-Task Verification Map renumbering** — the placeholder note at the bottom of the table already says "Wave numbers/plan IDs above are PLACEHOLDERS — gsd-planner refines them when generating PLAN.md files." This task IS that refinement. Renumber the Task ID column as follows (Plan/Wave columns must move in lockstep):
+
+       | Old Task ID | New Task ID | Plan | Wave | Notes |
+       |-------------|-------------|------|------|-------|
+       | 44-01-01 | 44-02-01 | 02 | 2 | MACRO-01 dxy_zscore_known_date — created in Plan 02 Task 3 |
+       | 44-01-02 | 44-02-02 | 02 | 2 | MACRO-02 eem_zscore_known_date — created in Plan 02 Task 3 |
+       | 44-01-03 | 44-02-03 | 02 | 2 | MACRO-03 sbv_regime_transitions — created in Plan 02 Task 3 |
+       | 44-01-04 | 44-02-04 | 02 | 2 | MACRO-03 sbv_decay_to_neutral — created in Plan 02 Task 3 |
+       | 44-02-01 | 44-03-01 | 03 | 3 | MACRO-04 macro_verdict_pass_through — covered by Plan 03 unit suite |
+       | 44-02-02 | 44-03-02 | 03 | 3 | MACRO-04 short_circuit_when_disabled — Plan 03 Task 1 |
+       | 44-02-03 | 44-03-03 | 03 | 3 | MACRO-05 dxy_easing_vetoes_sell — Plan 03 Task 1 |
+       | 44-02-04 | 44-03-04 | 03 | 3 | MACRO-05 dxy_tightening_lowers_dd — Plan 03 Task 1 |
+       | 44-02-05 | 44-03-05 | 03 | 3 | MACRO-05 sbv_tightening_shrinks_stop_loss — Plan 03 Task 1 |
+       | 44-02-06 | 44-03-06 | 03 | 3 | MACRO-05 most_restrictive_combiner — Plan 03 Task 1 |
+       | 44-03-01 | 44-04-01 | 04 | 4 | MACRO-04 v6 parity full suite — this plan |
+       | 44-03-02 | 44-04-02 | 04 | 4 | MACRO-04 byte-exact signal log — this plan |
+
+       Update both the `Task ID` column AND the `Plan` column AND the `Wave` column in the table for each row. Status column flips from `⬜ pending` to `✅ green` for ALL rows since at this point all tests are PASSING (this task runs LAST in the phase).
+
+    3. **Approval line** — replace the bottom line `**Approval:** pending` with `**Approval:** approved 2026-04-23`.
+
+    Do NOT modify any other section of VALIDATION.md (Test Infrastructure, Sampling Rate, Wave 0 Requirements, Manual-Only Verifications stay verbatim — those sections are still accurate post-execution).
+
+    DO NOT touch the `*Wave numbers/plan IDs above are PLACEHOLDERS...*` italic note — leave it as-is for historical context (it documents that the original VALIDATION.md was a draft).
   </action>
   <verify>
     <automated>uv run pytest tests/test_macro_filter_v6_parity.py -x -m regression -v</automated>
@@ -280,6 +330,15 @@ DataLoader contract (verified via test_baseline_determinism.py:180):
     - Existing baseline determinism still passes: `uv run pytest tests/test_baseline_determinism.py -x -m regression` exits 0
     - Existing hybrid engine tests still pass: `uv run pytest tests/test_hybrid_engine.py -x` exits 0
     - Full Phase 44 unit test suite still passes: `uv run pytest tests/test_macro_filter.py -x` exits 0
+    - **VALIDATION.md frontmatter flipped to approved state (closes plan-checker WARNING 2):** `grep -c "nyquist_compliant: true" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns 1
+    - `grep -c "wave_0_complete: true" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns 1
+    - `grep -c "status: approved" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns 1
+    - **Stale placeholder task IDs purged (closes WARNING 2 renumbering):** `grep -c "44-01-01" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns 0 (all `44-01-*` IDs renumbered to `44-02-*` per the renumbering table in the action body)
+    - `grep -c "44-01-02" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns 0
+    - `grep -c "44-01-03" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns 0
+    - `grep -c "44-01-04" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns 0
+    - `grep -c "44-04-01" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns at least 1 (this plan's parity test row)
+    - `grep -c "Approval:.*approved" .planning/phases/44-macro-filter-module/44-VALIDATION.md` returns at least 1
   </acceptance_criteria>
   <done>5 tests in test_macro_filter_v6_parity.py all PASS under @pytest.mark.regression; macro-off byte-exact parity locked; macro-on determinism locked; macro-on column presence locked; MacroFilter actually-has-an-effect proven; existing test suites still green.</done>
 </task>

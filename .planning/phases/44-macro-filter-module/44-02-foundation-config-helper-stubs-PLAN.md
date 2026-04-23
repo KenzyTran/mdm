@@ -1060,6 +1060,7 @@ From RESEARCH §"Common Operation 1" (full add_macro_columns reference implement
     - `grep -c "from analysis.validate_v9" tests/test_macro_filter.py` returns 0
     - All Task 1+2 tests pass: `uv run pytest tests/test_macro_filter.py::test_macro_verdict_pass_through tests/test_macro_filter.py::test_dxy_zscore_known_date tests/test_macro_filter.py::test_eem_zscore_known_date tests/test_macro_filter.py::test_sbv_regime_transitions tests/test_macro_filter.py::test_sbv_decay_to_neutral tests/test_macro_filter.py::test_sbv_publication_lag_shift tests/test_macro_filter.py::test_config_field_presence tests/test_macro_filter.py::test_config_validation_gated_on_flag -x` exits 0
     - Plan-03-dependent tests skip cleanly: `uv run pytest tests/test_macro_filter.py -v 2>&1 | grep -c "SKIPPED"` returns at least 6 (the MacroFilter-class-dependent tests skip until Plan 03)
+    - **Pitfall 8 guard (RESEARCH §Common Pitfalls):** parity-test fixture explicitly sets `v60_strict_mode=True` — verify with `grep -c "v60_strict_mode=True" tests/test_macro_filter_v6_parity.py` returns at least 1 (without this, the parity test exercises the wrong config and passes spuriously)
     - `uv run pytest tests/test_baseline_determinism.py -x -m regression` STILL exits 0 (test additions don't break existing parity)
   </acceptance_criteria>
   <done>Test files exist with all 12 VALIDATION.md test stubs (8 plus 4 extras for symmetry coverage); Task 1+2 tests pass; Plan 03-dependent tests skip cleanly; no import-time side effects.</done>
