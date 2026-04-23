@@ -853,7 +853,7 @@ Plans:
   5. Filter policy is implemented: DXY easing VETOes SELL, DXY tightening lowers the effective DD threshold, SBV tightening shrinks `stop_loss_max_multiplier`; exact thresholds (`dxy_easing_z_threshold`, `dxy_tightening_z_threshold`, `eem_easing_z_threshold`, `eem_tightening_z_threshold`, `dxy_tightening_dd_threshold`, `sbv_tightening_stop_loss_max_multiplier`) are exposed as config fields ready for the Phase 45 grid search (per Phase 44 D-05 — engine binary model preserved, fractional sizing deferred to v11+)
 **Plans**: 4 plans
 Plans:
-- [ ] 44-01-doc-rewrite-macro05-PLAN.md — Atomic doc rewrite of MACRO-05 spec per D-05 (ROADMAP SC-5 + REQUIREMENTS) lands first
+- [x] 44-01-doc-rewrite-macro05-PLAN.md — Atomic doc rewrite of MACRO-05 spec per D-05 (ROADMAP SC-5 + REQUIREMENTS) lands first
 - [ ] 44-02-foundation-config-helper-stubs-PLAN.md — MDMV2Config 10 D-15 fields + add_macro_columns helper + MacroVerdict dataclass + test stubs
 - [ ] 44-03-engine-integration-PLAN.md — MacroFilter class + position_manager/stop_loss override params + HybridEngine 6 insertion points
 - [ ] 44-04-parity-regression-signoff-PLAN.md — MACRO-04 / VAL-04 byte-exact parity regression + macro-on determinism + effect-proof tests
@@ -948,7 +948,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 | 41. A/B & Walk-Forward Validation | v9.0 | 2/2 | Complete    | 2026-04-21 |
 | 42. Baseline Reconciliation | v10.0 | 6/6 | Complete    | 2026-04-22 |
 | 43. Canonical Liquidity Data Pipeline | v10.0 | 3/3 | Complete    | 2026-04-22 |
-| 44. Macro Filter Module | v10.0 | 0/0 | Not started | - |
+| 44. Macro Filter Module | v10.0 | 1/4 | In Progress | 2026-04-23 |
 | 45. Walk-Forward Grid Search | v10.0 | 0/0 | Not started | - |
 | 46. A/B + OOS Validation (HARD Gate) | v10.0 | 0/0 | Not started | - |
 | 47. Docs & Dashboard | v10.0 | 0/0 | Not started | - |

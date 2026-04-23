@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
-status: verifying
-stopped_at: Phase 44 context gathered
-last_updated: "2026-04-22T10:38:50.216Z"
-last_activity: 2026-04-22
+status: executing
+stopped_at: Completed 44-01-doc-rewrite-macro05-PLAN.md (2/2 tasks, 2 commits ee0b80d + 46067c4)
+last_updated: "2026-04-23T04:23:06.468Z"
+last_activity: 2026-04-23
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce v6.0 HybridEngine MaxDD from -28.6% to < -20% via VN-native macro filter (DXY/EEM/SBV regime), after reconciling baseline drift (shipped 11.5% → measured 10.70%).
-**Current focus:** Phase 43 — canonical-liquidity-data-pipeline
+**Current focus:** Phase 44 — macro-filter-module
 
 ## Current Position
 
-Phase: 43
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-22
+Phase: 44 (macro-filter-module) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-23
 
 Progress: [░░░░░░░░░░] 0% (v10.0: 0/6 phases complete)
 
@@ -106,6 +106,7 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 43]: Plan 43-03: Spec placed at repo-root docs/ (NOT docs/research/) per plan fence — docs/research is research evidence, docs/ is production contract. Any change to inputs/merge contract requires Phase 44 VAL-04 re-run.
 - [Phase 43]: Plan 43-03: Enumerated 5 look-ahead traps vs D-09 minimum of 3. Added (4) rolling-z-score-on-raw-CSV trap and (5) SBV direction='nearest' trap — both greppable failure modes Phase 44 reviewers can key off.
 - [Phase 43]: Plan 43-03: Code-Docs Sync pointer added to spec footer — future strategies/mdm_hybrid/macro_filter*.py changes MUST update docs/liquidity_proxy_spec.md in the same commit per CLAUDE.md Code-Docs Sync Rule.
+- [Phase 44]: Plan 44-01: doc-only rewrite of MACRO-05 per D-05 landed as two atomic commits (ee0b80d ROADMAP, 46067c4 REQUIREMENTS) BEFORE Wave-2 code work; 6 canonical threshold field names (dxy_easing_z_threshold, dxy_tightening_z_threshold, eem_easing_z_threshold, eem_tightening_z_threshold, dxy_tightening_dd_threshold, sbv_tightening_stop_loss_max_multiplier) now frozen in both ROADMAP.md:852 and REQUIREMENTS.md:26 — Phase 45 planner cannot race on stale dxy_z_threshold/sbv_tightening_position_frac text
 
 ### Pending Todos
 
@@ -117,7 +118,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-22T10:38:50.211Z
-Stopped at: Phase 44 context gathered
-Resume file: .planning/phases/44-macro-filter-module/44-CONTEXT.md
+Last session: 2026-04-23T04:23:06.456Z
+Stopped at: Completed 44-01-doc-rewrite-macro05-PLAN.md (2/2 tasks, 2 commits ee0b80d + 46067c4)
+Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
