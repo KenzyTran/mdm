@@ -1,9 +1,9 @@
 ---
 phase: 44
 slug: macro-filter-module
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: approved
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-23
 ---
 
@@ -38,18 +38,18 @@ created: 2026-04-23
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 44-01-01 | 01 | 1 | MACRO-01 | unit | `uv run pytest tests/test_macro_filter.py::test_dxy_zscore_known_date -x` | ❌ W0 | ⬜ pending |
-| 44-01-02 | 01 | 1 | MACRO-02 | unit | `uv run pytest tests/test_macro_filter.py::test_eem_zscore_known_date -x` | ❌ W0 | ⬜ pending |
-| 44-01-03 | 01 | 1 | MACRO-03 | unit | `uv run pytest tests/test_macro_filter.py::test_sbv_regime_transitions -x` | ❌ W0 | ⬜ pending |
-| 44-01-04 | 01 | 1 | MACRO-03 | unit | `uv run pytest tests/test_macro_filter.py::test_sbv_decay_to_neutral -x` | ❌ W0 | ⬜ pending |
-| 44-02-01 | 02 | 2 | MACRO-04 | unit | `uv run pytest tests/test_macro_filter.py::test_macro_verdict_pass_through -x` | ❌ W0 | ⬜ pending |
-| 44-02-02 | 02 | 2 | MACRO-04 | unit | `uv run pytest tests/test_macro_filter.py::test_short_circuit_when_disabled -x` | ❌ W0 | ⬜ pending |
-| 44-02-03 | 02 | 2 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_dxy_easing_vetoes_sell -x` | ❌ W0 | ⬜ pending |
-| 44-02-04 | 02 | 2 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_dxy_tightening_lowers_dd -x` | ❌ W0 | ⬜ pending |
-| 44-02-05 | 02 | 2 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_sbv_tightening_shrinks_stop_loss -x` | ❌ W0 | ⬜ pending |
-| 44-02-06 | 02 | 2 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_most_restrictive_combiner -x` | ❌ W0 | ⬜ pending |
-| 44-03-01 | 03 | 3 | MACRO-04 | regression | `uv run pytest tests/test_macro_filter_v6_parity.py -x -m regression` | ❌ W0 | ⬜ pending |
-| 44-03-02 | 03 | 3 | MACRO-04 | regression | `uv run pytest tests/test_macro_filter_v6_parity.py::test_signal_log_byte_exact -x -m regression` | ❌ W0 | ⬜ pending |
+| 44-02-01 | 02 | 2 | MACRO-01 | unit | `uv run pytest tests/test_macro_filter.py::test_dxy_zscore_known_date -x` | ❌ W0 | ✅ green |
+| 44-02-02 | 02 | 2 | MACRO-02 | unit | `uv run pytest tests/test_macro_filter.py::test_eem_zscore_known_date -x` | ❌ W0 | ✅ green |
+| 44-02-03 | 02 | 2 | MACRO-03 | unit | `uv run pytest tests/test_macro_filter.py::test_sbv_regime_transitions -x` | ❌ W0 | ✅ green |
+| 44-02-04 | 02 | 2 | MACRO-03 | unit | `uv run pytest tests/test_macro_filter.py::test_sbv_decay_to_neutral -x` | ❌ W0 | ✅ green |
+| 44-03-01 | 03 | 3 | MACRO-04 | unit | `uv run pytest tests/test_macro_filter.py::test_macro_verdict_pass_through -x` | ❌ W0 | ✅ green |
+| 44-03-02 | 03 | 3 | MACRO-04 | unit | `uv run pytest tests/test_macro_filter.py::test_short_circuit_when_disabled -x` | ❌ W0 | ✅ green |
+| 44-03-03 | 03 | 3 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_dxy_easing_vetoes_sell -x` | ❌ W0 | ✅ green |
+| 44-03-04 | 03 | 3 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_dxy_tightening_lowers_dd -x` | ❌ W0 | ✅ green |
+| 44-03-05 | 03 | 3 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_sbv_tightening_shrinks_stop_loss -x` | ❌ W0 | ✅ green |
+| 44-03-06 | 03 | 3 | MACRO-05 | unit | `uv run pytest tests/test_macro_filter.py::test_most_restrictive_combiner -x` | ❌ W0 | ✅ green |
+| 44-04-01 | 04 | 4 | MACRO-04 | regression | `uv run pytest tests/test_macro_filter_v6_parity.py -x -m regression` | ❌ W0 | ✅ green |
+| 44-04-02 | 04 | 4 | MACRO-04 | regression | `uv run pytest tests/test_macro_filter_v6_parity.py::test_signal_log_byte_exact -x -m regression` | ❌ W0 | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -79,11 +79,11 @@ created: 2026-04-23
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references (tests/test_macro_filter.py, tests/test_macro_filter_v6_parity.py)
-- [ ] No watch-mode flags (all `-x` short-circuit on first fail)
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (tests/test_macro_filter.py, tests/test_macro_filter_v6_parity.py)
+- [x] No watch-mode flags (all `-x` short-circuit on first fail)
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-04-23
