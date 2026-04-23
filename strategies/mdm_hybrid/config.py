@@ -88,6 +88,26 @@ class MDMV2Config:
     # See docs/audits/v10_baseline_drift.md and 42-CONTEXT.md D-07 for rationale.
     v60_strict_mode: bool = False
 
+    # ── Macro Filter (Phase 44, MACRO-01..05) ───────────────────────────
+    # Feature-gated default-off; when False, helper not called and
+    # MacroFilter.apply() returns pass_through on first line (D-09).
+    macro_filter_enabled: bool = False
+
+    # Threshold fields (Phase 45 grid-search inputs)
+    dxy_easing_z_threshold: float = -1.0           # D-11 — DXY z < this → easing → VETO SELL
+    dxy_tightening_z_threshold: float = +1.0       # D-11 — DXY z > this → tightening → lower DD
+    eem_easing_z_threshold: float = +1.0           # D-12 — sign FLIPPED vs DXY (EEM corr +0.19)
+    eem_tightening_z_threshold: float = -1.0       # D-12 — sign FLIPPED vs DXY
+
+    # Window fields
+    dxy_window_days: int = 20                      # D-14 — z-score lookback
+    eem_window_days: int = 20                      # D-14 — z-score lookback
+    sbv_decay_days: int = 90                       # D-14 — regime decay to neutral
+
+    # Policy override fields (consumed at use-site, not in-place mutation)
+    dxy_tightening_dd_threshold: int = 3           # D-02 — V2PositionManager override
+    sbv_tightening_stop_loss_max_multiplier: float = 1.5  # D-03 — StopLossChecker override
+
     def __post_init__(self):
         """Validate parameters."""
         assert self.correction_threshold < 0, "Correction threshold must be negative"
@@ -106,6 +126,34 @@ class MDMV2Config:
                 "percentile must be 1-100"
             assert self.refined_dd_small_vol_lookback > 0, \
                 "lookback must be positive"
+        # Macro Filter validation only fires when feature is enabled (Phase 39 D-06 precedent)
+        if self.macro_filter_enabled:
+            assert self.dxy_easing_z_threshold < 0, (
+                f"dxy_easing_z_threshold should be negative (e.g., -1.0); "
+                f"got {self.dxy_easing_z_threshold}"
+            )
+            assert self.dxy_tightening_z_threshold > 0, (
+                f"dxy_tightening_z_threshold should be positive (e.g., +1.0); "
+                f"got {self.dxy_tightening_z_threshold}"
+            )
+            assert self.eem_easing_z_threshold > 0, (
+                f"eem_easing_z_threshold should be positive (sign flipped vs DXY); "
+                f"got {self.eem_easing_z_threshold}"
+            )
+            assert self.eem_tightening_z_threshold < 0, (
+                f"eem_tightening_z_threshold should be negative (sign flipped vs DXY); "
+                f"got {self.eem_tightening_z_threshold}"
+            )
+            assert self.dxy_window_days > 0, "dxy_window_days must be positive"
+            assert self.eem_window_days > 0, "eem_window_days must be positive"
+            assert self.sbv_decay_days > 0, "sbv_decay_days must be positive"
+            assert self.dxy_tightening_dd_threshold > 0, (
+                "dxy_tightening_dd_threshold must be positive"
+            )
+            assert 0 < self.sbv_tightening_stop_loss_max_multiplier <= self.stop_loss_max_multiplier, (
+                f"sbv_tightening_stop_loss_max_multiplier ({self.sbv_tightening_stop_loss_max_multiplier}) "
+                f"must be in (0, stop_loss_max_multiplier={self.stop_loss_max_multiplier}]"
+            )
 
 
 # Compatibility alias: copied modules (distribution_day, rally_attempt, ftd_signal)
@@ -172,6 +220,17 @@ VN30_PRESET = MDMV2Config(
     refined_dd_small_vol_percentile=5,
     refined_dd_small_vol_lookback=50,
     v60_strict_mode=False,
+    # Macro Filter (Phase 44 D-15) — defaults match MDMV2Config defaults; explicit per project convention
+    macro_filter_enabled=False,
+    dxy_easing_z_threshold=-1.0,
+    dxy_tightening_z_threshold=+1.0,
+    eem_easing_z_threshold=+1.0,
+    eem_tightening_z_threshold=-1.0,
+    dxy_window_days=20,
+    eem_window_days=20,
+    sbv_decay_days=90,
+    dxy_tightening_dd_threshold=3,
+    sbv_tightening_stop_loss_max_multiplier=1.5,
     name="vn30",
 )
 
@@ -209,5 +268,16 @@ NASDAQ_PRESET = MDMV2Config(
     refined_dd_small_vol_percentile=5,
     refined_dd_small_vol_lookback=50,
     v60_strict_mode=False,
+    # Macro Filter (Phase 44 D-15) — defaults match MDMV2Config defaults; explicit per project convention
+    macro_filter_enabled=False,
+    dxy_easing_z_threshold=-1.0,
+    dxy_tightening_z_threshold=+1.0,
+    eem_easing_z_threshold=+1.0,
+    eem_tightening_z_threshold=-1.0,
+    dxy_window_days=20,
+    eem_window_days=20,
+    sbv_decay_days=90,
+    dxy_tightening_dd_threshold=3,
+    sbv_tightening_stop_loss_max_multiplier=1.5,
     name="nasdaq",
 )
