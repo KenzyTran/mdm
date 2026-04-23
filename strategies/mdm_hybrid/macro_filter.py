@@ -206,3 +206,112 @@ def add_macro_columns(
     sbv_merged = sbv_merged.drop(columns=['effective_date', 'sbv_raw_direction'])
 
     return sbv_merged
+
+
+# ── MacroFilter class (Plan 03) ─────────────────────────────────────────
+
+class MacroFilter:
+    """Stateless macro-policy filter for the hybrid engine.
+
+    Reads precomputed dxy_z, eem_z, sbv_regime columns and combines them
+    via the most-restrictive rule (D-04) to produce a MacroVerdict.
+
+    The filter never originates new state — it only modulates state-machine
+    decisions via three orthogonal policy levers:
+      - veto_sell (D-01, D-13): DXY OR EEM easing blocks SELL transition
+      - effective_dd_threshold (D-02, D-13): DXY OR EEM tightening lowers
+        V2PositionManager.dd_cash_threshold via override parameter
+      - effective_stop_loss_max_multiplier (D-03): SBV tightening shrinks
+        stop_loss_max_multiplier via StopLossChecker override parameter
+
+    D-04 conflict resolution (most-restrictive wins):
+      - If ANY tightening signal active → apply tightening policies (lower
+        DD threshold, tighten stop-loss); veto_sell stays False
+      - veto_sell requires (any easing) AND (no tightening) — a single
+        cautionary signal blocks the bullish veto
+
+    Per CONTEXT.md D-09, when macro_filter_enabled=False the apply()
+    method's first line returns pass_through() before reading any column.
+    Combined with the engine's gate around add_macro_columns, this is the
+    DUAL-LAYER short-circuit that protects v6.0 parity (MACRO-04 / VAL-04).
+    """
+
+    def __init__(self, config):
+        """Initialize with a HybridConfig.
+
+        Args:
+            config: HybridConfig instance — exposes config.v2_config with
+                the 10 D-15 fields landed in Plan 02 Task 1.
+        """
+        self.config = config
+
+    def apply(self, row, current_state) -> MacroVerdict:
+        """Evaluate macro policy for one trading day.
+
+        Args:
+            row: pandas Series with dxy_z, eem_z, sbv_regime columns.
+                When macro_filter_enabled=False the row is not even
+                read (D-09 hard short-circuit).
+            current_state: V2MarketState (BUY / CASH / SELL). Used by
+                D-01: veto_sell suppresses transitions INTO SELL, not
+                transitions away from SELL.
+
+        Returns:
+            MacroVerdict — pass_through if filter disabled, no signal
+            active, or NaN columns. Stacking allowed per D-04.
+        """
+        # Lazy import inside the function to avoid circular deps with
+        # position_manager (defensive — position_manager doesn't import
+        # this module today, but a future refactor might).
+        from .position_manager import V2MarketState
+
+        # ── D-09 HARD SHORT-CIRCUIT — first-line guard guarantees parity ──
+        # Do NOT compute votes, read columns, or call helpers when disabled.
+        if not self.config.v2_config.macro_filter_enabled:
+            return MacroVerdict.pass_through()
+
+        v2 = self.config.v2_config
+
+        # ── Read precomputed columns (NaN-safe per IndicatorFilter D-13) ─
+        dxy_z = row.get('dxy_z')
+        eem_z = row.get('eem_z')
+        sbv_regime = row.get('sbv_regime', 'neutral')
+
+        dxy_easing = pd.notna(dxy_z) and dxy_z < v2.dxy_easing_z_threshold
+        dxy_tightening = pd.notna(dxy_z) and dxy_z > v2.dxy_tightening_z_threshold
+        # D-12: EEM signs FLIPPED vs DXY (EEM corr +0.19 vs DXY -0.19)
+        eem_easing = pd.notna(eem_z) and eem_z > v2.eem_easing_z_threshold
+        eem_tightening = pd.notna(eem_z) and eem_z < v2.eem_tightening_z_threshold
+        sbv_easing = sbv_regime == 'easing'
+        sbv_tightening = sbv_regime == 'tightening'
+
+        # ── D-04 most-restrictive combiner ──────────────────────────────
+        any_tightening = dxy_tightening or eem_tightening or sbv_tightening
+        any_easing = dxy_easing or eem_easing or sbv_easing
+
+        veto_sell = False
+        effective_dd_threshold = None
+        effective_stop_loss_max_multiplier = None
+
+        # D-01 / D-13: easing VETOes SELL — but ONLY if no tightening
+        # signal active (D-04 cautionary blocks bullish). Veto only
+        # meaningful for transitions INTO SELL — D-01 says "block SELL
+        # transition, keep current state HOLD/BUY unchanged".
+        if any_easing and not any_tightening and current_state != V2MarketState.SELL:
+            veto_sell = True
+
+        # D-02 / D-13: DXY OR EEM tightening lowers DD threshold (stacks
+        # with D-03 — independent policy lever per D-04, NOT elif).
+        if dxy_tightening or eem_tightening:
+            effective_dd_threshold = v2.dxy_tightening_dd_threshold
+
+        # D-03: SBV tightening shrinks stop-loss max multiplier
+        # (independent of D-02 — stacks per D-04, NOT elif).
+        if sbv_tightening:
+            effective_stop_loss_max_multiplier = v2.sbv_tightening_stop_loss_max_multiplier
+
+        return MacroVerdict(
+            veto_sell=veto_sell,
+            effective_dd_threshold=effective_dd_threshold,
+            effective_stop_loss_max_multiplier=effective_stop_loss_max_multiplier,
+        )
