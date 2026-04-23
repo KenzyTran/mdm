@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
-status: executing
-stopped_at: Completed 45-02-oos-guard-pytest-PLAN.md (tests/test_walkforward_oos_guard.py 210 lines, commit bf0b5e8 — 2 regression tests PASS in 0.12s; full 10-test regression suite PASS in 87s)
-last_updated: "2026-04-23T08:45:12.660Z"
+status: verifying
+stopped_at: Completed 45-03-execute-sweep-commit-artifacts-PLAN.md (commit 4dd00a0 -- output/v10_grid_results.csv 39 rows, 0/39 accepted, retain-v6.0 verdict approved at checkpoint; Phase 45 complete 3/3; Phase 46 enters retain-v6.0 branch)
+last_updated: "2026-04-23T09:34:13.168Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 4
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce v6.0 HybridEngine MaxDD from -28.6% to < -20% via VN-native macro filter (DXY/EEM/SBV regime), after reconciling baseline drift (shipped 11.5% → measured 10.70%).
-**Current focus:** Phase 45 — walk-forward-grid-search
+**Current focus:** Phase 46 — A/B + OOS Validation (HARD Gate) [retain-v6.0 branch expected]
 
 ## Current Position
 
-Phase: 45 (walk-forward-grid-search) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
+Phase: 45 (walk-forward-grid-search) — COMPLETE (verdict: retain v6.0)
+Plan: 3 of 3 complete (3/3 SUMMARY.md on disk)
+Status: Ready for verification. Phase 46 planner unblocked — enters retain-v6.0 branch
 Last activity: 2026-04-23
 
-Progress: [░░░░░░░░░░] 0% (v10.0: 0/6 phases complete)
+Progress: [██████▋░░░] 67% (v10.0: 4/6 phases complete — 42, 43, 44, 45; remaining: 46, 47)
 
 ## v10.0 Phase Plan
 
@@ -117,6 +117,9 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 45]: Plan 45-01: df_override injection hook on load_vn30_data enables Plan 02 pytest to raise AssertionError on synthetic 2025 frames without network-bound DataLoader call; reusable pattern for future OOS-guard tests
 - [Phase 45]: Plan 45-02: stdout-safe lazy-import shim adopted for tests/test_walkforward_oos_guard.py (copied from test_baseline_determinism.py precedent) because analysis.walkforward_grid transitively imports analysis.validate_v9 which rewrites sys.stdout at module-load time — direct 'from analysis.walkforward_grid import ...' breaks pytest collection with 'ValueError: I/O operation on closed file'
 - [Phase 45]: Plan 45-02: 2 @pytest.mark.regression tests ship in 0.12s total (well under 2s budget) — test_assert_fires_on_2025_data verifies df_override hook raises AssertionError with 'OOS leak' substring; test_selection_excludes_2025_when_present verifies select_winner filters by accepted==True gate (not by rank) even when a poisoned row carries 999.0 CAGR; schema-level '2025 not in EVAL_YEARS' assert catches future maintainer drift
+- [Phase 45]: Plan 45-03: v10 walkforward sweep ran to completion (2m37s, exit 0, D-18 guard did not fire); 0/39 combos accepted. All rejected by D-09 gate median_degradation >= 0.30 (median 0.538, min 0.410, max 0.645). Train CAGR median 9.54% -> eval CAGR median 4.57% (54% degradation, ~2x the 30% gate). Full-period 10y return median +146.84%, best +163.39% vs v6.0 reconciled baseline +238.78% / 11.47% CAGR. Worst-year DD -19.68% (2021, shallower than v6.0 -28.17% full-period).
+- [Phase 45]: Plan 45-03: Retain-v6.0 verdict approved at Task 3 human-verify checkpoint. Phase 46 enters retain-v6.0 branch per plan line 211 and v10.0 HARD gate conditional logic. output/v10_grid_best.json intentionally NOT written because main() aborts JSON payload when zero stages have winners (D-11 consumer refusal semantics, not a bug) -- Phase 46 planner must handle this branch. Retain-v6.0 implies Phase 47 runs DOC-03 audit only, skips DOC-01/02.
+- [Phase 45]: Plan 45-03: Commit strategy adapted from plan Task 4 (CSV + JSON) to CSV-alone because JSON intentionally absent; commit message body names retain-v6.0 verdict explicitly so git log is machine-grep-able for Phase 46 branching. Pattern: when D-09-style acceptance gate rejects all candidates, commit the rejection artifact with verdict in the message body rather than skipping the artifact or fabricating a null winner.
 
 ### Pending Todos
 
@@ -128,7 +131,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-23T08:45:12.654Z
-Stopped at: Completed 45-02-oos-guard-pytest-PLAN.md (tests/test_walkforward_oos_guard.py 210 lines, commit bf0b5e8 — 2 regression tests PASS in 0.12s; full 10-test regression suite PASS in 87s)
+Last session: 2026-04-23T09:34:13.162Z
+Stopped at: Completed 45-03-execute-sweep-commit-artifacts-PLAN.md (commit 4dd00a0 -- output/v10_grid_results.csv 39 rows, 0/39 accepted, retain-v6.0 verdict approved at checkpoint; Phase 45 complete 3/3; Phase 46 enters retain-v6.0 branch)
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)

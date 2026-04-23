@@ -471,7 +471,8 @@ Plans:
  (completed 2026-04-22)
 - [x] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05)
  (completed 2026-04-23)
-- [ ] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
+- [x] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
+ (completed 2026-04-23 — verdict: 0/39 combos accepted, retain-v6.0 branch for Phase 46)
 - [ ] **Phase 46: A/B + OOS Validation (HARD Gate)** - 5-scenario A/B on 2015-2026 + 2025-2026 OOS with HARD gate (MaxDD < -20% AND CAGR ≥ reconciled baseline) + v6.0 parity regression + committed Production Candidate verdict (VAL-01, VAL-02, VAL-03, VAL-04, VAL-05)
 - [ ] **Phase 47: Docs & Dashboard** - Conditional on VAL-02 pass: ship rules doc + dashboard JSON + v10.0 milestone audit. On fail: retain v6.0 and publish rejection audit only (DOC-01, DOC-02, DOC-03)
 
@@ -873,7 +874,7 @@ Plans:
 Plans:
 - [x] 45-01-walkforward-grid-script-PLAN.md — analysis/walkforward_grid.py staged sweep orchestrator (27+9+3 combos, OOS fence, D-11 JSON + D-06 CSV, compute_metrics reuse)
 - [x] 45-02-oos-guard-pytest-PLAN.md — tests/test_walkforward_oos_guard.py with 2 @pytest.mark.regression tests per D-15 (synthetic 2025-leak detection)
-- [ ] 45-03-execute-sweep-commit-artifacts-PLAN.md — run sweep, human-verify results, commit output/v10_grid_results.csv + output/v10_grid_best.json
+- [x] 45-03-execute-sweep-commit-artifacts-PLAN.md — swept 39 combos in 2m37s; 0 accepted (all failed D-09 `median_degradation < 0.30` gate; median 0.538, min 0.410); output/v10_grid_results.csv force-added, output/v10_grid_best.json correctly NOT written (main() zero-accepted guard); retain-v6.0 verdict approved at human-verify checkpoint → Phase 46 enters retain branch
 **Canonical refs**: `.planning/MILESTONES.md` v9.0 entry (walk-forward-only-post-hoc lesson), Phase 41 degradation table (+67% to +96% = what v10 must not repeat), Phase 44 config fields (search space inputs)
 
 ### Phase 46: A/B + OOS Validation (HARD Gate)
@@ -887,7 +888,9 @@ Plans:
   4. v6.0 parity regression test (`macro_filter_enabled=False` → byte-exact v6.0 signal log match) is included in the validation run and must be green; failure blocks acceptance regardless of any gain on the other criteria
   5. Production Candidate recommendation committed as a literal string in `output/v10_validation_report.txt`: `"v10 macro filter accepted as production"` on full pass, `"v6.0 retained as production"` on any fail — grep-matchable, drives Phase 47 branching
 **Plans**: TBD
-**Canonical refs**: `analysis/validate_v9.py` (pattern for A/B + walk-forward + CSV + verdict string, adapt to v10), Phase 42 reconciled baseline (gate reference), Phase 45 `output/v10_grid_best.json` (scenarios under test)
+**Canonical refs**: `analysis/validate_v9.py` (pattern for A/B + walk-forward + CSV + verdict string, adapt to v10), Phase 42 reconciled baseline (gate reference), Phase 45 `output/v10_grid_results.csv` (39-combo sweep, 0 accepted — see 45-03 SUMMARY for retain-v6.0 context; note: `output/v10_grid_best.json` intentionally NOT written by main() because zero stages had winners — Phase 46 planner must handle this branch)
+
+**Expected outcome (post-Phase-45)**: retain-v6.0 branch. Phase 45 concluded 0/39 combos passed the walk-forward D-09 gate (median train→eval degradation 54% vs 30% threshold). Phase 46's HARD gate (VAL-02) will either (a) mechanically confirm rejection and VAL-05 writes `"v6.0 retained as production"` → Phase 47 DOC-03 only, or (b) surface a narrower-than-grid-searched config that passes (not expected since D-03 space was swept exhaustively). Phase 46 planner should design A/B scenarios assuming branch (a) and read 45-03 SUMMARY.md for per-stage numbers.
 
 ### Phase 47: Docs & Dashboard
 **Goal**: Ship the v10.0 milestone — pass path updates rules + dashboard + audit to install v10 as production; fail path keeps v6.0 and publishes a rejection audit with lessons for v11.0
@@ -954,7 +957,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 | 42. Baseline Reconciliation | v10.0 | 6/6 | Complete    | 2026-04-22 |
 | 43. Canonical Liquidity Data Pipeline | v10.0 | 3/3 | Complete    | 2026-04-22 |
 | 44. Macro Filter Module | v10.0 | 4/4 | Complete    | 2026-04-23 |
-| 45. Walk-Forward Grid Search | v10.0 | 2/3 | In Progress|  |
+| 45. Walk-Forward Grid Search | v10.0 | 3/3 | Complete   | 2026-04-23 |
 | 46. A/B + OOS Validation (HARD Gate) | v10.0 | 0/0 | Not started | - |
 | 47. Docs & Dashboard | v10.0 | 0/0 | Not started | - |
 
@@ -965,7 +968,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Context:
 - Bug found during Phase 33 review
