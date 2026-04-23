@@ -558,7 +558,127 @@ def _top3_nan_guard(stage_name: str, stage_rows: list) -> None:
 
 
 def main() -> None:
-    raise NotImplementedError("main() orchestrator lands in Task 5")
+    """Phase 45 staged walk-forward grid search orchestrator (WF-01 / WF-02 / WF-03).
+
+    Serial execution with tqdm progress per stage (D-17). Per-combo errors are
+    captured in row dicts (D-10 graceful degradation); SummaryError from the
+    D-18 top-3 NaN guard halts the script (fail-loud).
+    """
+    print("=" * 70)
+    print("PHASE 45: WALK-FORWARD GRID SEARCH (WF-01 / WF-02 / WF-03)")
+    print(f"  Train: {TRAIN_START}..{TRAIN_END}")
+    print(f"  Eval years: {EVAL_YEARS}")
+    print(f"  OOS holdout (UNTOUCHED): {OOS_FENCE}..2026-12-31")
+    print(
+        f"  Accept gate: median_degradation < {DEGRADATION_THRESHOLD:.2f} "
+        f"AND median(eval CAGR) > {MEDIAN_CAGR_FLOOR:.1f}%"
+    )
+    print("=" * 70)
+
+    # Load baseline for context only (D-Claude-4 — not a gate)
+    baseline_cagr = _load_reconciled_baseline_cagr()
+    if not np.isnan(baseline_cagr):
+        print(f"Reconciled v6.0 baseline CAGR (context only, not a gate): {baseline_cagr:.2f}%")
+
+    # D-14 OOS-guarded data load
+    print("\nLoading VN30 data (2015-01-01..2024-12-31)...")
+    df = load_vn30_data()
+    print(f"  {len(df)} rows ({df['date'].min().date()} -> {df['date'].max().date()})")
+
+    # Accumulate all 39 rows across stages for single CSV write
+    all_rows: list = []
+    stages_result: dict = {}
+
+    # ── STAGE 1: DXY (27 combos) ────────────────────────────────────
+    print(f"\n{'-' * 70}\nSTAGE 1 - DXY sweep (27 combos)\n{'-' * 70}")
+    stage1_grid = build_combo_grid('stage1_dxy', {})
+    assert len(stage1_grid) == 27, f"stage1 expected 27, got {len(stage1_grid)}"
+    stage1_rows: list = []
+    for i, overrides in enumerate(tqdm(stage1_grid, desc='Stage1 DXY')):
+        row = run_combo(df, overrides, 'stage1_dxy', i)
+        stage1_rows.append(row)
+        all_rows.append(row)
+    _top3_nan_guard('stage1_dxy', stage1_rows)
+    winner1, runners_up1 = select_winner(stage1_rows, 'stage1_dxy')
+    stages_result['stage1_dxy'] = {'winner': winner1, 'runners_up': runners_up1}
+    if winner1 is None:
+        print("  WARNING: Stage 1 has NO accepted combos. Stages 2/3 will sweep against VN30_PRESET DXY defaults.")
+        stage1_locked: dict = {}
+    else:
+        stage1_locked = {
+            f: winner1[f]
+            for f in ['dxy_easing_z_threshold', 'dxy_tightening_z_threshold', 'dxy_tightening_dd_threshold']
+        }
+        print(
+            f"  Stage 1 winner: {winner1['config_name']} | "
+            f"median_eval_cagr={winner1['median_eval_cagr_pct']:.2f}% | "
+            f"median_degradation={winner1['median_degradation']:.3f}"
+        )
+
+    # ── STAGE 2: EEM (9 combos, DXY locked) ─────────────────────────
+    print(f"\n{'-' * 70}\nSTAGE 2 - EEM sweep (9 combos, DXY locked)\n{'-' * 70}")
+    stage2_grid = build_combo_grid('stage2_eem', stage1_locked)
+    assert len(stage2_grid) == 9, f"stage2 expected 9, got {len(stage2_grid)}"
+    stage2_rows: list = []
+    for i, overrides in enumerate(tqdm(stage2_grid, desc='Stage2 EEM')):
+        row = run_combo(df, overrides, 'stage2_eem', i)
+        stage2_rows.append(row)
+        all_rows.append(row)
+    _top3_nan_guard('stage2_eem', stage2_rows)
+    winner2, runners_up2 = select_winner(stage2_rows, 'stage2_eem')
+    stages_result['stage2_eem'] = {'winner': winner2, 'runners_up': runners_up2}
+    if winner2 is None:
+        print("  WARNING: Stage 2 has NO accepted combos.")
+        stage2_locked = dict(stage1_locked)
+    else:
+        stage2_locked = dict(stage1_locked)
+        stage2_locked.update({
+            f: winner2[f] for f in ['eem_easing_z_threshold', 'eem_tightening_z_threshold']
+        })
+        print(
+            f"  Stage 2 winner: {winner2['config_name']} | "
+            f"median_eval_cagr={winner2['median_eval_cagr_pct']:.2f}% | "
+            f"median_degradation={winner2['median_degradation']:.3f}"
+        )
+
+    # ── STAGE 3: SBV (3 combos, DXY+EEM locked) ─────────────────────
+    print(f"\n{'-' * 70}\nSTAGE 3 - SBV sweep (3 combos, DXY+EEM locked)\n{'-' * 70}")
+    stage3_grid = build_combo_grid('stage3_all_three', stage2_locked)
+    assert len(stage3_grid) == 3, f"stage3 expected 3, got {len(stage3_grid)}"
+    stage3_rows: list = []
+    for i, overrides in enumerate(tqdm(stage3_grid, desc='Stage3 SBV')):
+        row = run_combo(df, overrides, 'stage3_all_three', i)
+        stage3_rows.append(row)
+        all_rows.append(row)
+    _top3_nan_guard('stage3_all_three', stage3_rows)
+    winner3, runners_up3 = select_winner(stage3_rows, 'stage3_all_three')
+    stages_result['stage3_all_three'] = {'winner': winner3, 'runners_up': runners_up3}
+    if winner3 is not None:
+        print(
+            f"  Stage 3 winner: {winner3['config_name']} | "
+            f"median_eval_cagr={winner3['median_eval_cagr_pct']:.2f}% | "
+            f"median_degradation={winner3['median_degradation']:.3f}"
+        )
+    else:
+        print("  WARNING: Stage 3 has NO accepted combos.")
+
+    # ── Outputs ─────────────────────────────────────────────────────
+    assert len(all_rows) == 39, f"expected 39 total combos, got {len(all_rows)}"
+    write_results_csv(all_rows, RESULTS_CSV)
+    print(f"\nWrote {RESULTS_CSV} ({len(all_rows)} rows)")
+    if all(s['winner'] is not None for s in stages_result.values()):
+        write_best_json(stages_result, BEST_JSON)
+        print(f"Wrote {BEST_JSON} (3 stages x 1 winner + 3 runners-up)")
+    else:
+        print(f"WARNING: at least one stage has no accepted winner - {BEST_JSON} NOT written")
+
+    # Accept/reject summary
+    accepted_count = sum(1 for r in all_rows if r.get('accepted') is True)
+    print(
+        f"\nSummary: {accepted_count}/{len(all_rows)} combos accepted "
+        f"(D-09 gate: < {DEGRADATION_THRESHOLD*100:.0f}% degradation "
+        f"AND > {MEDIAN_CAGR_FLOOR:.0f}% median eval CAGR)"
+    )
 
 
 if __name__ == '__main__':
