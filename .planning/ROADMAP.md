@@ -469,7 +469,8 @@ Plans:
  (completed 2026-04-22)
 - [x] **Phase 43: Canonical Liquidity Data Pipeline** - Productionize `data/vn_liquidity_proxy.csv` + `data/sbv_policy_events.csv` as regenerable canonical inputs with documented publication-lag handling (LIQ-01, LIQ-02, LIQ-03)
  (completed 2026-04-22)
-- [x] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05) (completed 2026-04-23)
+- [x] **Phase 44: Macro Filter Module** - DXY/EEM 20d z-scores + SBV regime classifier (90-day decay), integrated into HybridEngine feature-gated with v6.0 parity when off (MACRO-01, MACRO-02, MACRO-03, MACRO-04, MACRO-05)
+ (completed 2026-04-23)
 - [ ] **Phase 45: Walk-Forward Grid Search** - Rolling-window grid search (train 2015-2018, walk-forward 2019-2024, OOS 2025-2026) with median degradation < 30% acceptance rule INSIDE the sweep, not post-hoc (WF-01, WF-02, WF-03)
 - [ ] **Phase 46: A/B + OOS Validation (HARD Gate)** - 5-scenario A/B on 2015-2026 + 2025-2026 OOS with HARD gate (MaxDD < -20% AND CAGR ≥ reconciled baseline) + v6.0 parity regression + committed Production Candidate verdict (VAL-01, VAL-02, VAL-03, VAL-04, VAL-05)
 - [ ] **Phase 47: Docs & Dashboard** - Conditional on VAL-02 pass: ship rules doc + dashboard JSON + v10.0 milestone audit. On fail: retain v6.0 and publish rejection audit only (DOC-01, DOC-02, DOC-03)
@@ -868,7 +869,11 @@ Plans:
   2. Per parameter combo, the script computes train CAGR and each walk-forward year's CAGR, then a `median_degradation` metric across the walk-forward years; any combo with `median_degradation ≥ 30%` is marked rejected (not silently dropped)
   3. `output/v10_grid_results.csv` contains, per combo, the config fields plus per-window metrics (CAGR, Sharpe_rf3, MaxDD) and the accept/reject decision; top-N accepted combos have a locked-params JSON sibling (`output/v10_grid_best.json`) reproducible from the CSV
   4. Selection never considers 2025-2026 data — verified by a test that runs the selection against synthetic 2025-labeled data and asserts it's excluded
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 45-01-walkforward-grid-script-PLAN.md — analysis/walkforward_grid.py staged sweep orchestrator (27+9+3 combos, OOS fence, D-11 JSON + D-06 CSV, compute_metrics reuse)
+- [ ] 45-02-oos-guard-pytest-PLAN.md — tests/test_walkforward_oos_guard.py with 2 @pytest.mark.regression tests per D-15 (synthetic 2025-leak detection)
+- [ ] 45-03-execute-sweep-commit-artifacts-PLAN.md — run sweep, human-verify results, commit output/v10_grid_results.csv + output/v10_grid_best.json
 **Canonical refs**: `.planning/MILESTONES.md` v9.0 entry (walk-forward-only-post-hoc lesson), Phase 41 degradation table (+67% to +96% = what v10 must not repeat), Phase 44 config fields (search space inputs)
 
 ### Phase 46: A/B + OOS Validation (HARD Gate)
