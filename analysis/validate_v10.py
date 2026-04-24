@@ -455,5 +455,97 @@ def lookup_walkforward_degradation(combo_name: str = None) -> dict:
     }
 
 
-# Plan 02 still-to-add: run_parity_gate()
+def run_parity_gate(timeout_sec: int = 300) -> dict:
+    """Invoke the Phase 44 parity pytest as the VAL-04 gate (D-08).
+
+    Does NOT duplicate parity logic. Shells out to:
+        uv run python -m pytest tests/test_macro_filter_v6_parity.py -v
+
+    Exit code 0 = all 5 tests pass = VAL-04 gate PASS.
+    Any non-zero = any test failure = VAL-04 gate FAIL (blocks acceptance
+    per the v10.0 HARD gate contract regardless of VAL-01..03 outcome).
+
+    Args:
+        timeout_sec: Max seconds to wait. Historical runtime ~90s;
+            default 300 gives 3× margin for slow CI.
+
+    Returns:
+        Dict with:
+          passed: bool          (returncode == 0)
+          returncode: int
+          stdout_tail: str      (last ~50 lines of stdout)
+          stderr_tail: str      (last ~50 lines of stderr)
+          tests_passed: int     (parsed from pytest summary; -1 if unparseable)
+          tests_failed: int     (parsed from pytest summary; -1 if unparseable)
+          test_file: str        (PARITY_TEST_PATH)
+          duration_sec: float   (wall-clock subprocess time)
+
+    Does NOT raise — subprocess failures (pytest not installed, test file
+    missing, timeout) are captured in the return dict for report inclusion.
+    """
+    import time
+    import re as _re
+
+    cmd = [
+        'uv', 'run', 'python', '-m', 'pytest',
+        PARITY_TEST_PATH, '-v', '--tb=short',
+    ]
+    start = time.time()
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout_sec,
+            cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')),
+        )
+        rc = proc.returncode
+        stdout = proc.stdout
+        stderr = proc.stderr
+    except subprocess.TimeoutExpired as exc:
+        rc = -1
+        stdout = (exc.stdout or '') + f"\n[TIMEOUT after {timeout_sec}s]"
+        stderr = (exc.stderr or '') + f"\n[TIMEOUT after {timeout_sec}s]"
+    except FileNotFoundError as exc:
+        # 'uv' not in PATH or similar — capture and fail the gate
+        rc = -2
+        stdout = ''
+        stderr = f"[subprocess FileNotFoundError: {exc}]"
+
+    duration = time.time() - start
+
+    # Tail helpers (last N lines)
+    def _tail(text: str, n: int = 50) -> str:
+        if not text:
+            return ''
+        lines = text.splitlines()
+        return '\n'.join(lines[-n:])
+
+    # Parse pytest summary line: "5 passed in 90.2s" or "4 passed, 1 failed in ..."
+    tests_passed = -1
+    tests_failed = -1
+    if stdout:
+        # Look for the final summary line
+        passed_match = _re.search(r'(\d+) passed', stdout)
+        failed_match = _re.search(r'(\d+) failed', stdout)
+        if passed_match:
+            tests_passed = int(passed_match.group(1))
+        if failed_match:
+            tests_failed = int(failed_match.group(1))
+        # If no 'failed' token found AND 'passed' found AND rc==0, set failed=0
+        if tests_passed >= 0 and tests_failed == -1 and rc == 0:
+            tests_failed = 0
+
+    return {
+        'passed': rc == 0,
+        'returncode': rc,
+        'stdout_tail': _tail(stdout, 50),
+        'stderr_tail': _tail(stderr, 50),
+        'tests_passed': tests_passed,
+        'tests_failed': tests_failed,
+        'test_file': PARITY_TEST_PATH,
+        'duration_sec': duration,
+    }
+
+
 # Plan 03 adds: main() orchestration + report/CSV/verdict writers
