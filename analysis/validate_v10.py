@@ -257,6 +257,109 @@ def verify_extremes_never_trigger(df_with_macro_cols: pd.DataFrame) -> dict:
     }
 
 
-# Plan 02 adds: load_hard_gate_thresholds(), lookup_walkforward_degradation(),
-#               run_parity_gate()
+# ═══════════════════════════════════════════════════════════════════════
+# Gate helpers (Plan 02) — pure functions consumed by Plan 03 main()
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def load_hard_gate_thresholds() -> dict:
+    """Load VAL-02 HARD gate thresholds per D-05.
+
+    CAGR floor comes from output/v10_reconciled_baseline.json (Phase 42
+    BASE-02 canonical tuple) so we never hardcode the floor value in this
+    script — any future reconciliation re-run updates the gate automatically.
+    MaxDD ceiling is the module constant HARD_GATE_MAX_DD_CEILING = -20.0
+    (milestone decision, not subject to baseline drift).
+
+    Returns:
+        Dict with:
+          cagr_floor: float (from reconciled baseline cagr_pct field)
+          max_dd_ceiling: float (HARD_GATE_MAX_DD_CEILING, always -20.0)
+          baseline_source: str (the JSON path, for report provenance)
+          schema_version: int (from JSON, for compatibility tracking)
+
+    Raises:
+        FileNotFoundError: if RECONCILED_BASELINE_JSON missing (message
+            points to Phase 42 Plan 42-05 as the owner).
+        KeyError: if JSON lacks 'cagr_pct' key (schema drift — fail loud).
+    """
+    if not os.path.exists(RECONCILED_BASELINE_JSON):
+        raise FileNotFoundError(
+            f"{RECONCILED_BASELINE_JSON} not found. "
+            "Phase 42 Plan 42-05 owns this artifact; verify "
+            "output/v10_reconciled_baseline.json exists (force-added past "
+            "output/ gitignore) before running Phase 46 validation."
+        )
+    with open(RECONCILED_BASELINE_JSON, 'r', encoding='utf-8') as f:
+        baseline = json.load(f)
+    if 'cagr_pct' not in baseline:
+        raise KeyError(
+            f"'cagr_pct' missing from {RECONCILED_BASELINE_JSON}. "
+            f"Found keys: {sorted(baseline.keys())}. Schema drift — "
+            "check Phase 42 BASE-02 contract."
+        )
+    return {
+        'cagr_floor': float(baseline['cagr_pct']),
+        'max_dd_ceiling': HARD_GATE_MAX_DD_CEILING,
+        'baseline_source': RECONCILED_BASELINE_JSON,
+        'schema_version': baseline.get('schema_version', None),
+    }
+
+
+def evaluate_hard_gate(metrics: dict, thresholds: dict) -> dict:
+    """Evaluate VAL-02 HARD gate against a single scenario's metrics.
+
+    D-05 rule: pass iff
+      (cagr_pct >= cagr_floor) AND (max_dd_pct > max_dd_ceiling)
+    where max_dd_pct and max_dd_ceiling are both negative; "strictly
+    less negative" means "observed drawdown shallower than the -20% cap".
+
+    Args:
+        metrics: Dict from compute_metrics() — must have 'cagr_pct' and
+            'max_dd_pct' keys (float percent values; e.g. reconciled baseline
+            cagr and its max drawdown).
+        thresholds: Dict from load_hard_gate_thresholds() — must have
+            'cagr_floor' and 'max_dd_ceiling'.
+
+    Returns:
+        Dict with:
+          passed: bool — True iff both sub-gates pass
+          cagr_pass: bool
+          max_dd_pass: bool
+          cagr_observed: float
+          max_dd_observed: float
+          cagr_required: float (>=)
+          max_dd_required: float (strictly > i.e. shallower-than)
+          detail: str — one-line human summary for the report
+    """
+    cagr_obs = float(metrics['cagr_pct'])
+    max_dd_obs = float(metrics['max_dd_pct'])
+    cagr_req = float(thresholds['cagr_floor'])
+    max_dd_req = float(thresholds['max_dd_ceiling'])
+
+    cagr_pass = cagr_obs >= cagr_req
+    # max_dd_obs and max_dd_req both negative. 'shallower' = less negative = greater.
+    max_dd_pass = max_dd_obs > max_dd_req
+    passed = cagr_pass and max_dd_pass
+
+    cagr_glyph = '✓' if cagr_pass else '✗'
+    maxdd_glyph = '✓' if max_dd_pass else '✗'
+    detail = (
+        f"CAGR {cagr_glyph} {cagr_obs:.2f}% vs floor {cagr_req:.2f}% | "
+        f"MaxDD {maxdd_glyph} {max_dd_obs:.2f}% vs ceiling {max_dd_req:.2f}%"
+    )
+
+    return {
+        'passed': passed,
+        'cagr_pass': cagr_pass,
+        'max_dd_pass': max_dd_pass,
+        'cagr_observed': cagr_obs,
+        'max_dd_observed': max_dd_obs,
+        'cagr_required': cagr_req,
+        'max_dd_required': max_dd_req,
+        'detail': detail,
+    }
+
+
+# Plan 02 still-to-add: lookup_walkforward_degradation(), run_parity_gate()
 # Plan 03 adds: main() orchestration + report/CSV/verdict writers
