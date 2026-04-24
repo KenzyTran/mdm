@@ -98,6 +98,104 @@ SBV_MULTIPLIER_NOOP = 2.5   # equals stop_loss_max_multiplier; makes SBV tighten
 # policy branch is never entered on real data.
 
 
+def build_scenarios() -> dict:
+    """Build the 5 scenario MDMV2Config instances per D-01/D-02/D-03.
+
+    D-01 (defaults): all macro-on scenarios use VN30_PRESET defaults for
+        their active factor(s). No Phase-45 grid-search winner exists
+        because 0/39 combos were accepted.
+    D-02 (isolation via extremes): +DXY/+EEM/+SBV-regime disable the
+        other factors by pushing z-thresholds to unreachable extremes
+        (preserving required signs per MDMV2Config.__post_init__) and
+        neutralizing SBV by setting the multiplier equal to
+        stop_loss_max_multiplier (2.5), so the SBV tightening branch
+        never LOWERS the effective cap.
+    D-03 (+all = VN30_PRESET verbatim): the full-stack scenario flips
+        only the feature gate; all thresholds stay at VN30_PRESET values.
+
+    Returns:
+        Dict with keys matching SCENARIO_ORDER; each value is an
+        MDMV2Config suitable for HybridEngine(HybridConfig(v2_config=...)).
+    """
+    # --- baseline: macro off, v6.0 reference ---------------------------
+    baseline = replace(
+        VN30_PRESET,
+        macro_filter_enabled=False,
+        name='baseline',
+    )
+
+    # --- +DXY: DXY live, EEM + SBV disabled via extremes ---------------
+    plus_dxy = replace(
+        VN30_PRESET,
+        macro_filter_enabled=True,
+        # DXY: VN30_PRESET defaults (live) — no override
+        # EEM: unreachable extremes (signs preserved per __post_init__)
+        eem_easing_z_threshold=Z_EXTREME_POSITIVE,     # still > 0
+        eem_tightening_z_threshold=Z_EXTREME_NEGATIVE, # still < 0
+        # SBV: multiplier equals stop_loss_max_multiplier (no tightening effect)
+        sbv_tightening_stop_loss_max_multiplier=SBV_MULTIPLIER_NOOP,
+        name='+DXY',
+    )
+
+    # --- +EEM: EEM live, DXY + SBV disabled via extremes ---------------
+    plus_eem = replace(
+        VN30_PRESET,
+        macro_filter_enabled=True,
+        # DXY: unreachable extremes (signs preserved)
+        dxy_easing_z_threshold=Z_EXTREME_NEGATIVE,     # still < 0
+        dxy_tightening_z_threshold=Z_EXTREME_POSITIVE, # still > 0
+        # EEM: VN30_PRESET defaults (live) — no override
+        # SBV: no-op multiplier
+        sbv_tightening_stop_loss_max_multiplier=SBV_MULTIPLIER_NOOP,
+        name='+EEM',
+    )
+
+    # --- +SBV-regime: SBV live, DXY + EEM disabled via extremes --------
+    plus_sbv = replace(
+        VN30_PRESET,
+        macro_filter_enabled=True,
+        # DXY: unreachable extremes
+        dxy_easing_z_threshold=Z_EXTREME_NEGATIVE,
+        dxy_tightening_z_threshold=Z_EXTREME_POSITIVE,
+        # EEM: unreachable extremes
+        eem_easing_z_threshold=Z_EXTREME_POSITIVE,
+        eem_tightening_z_threshold=Z_EXTREME_NEGATIVE,
+        # SBV: VN30_PRESET default multiplier (1.5) — live
+        name='+SBV-regime',
+    )
+
+    # --- +all: VN30_PRESET as-shipped (D-03) ---------------------------
+    plus_all = replace(
+        VN30_PRESET,
+        macro_filter_enabled=True,
+        name='+all',
+    )
+
+    return {
+        'baseline': baseline,
+        '+DXY': plus_dxy,
+        '+EEM': plus_eem,
+        '+SBV-regime': plus_sbv,
+        '+all': plus_all,
+    }
+
+
+def run_engine(df: pd.DataFrame, cfg) -> pd.DataFrame:
+    """Run HybridEngine on df with the given MDMV2Config.
+
+    Mirrors analysis/validate_v9.py::run_engine — two_phase_enabled=True,
+    filter_enabled=False. df is defensively copied inside engine.run()
+    already but we copy here too so callers can re-run scenarios on
+    shared data without side effects.
+    """
+    engine = HybridEngine(HybridConfig(
+        v2_config=cfg,
+        two_phase_enabled=True,
+        filter_enabled=False,
+    ))
+    return engine.run(df.copy())
+
+
 # Plan 02 adds: load_hard_gate_thresholds(), lookup_walkforward_degradation(),
 #               run_parity_gate()
 # Plan 03 adds: main() orchestration + report/CSV/verdict writers
