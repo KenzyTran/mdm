@@ -1,0 +1,103 @@
+"""Phase 46: v10.0 A/B + OOS Validation (HARD Gate) — VAL-01..VAL-05.
+
+Forked from analysis/validate_v9.py skeleton per CONTEXT D-12. Imports
+compute_metrics from analysis.validate_v9 per D-13 (determinism across
+Phase 41/45/46). Produces:
+- output/v10_ab_comparison.txt — 5-scenario A/B report on VN30 2015-2026
+- output/v10_ab_scenarios.csv — machine-readable per-scenario metrics
+- output/v10_validation_report.txt — HARD gate verdict + rejection narrative
+
+Scenarios (D-01 "defaults" + D-02 isolation via threshold extremes):
+  1. baseline:       macro_filter_enabled=False (v6.0 reference)
+  2. +DXY:           macro_filter_enabled=True, EEM + SBV disabled via extremes
+  3. +EEM:           macro_filter_enabled=True, DXY + SBV disabled via extremes
+  4. +SBV-regime:    macro_filter_enabled=True, DXY + EEM disabled via extremes
+  5. +all:           VN30_PRESET verbatim + macro_filter_enabled=True (D-03)
+
+Exit discipline (D-11): exit 0 on full pass, exit 1 on any gate fail.
+Verdict string (D-09): literal "v10 macro filter accepted as production"
+on full pass, "v6.0 retained as production" on any fail.
+
+Usage:  uv run python analysis/validate_v10.py
+"""
+
+import sys
+import os
+import io
+import json
+import subprocess
+import traceback
+from dataclasses import replace
+
+import numpy as np
+import pandas as pd
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from core.data_loader import DataLoader
+from core.indicators import build_indicator_dataframe
+from strategies.mdm_hybrid.mdm_hybrid_engine import HybridEngine
+from strategies.mdm_hybrid.config import HybridConfig, VN30_PRESET
+from analysis.validate_v9 import compute_metrics
+
+
+# ── Module constants ────────────────────────────────────────────────
+DATA_START = '2015-01-01'
+DATA_END = '2026-03-31'              # Full A/B period (matches v9 precedent + reconciled baseline window)
+OOS_START = '2025-01-01'             # OOS HARD gate window (D-14)
+OOS_END = '2026-03-31'
+
+# HARD gate thresholds (D-05)
+HARD_GATE_MAX_DD_CEILING = -20.0     # OOS MaxDD must be strictly > this (less negative)
+# HARD_GATE_CAGR_FLOOR read at runtime from output/v10_reconciled_baseline.json (D-05)
+
+# VAL-03 walk-forward re-check (D-07)
+WALKFORWARD_DEGRADATION_THRESHOLD = 0.30
+WALKFORWARD_GRID_CSV = os.path.join(
+    os.path.dirname(__file__), '..', 'output', 'v10_grid_results.csv'
+)
+WALKFORWARD_VN30_PRESET_COMBO = 'stage3_all_three-c1'
+# D-07 note: stage3_all_three-c1 matches VN30_PRESET defaults exactly
+# (dxy_easing=-1.0, dxy_tightening=+1.0, dxy_tightening_dd=3,
+#  eem_easing=+1.0, eem_tightening=-1.0, sbv_mult=1.5).
+# All three stage3_all_three rows have identical median_degradation
+# (0.5374873...) because the macro filter policy saturates before
+# the SBV multiplier variation matters.
+
+# Reconciled baseline (D-05)
+RECONCILED_BASELINE_JSON = os.path.join(
+    os.path.dirname(__file__), '..', 'output', 'v10_reconciled_baseline.json'
+)
+
+# VAL-04 parity test (D-08)
+PARITY_TEST_PATH = 'tests/test_macro_filter_v6_parity.py'
+
+# Output paths
+REPORT_TXT = os.path.join(os.path.dirname(__file__), '..', 'output', 'v10_validation_report.txt')
+AB_COMPARISON_TXT = os.path.join(os.path.dirname(__file__), '..', 'output', 'v10_ab_comparison.txt')
+SCENARIOS_CSV = os.path.join(os.path.dirname(__file__), '..', 'output', 'v10_ab_scenarios.csv')
+
+# Verdict strings (D-09 — exact, case-sensitive, locked by ROADMAP SC-5)
+VERDICT_PASS = "v10 macro filter accepted as production"
+VERDICT_FAIL = "v6.0 retained as production"
+
+# Scenario iteration order — single source of truth for A/B loop + CSV writer + OOS subset
+SCENARIO_ORDER = ['baseline', '+DXY', '+EEM', '+SBV-regime', '+all']
+OOS_SCENARIO_SUBSET = ['baseline', '+all']  # D-04: OOS runs only these two
+
+# Isolation extremes (D-02). Sized to never trigger on 2015-2026 dxy_z/eem_z ranges.
+# verify_extremes_never_trigger() asserts observed |z| < this bound at runtime.
+Z_EXTREME_POSITIVE = 999.0
+Z_EXTREME_NEGATIVE = -999.0
+SBV_MULTIPLIER_NOOP = 2.5   # equals stop_loss_max_multiplier; makes SBV tightening branch a no-op
+
+# Isolation rationale: __post_init__ validation in MDMV2Config requires
+# dxy_easing_z < 0, dxy_tightening_z > 0, eem_easing_z > 0, eem_tightening_z < 0.
+# We preserve those required signs while pushing magnitudes to 999 so the
+# policy branch is never entered on real data.
+
+
+# Plan 02 adds: load_hard_gate_thresholds(), lookup_walkforward_degradation(),
+#               run_parity_gate()
+# Plan 03 adds: main() orchestration + report/CSV/verdict writers
