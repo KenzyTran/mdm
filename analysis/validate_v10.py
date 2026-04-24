@@ -361,5 +361,99 @@ def evaluate_hard_gate(metrics: dict, thresholds: dict) -> dict:
     }
 
 
-# Plan 02 still-to-add: lookup_walkforward_degradation(), run_parity_gate()
+def lookup_walkforward_degradation(combo_name: str = None) -> dict:
+    """Read walk-forward median_degradation for the +all defaults combo (VAL-03 per D-07).
+
+    Does NOT re-run the 39-combo sweep. Reads the row of
+    output/v10_grid_results.csv whose config_name matches
+    WALKFORWARD_VN30_PRESET_COMBO (default 'stage3_all_three-c1' —
+    matches VN30_PRESET defaults: dxy_easing=-1.0, dxy_tightening=+1.0,
+    dxy_tightening_dd=3, eem_easing=+1.0, eem_tightening=-1.0,
+    sbv_mult=1.5).
+
+    VAL-03 gate rule (D-07): pass iff median_degradation < 0.30. The CSV's
+    own 'accepted' column uses the Phase 45 D-09 composite gate
+    (median_degradation < 0.30 AND median_eval_cagr > 0.0); for VAL-03 we
+    apply only the degradation half so the gate is interpretable in
+    isolation as "walk-forward stability".
+
+    Args:
+        combo_name: Override for the target row's config_name. Default
+            None → uses WALKFORWARD_VN30_PRESET_COMBO.
+
+    Returns:
+        Dict with:
+          combo: str                (resolved config_name)
+          median_degradation: float (from CSV)
+          accepted: bool            (from CSV's own composite D-09 column)
+          rejection_reason: str     (from CSV; empty string if accepted)
+          passed_gate: bool         (VAL-03 rule: median_degradation < 0.30)
+          threshold: float          (WALKFORWARD_DEGRADATION_THRESHOLD = 0.30)
+          source_csv: str           (provenance)
+          total_combos: int         (row count in CSV)
+          total_accepted: int       (sum of CSV's accepted column)
+
+    Raises:
+        FileNotFoundError: if WALKFORWARD_GRID_CSV missing (points to
+            Phase 45 Plan 03 as owner).
+        ValueError: if combo_name not found in the CSV (schema drift).
+    """
+    target = combo_name if combo_name is not None else WALKFORWARD_VN30_PRESET_COMBO
+
+    if not os.path.exists(WALKFORWARD_GRID_CSV):
+        raise FileNotFoundError(
+            f"{WALKFORWARD_GRID_CSV} not found. "
+            "Phase 45 Plan 03 owns this artifact; re-run "
+            "`uv run python analysis/walkforward_grid.py` to regenerate "
+            "(or git log for commit 4dd00a0 which force-added it)."
+        )
+
+    df = pd.read_csv(WALKFORWARD_GRID_CSV)
+    matches = df[df['config_name'] == target]
+    if len(matches) == 0:
+        available = sorted(df['config_name'].unique().tolist())[:10]
+        raise ValueError(
+            f"config_name='{target}' not found in {WALKFORWARD_GRID_CSV}. "
+            f"First 10 available: {available}. "
+            "Check Phase 45 D-07 combo-naming scheme."
+        )
+    if len(matches) > 1:
+        raise ValueError(
+            f"config_name='{target}' matches {len(matches)} rows; "
+            "expected exactly 1. CSV has non-unique config_name (schema drift)."
+        )
+
+    row = matches.iloc[0]
+    median_deg = float(row['median_degradation'])
+    # CSV's 'accepted' is a boolean column; pandas loads it as str or bool
+    # depending on dtype inference. Normalise.
+    raw_accepted = row['accepted']
+    if isinstance(raw_accepted, str):
+        accepted = raw_accepted.strip().lower() == 'true'
+    else:
+        accepted = bool(raw_accepted)
+    rejection_reason = (
+        str(row['rejection_reason']) if pd.notna(row['rejection_reason']) else ''
+    )
+
+    # Aggregate CSV counts for report context
+    if df['accepted'].dtype == object:
+        total_accepted = int((df['accepted'].astype(str).str.lower() == 'true').sum())
+    else:
+        total_accepted = int(df['accepted'].sum())
+
+    return {
+        'combo': target,
+        'median_degradation': median_deg,
+        'accepted': accepted,
+        'rejection_reason': rejection_reason,
+        'passed_gate': median_deg < WALKFORWARD_DEGRADATION_THRESHOLD,
+        'threshold': WALKFORWARD_DEGRADATION_THRESHOLD,
+        'source_csv': WALKFORWARD_GRID_CSV,
+        'total_combos': int(len(df)),
+        'total_accepted': total_accepted,
+    }
+
+
+# Plan 02 still-to-add: run_parity_gate()
 # Plan 03 adds: main() orchestration + report/CSV/verdict writers
