@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 46-02 gate helpers
-last_updated: "2026-04-24T09:12:48.016Z"
+stopped_at: Completed 46-03 pipeline wiring
+last_updated: "2026-04-24T09:25:21.636Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 4
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 46 (ab-oos-validation-hard-gate) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-24
 
@@ -127,6 +127,9 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 46]: Plan 46-02: VAL-03 lookup_walkforward_degradation applies strict D-07 rule (median_degradation < 0.30) in-function rather than delegating to CSV accepted column (composite D-09); keeps VAL-03 interpretable in isolation as 'walk-forward stability' for Phase 47 audit narrative
 - [Phase 46]: Plan 46-02: run_parity_gate NEVER raises -- subprocess pitfalls (FileNotFoundError for uv, TimeoutExpired) captured as rc=-2/rc=-1 diagnostic in return dict; rationale: VAL-01..04 run in sequence, raise would abort the entire Plan 03 pipeline before verdict report is written
 - [Phase 46]: Plan 46-02: Windows App Control block on _ctypes.pyd persists in uv cpython-3.10.20 -- Plan 02 substituted AST + stdlib-replay verification via system Python 3.13 (same as Plan 01). Structural acceptance 100% verified; pandas-mediated runtime behaviors (numpy.bool_ branch in CSV dtype normalisation, 5 parity tests passing) deferred to Plan 03 CI run on unblocked env
+- [Phase 46]: Plan 46-03: D-09 verdict rendered via bare log(verdict_str) call — literal on its own line surrounded by blank lines so Phase 47's grep matches VERDICT_PASS/VERDICT_FAIL cleanly without word-boundary tricks
+- [Phase 46]: Plan 46-03: D-10 rejection narrative fully parameterized via baseline_cagr_floor f-string substitution (zero hardcoded 11.47 literals); 48-line narrative in fail case cites exact Phase 45 numbers (9.54 train CAGR, 0.538 degradation median, per-year DD medians 2019-2024, +146.8% vs +238.78% return comparison)
+- [Phase 46]: Plan 46-03: D-06 no-short-circuit implemented as straight-line sequence in main() — each of 4 gates runs unconditionally, 3 deliverables always written, sys.exit(exit_code) at end with dynamic code 0/1 per D-11 (never hardcoded sys.exit(0) — Rule 1 auto-fix rewrote docstring prose that contained the forbidden literal)
 
 ### Pending Todos
 
@@ -144,7 +147,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-24T09:12:21.021Z
-Stopped at: Completed 46-02 gate helpers
+Last session: 2026-04-24T09:25:21.628Z
+Stopped at: Completed 46-03 pipeline wiring
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)

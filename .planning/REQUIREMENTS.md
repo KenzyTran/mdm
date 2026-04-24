@@ -33,11 +33,11 @@
 
 ### Validation
 
-- [ ] **VAL-01**: A/B comparison on full 2015-2026 across 5 scenarios (baseline / +DXY / +EEM / +SBV-regime / +all) with canonical metrics (CAGR, Sharpe_rf3, MaxDD, total return, transitions, time-in-state, SELL count, MA50 breakdown share)
+- [x] **VAL-01**: A/B comparison on full 2015-2026 across 5 scenarios (baseline / +DXY / +EEM / +SBV-regime / +all) with canonical metrics (CAGR, Sharpe_rf3, MaxDD, total return, transitions, time-in-state, SELL count, MA50 breakdown share)
 - [x] **VAL-02**: OOS test validation (2025-2026 held-out) with HARD gate — MaxDD < -20% AND CAGR ≥ reconciled baseline; script returns exit code reflecting gate verdict
 - [x] **VAL-03**: Walk-forward stability gate — median degradation < 30% across all rolling windows for the selected scenario; failure blocks acceptance
 - [x] **VAL-04**: v6.0 parity regression test — signal log byte-exact match when macro filter disabled; automated in CI-friendly test suite
-- [ ] **VAL-05**: Production Candidate recommendation committed as literal string in `output/v10_validation_report.txt` (literal "v10 macro filter accepted as production" on pass, "v6.0 retained as production" on fail)
+- [x] **VAL-05**: Production Candidate recommendation committed as literal string in `output/v10_validation_report.txt` (literal "v10 macro filter accepted as production" on pass, "v6.0 retained as production" on fail)
 
 ### Docs & Dashboard (conditional on VAL-02 pass)
 
@@ -89,11 +89,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WF-01 | Phase 45 | Complete |
 | WF-02 | Phase 45 | Complete |
 | WF-03 | Phase 45 | Complete |
-| VAL-01 | Phase 46 | Pending |
+| VAL-01 | Phase 46 | Complete |
 | VAL-02 | Phase 46 | Complete |
 | VAL-03 | Phase 46 | Complete |
 | VAL-04 | Phase 46 | Complete |
-| VAL-05 | Phase 46 | Pending |
+| VAL-05 | Phase 46 | Complete |
 | DOC-01 | Phase 47 | Pending |
 | DOC-02 | Phase 47 | Pending |
 | DOC-03 | Phase 47 | Pending |
