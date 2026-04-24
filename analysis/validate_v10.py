@@ -796,7 +796,7 @@ def write_validation_report(gate_results: dict, report_path: str = None) -> bool
         report_path: Override; default REPORT_TXT.
 
     Returns:
-        all_passed: True iff every gate passed → caller sys.exit(0).
+        all_passed: True iff every gate passed → caller returns exit code 0.
     """
     path = report_path if report_path is not None else REPORT_TXT
 
@@ -960,4 +960,187 @@ def write_validation_report(gate_results: dict, report_path: str = None) -> bool
     return all_passed
 
 
-# Plan 03 adds: main() orchestration + report/CSV/verdict writers
+# ═══════════════════════════════════════════════════════════════════════
+# Orchestration (main) — Plan 03 Task 3
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def main():
+    """Phase 46 end-to-end validation (VAL-01..VAL-05).
+
+    Executes the four gates in order WITHOUT short-circuit (D-06) and
+    writes three deliverables:
+      - output/v10_ab_comparison.txt (VAL-01)
+      - output/v10_ab_scenarios.csv (VAL-01 machine-readable)
+      - output/v10_validation_report.txt (VAL-02/03/04 + D-09 verdict)
+
+    Exit code (D-11): 0 on full pass, 1 on any fail.
+    """
+    print('=' * 70)
+    print('PHASE 46: v10.0 VALIDATION PIPELINE')
+    print('=' * 70)
+
+    # ── Load HARD gate thresholds early (fail-fast if JSON missing) ──
+    thresholds = load_hard_gate_thresholds()
+    print(f'\nHARD gate thresholds loaded from {thresholds["baseline_source"]}:')
+    print(f'  CAGR floor:     {thresholds["cagr_floor"]:.2f}%')
+    print(f'  MaxDD ceiling:  {thresholds["max_dd_ceiling"]:.2f}%')
+
+    # ── Load VN30 data ───────────────────────────────────────────────
+    print(f'\nLoading VN30 data: {DATA_START} → {DATA_END}')
+    loader = DataLoader('vn30')
+    df_full = loader.load(start_date=DATA_START, end_date=DATA_END)
+    df_full = build_indicator_dataframe(df_full)
+    print(f'VN30 data: {len(df_full)} rows ({df_full["date"].min().date()} → '
+          f'{df_full["date"].max().date()})')
+    assert df_full['date'].max() >= pd.Timestamp('2025-12-01'), (
+        f"Insufficient data: max date {df_full['date'].max()} — OOS window "
+        f"requires through {OOS_END}"
+    )
+
+    # ── Build scenarios ──────────────────────────────────────────────
+    scenarios = build_scenarios()
+    print(f'\nScenarios built: {list(scenarios.keys())}')
+
+    # ── VAL-01: A/B across 5 scenarios on full period ────────────────
+    print('\n' + '─' * 70)
+    print('VAL-01: Running 5 scenarios on full period')
+    print('─' * 70)
+    full_results: dict = {}
+    full_metrics: dict = {}
+    val_01_ab_complete = True
+    for name in SCENARIO_ORDER:
+        print(f'  Running {name}...')
+        try:
+            res = run_engine(df_full, scenarios[name])
+            full_results[name] = res
+            full_metrics[name] = compute_metrics(res)
+            m = full_metrics[name]
+            print(f'    CAGR={m["cagr_pct"]:.2f}%  MaxDD={m["max_dd_pct"]:.2f}%  '
+                  f'Sharpe={m["sharpe_rf3"]:.3f}  SELL={m["sell_count"]}')
+        except Exception as exc:
+            print(f'  ERROR in {name}: {type(exc).__name__}: {exc}')
+            print(traceback.format_exc())
+            val_01_ab_complete = False
+            full_results[name] = None
+            full_metrics[name] = {
+                'sharpe_rf3': float('nan'), 'cagr_pct': float('nan'),
+                'max_dd_pct': float('nan'), 'total_return_pct': float('nan'),
+                'transitions': 0, 'sell_count': 0,
+                'ma50_breakdown_sell_share': float('nan'), 'buy_count': 0,
+                'buy_pct': float('nan'), 'cash_pct': float('nan'),
+                'sell_pct': float('nan'),
+            }
+
+    # ── D-02 isolation sanity check on +all macro-on results ─────────
+    extremes_check = {'dxy_z_abs_max': float('nan'), 'eem_z_abs_max': float('nan'),
+                      'headroom': float('nan')}
+    if full_results.get('+all') is not None:
+        try:
+            extremes_check = verify_extremes_never_trigger(full_results['+all'])
+            print(f'\nD-02 isolation sanity: |dxy_z|max={extremes_check["dxy_z_abs_max"]:.2f}  '
+                  f'|eem_z|max={extremes_check["eem_z_abs_max"]:.2f}  '
+                  f'headroom={extremes_check["headroom"]:.1f}')
+        except AssertionError as exc:
+            print(f'\n❌ D-02 ISOLATION LEAK: {exc}')
+            val_01_ab_complete = False
+
+    # ── Buy & Hold reference ─────────────────────────────────────────
+    bh_total_ret = (df_full['close'].iloc[-1] / df_full['close'].iloc[0] - 1) * 100
+    bh_years = (df_full['date'].iloc[-1] - df_full['date'].iloc[0]).days / 365.25
+    bh_cagr = ((1 + bh_total_ret / 100) ** (1 / bh_years) - 1) * 100 if bh_years > 0 else 0.0
+    bh_eq = df_full['close'].values / df_full['close'].iloc[0]
+    bh_peak = np.maximum.accumulate(bh_eq)
+    bh_maxdd = ((bh_eq - bh_peak) / bh_peak).min() * 100
+    bh_stats = {
+        'total_return_pct': round(bh_total_ret, 2),
+        'cagr_pct': round(bh_cagr, 2),
+        'max_dd_pct': round(bh_maxdd, 2),
+    }
+
+    # ── VAL-02: OOS HARD gate (baseline + +all only, D-04) ───────────
+    print('\n' + '─' * 70)
+    print(f'VAL-02: OOS slice {OOS_START} → {OOS_END} (baseline + +all only, D-04)')
+    print('─' * 70)
+    oos_metrics: dict = {}
+    hard_gate_per_scenario: dict = {}
+    for name in OOS_SCENARIO_SUBSET:
+        res_full = full_results.get(name)
+        if res_full is None:
+            oos_metrics[name] = None
+            hard_gate_per_scenario[name] = None
+            print(f'  {name}: n/a (full-period run errored)')
+            continue
+        oos_slice = res_full[res_full['date'] >= OOS_START].copy().reset_index(drop=True)
+        if len(oos_slice) < 2:
+            oos_metrics[name] = None
+            hard_gate_per_scenario[name] = None
+            print(f'  {name}: n/a (OOS slice has {len(oos_slice)} rows)')
+            continue
+        om = compute_metrics(oos_slice)
+        oos_metrics[name] = om
+        gate = evaluate_hard_gate(om, thresholds)
+        hard_gate_per_scenario[name] = gate
+        print(f'  {name}: {"PASS" if gate["passed"] else "FAIL"} — {gate["detail"]}')
+
+    # ── VAL-03: Walk-forward lookup (D-06 no short-circuit) ──────────
+    print('\n' + '─' * 70)
+    print('VAL-03: Walk-forward stability (lookup Phase 45)')
+    print('─' * 70)
+    try:
+        wf_lookup = lookup_walkforward_degradation()
+        print(f'  combo={wf_lookup["combo"]}  median_deg={wf_lookup["median_degradation"]:.4f}  '
+              f'passed_gate={wf_lookup["passed_gate"]}')
+    except Exception as exc:
+        print(f'  ERROR in VAL-03 lookup: {type(exc).__name__}: {exc}')
+        wf_lookup = {
+            'combo': 'N/A', 'median_degradation': float('nan'), 'threshold': 0.30,
+            'passed_gate': False, 'accepted': False,
+            'rejection_reason': f'lookup failed: {type(exc).__name__}: {exc}',
+            'source_csv': WALKFORWARD_GRID_CSV, 'total_combos': 0, 'total_accepted': 0,
+        }
+
+    # ── VAL-04: Parity pytest subprocess (D-06 no short-circuit) ─────
+    print('\n' + '─' * 70)
+    print('VAL-04: v6.0 parity pytest (subprocess)')
+    print('─' * 70)
+    parity = run_parity_gate(timeout_sec=300)
+    print(f'  returncode={parity["returncode"]}  '
+          f'passed={parity["tests_passed"]}  failed={parity["tests_failed"]}  '
+          f'duration={parity["duration_sec"]:.1f}s  → {"PASS" if parity["passed"] else "FAIL"}')
+
+    # ── Write artifacts (D-06: always, even on failure) ──────────────
+    print('\n' + '─' * 70)
+    print('Writing Phase 46 deliverables')
+    print('─' * 70)
+    write_ab_comparison_report(
+        full_metrics=full_metrics,
+        oos_metrics=oos_metrics,
+        wf_lookup=wf_lookup,
+        extremes_check=extremes_check,
+        bh_stats=bh_stats,
+    )
+    write_scenarios_csv(
+        full_metrics=full_metrics,
+        oos_metrics=oos_metrics,
+        hard_gate_results=hard_gate_per_scenario,
+        bh_stats=bh_stats,
+    )
+    all_passed = write_validation_report({
+        'val_01_ab_complete': val_01_ab_complete,
+        'val_02_hard_gate': hard_gate_per_scenario,
+        'val_03_walkforward': wf_lookup,
+        'val_04_parity': parity,
+        'hard_gate_scenario': '+all',      # D-04: +all is the "selected" scenario
+        'full_metrics': full_metrics,
+        'baseline_cagr_floor': thresholds['cagr_floor'],
+    })
+
+    # ── D-11: exit code reflects verdict ─────────────────────────────
+    exit_code = 0 if all_passed else 1
+    print(f'\nFINAL VERDICT: {"PASS" if all_passed else "FAIL"} → exit {exit_code}')
+    sys.exit(exit_code)
+
+
+if __name__ == '__main__':
+    main()
