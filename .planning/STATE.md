@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 46-01 scenario scaffold
-last_updated: "2026-04-24T09:02:37.355Z"
+stopped_at: Completed 46-02 gate helpers
+last_updated: "2026-04-24T09:12:48.016Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 4
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-21)
 ## Current Position
 
 Phase: 46 (ab-oos-validation-hard-gate) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-24
 
@@ -123,6 +123,10 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 46-ab-oos-validation-hard-gate]: Plan 46-01: Z_EXTREME_POSITIVE=999.0 + SBV_MULTIPLIER_NOOP=2.5 locked as D-02 isolation constants — preserves MDMV2Config __post_init__ sign constraints while making the factor branch unreachable on 2015-2026 data (z-scores rarely exceed |5|; ~994 headroom)
 - [Phase 46-ab-oos-validation-hard-gate]: Plan 46-01: verify_extremes_never_trigger() returns diagnostic dict (dxy_z_abs_max, eem_z_abs_max, headroom) not bool — headroom is load-bearing for Plan 03 report so future pandas upgrades that shift observed z ranges can be caught rather than silently losing safety margin
 - [Phase 46-ab-oos-validation-hard-gate]: Plan 46-01: Runtime python verification blocked by Windows Application Control policy on _ctypes.pyd for uv cpython-3.10.20; substituted AST-level structural verification via system Python 3.13. All 15+ module constants, function signatures, and return-dict keys verified via ast.literal_eval. Runtime assertion behavior (KeyError/AssertionError firing on synthetic inputs) deferred to Plan 02's first execution on an unblocked environment
+- [Phase 46]: Plan 46-02: HARD gate helpers read CAGR floor from reconciled baseline JSON at runtime (no 11.47 literal anywhere in file per strict grep acceptance criterion); docstring numeric example replaced with prose to honor 0-hits grep rule
+- [Phase 46]: Plan 46-02: VAL-03 lookup_walkforward_degradation applies strict D-07 rule (median_degradation < 0.30) in-function rather than delegating to CSV accepted column (composite D-09); keeps VAL-03 interpretable in isolation as 'walk-forward stability' for Phase 47 audit narrative
+- [Phase 46]: Plan 46-02: run_parity_gate NEVER raises -- subprocess pitfalls (FileNotFoundError for uv, TimeoutExpired) captured as rc=-2/rc=-1 diagnostic in return dict; rationale: VAL-01..04 run in sequence, raise would abort the entire Plan 03 pipeline before verdict report is written
+- [Phase 46]: Plan 46-02: Windows App Control block on _ctypes.pyd persists in uv cpython-3.10.20 -- Plan 02 substituted AST + stdlib-replay verification via system Python 3.13 (same as Plan 01). Structural acceptance 100% verified; pandas-mediated runtime behaviors (numpy.bool_ branch in CSV dtype normalisation, 5 parity tests passing) deferred to Plan 03 CI run on unblocked env
 
 ### Pending Todos
 
@@ -140,7 +144,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-24T09:02:37.350Z
-Stopped at: Completed 46-01 scenario scaffold
+Last session: 2026-04-24T09:12:21.021Z
+Stopped at: Completed 46-02 gate helpers
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)

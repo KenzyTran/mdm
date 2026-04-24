@@ -890,7 +890,7 @@ Plans:
 **Plans**: 4 plans
 Plans:
 - [x] 46-01-scenario-scaffold-PLAN.md — fork analysis/validate_v10.py with module constants, SCENARIO_ORDER, build_scenarios() + D-02 factor isolation via threshold extremes, verify_extremes_never_trigger() runtime sanity
-- [ ] 46-02-gate-helpers-PLAN.md — load_hard_gate_thresholds() reads reconciled baseline JSON (no hardcoded 11.47), evaluate_hard_gate() D-05 rule, lookup_walkforward_degradation() reads Phase 45 CSV stage3_all_three-c1 row, run_parity_gate() subprocess invocation of Phase 44 parity pytest
+- [x] 46-02-gate-helpers-PLAN.md — load_hard_gate_thresholds() reads reconciled baseline JSON (no hardcoded 11.47), evaluate_hard_gate() D-05 rule, lookup_walkforward_degradation() reads Phase 45 CSV stage3_all_three-c1 row, run_parity_gate() subprocess invocation of Phase 44 parity pytest
 - [ ] 46-03-pipeline-wiring-PLAN.md — write_ab_comparison_report() + write_scenarios_csv() with VAL-01 columns, write_validation_report() with D-09 literal verdict + D-10 rejection narrative, main() orchestration with D-06 no-short-circuit + D-11 exit code
 - [ ] 46-04-execute-and-commit-PLAN.md — pre-flight regression green, execute validate_v10.py end-to-end, human-verify retain-v6.0 vs ship-v10 branch at checkpoint, force-add + commit three output artifacts with verdict-naming commit message
 **Canonical refs**: `analysis/validate_v9.py` (pattern for A/B + walk-forward + CSV + verdict string, adapt to v10), Phase 42 reconciled baseline (gate reference), Phase 45 `output/v10_grid_results.csv` (39-combo sweep, 0 accepted — see 45-03 SUMMARY for retain-v6.0 context; note: `output/v10_grid_best.json` intentionally NOT written by main() because zero stages had winners — Phase 46 planner must handle this branch)
@@ -963,7 +963,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 | 43. Canonical Liquidity Data Pipeline | v10.0 | 3/3 | Complete    | 2026-04-22 |
 | 44. Macro Filter Module | v10.0 | 4/4 | Complete    | 2026-04-23 |
 | 45. Walk-Forward Grid Search | v10.0 | 3/3 | Complete    | 2026-04-23 |
-| 46. A/B + OOS Validation (HARD Gate) | v10.0 | 1/4 | In Progress|  |
+| 46. A/B + OOS Validation (HARD Gate) | v10.0 | 2/4 | In Progress|  |
 | 47. Docs & Dashboard | v10.0 | 0/0 | Not started | - |
 
 
@@ -973,7 +973,7 @@ Phases execute in numeric order: 38 -> 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 ->
 
 **Goal:** Correct `PortfolioEngine` behavior on MDM SELL — currently liquidates all open positions, but correct behavior is to rank open positions by RS (Relative Strength), close the bottom 50% weakest, and keep the top 50% strongest. No new entries while in SELL state.
 **Requirements:** SELL-REDUCE-01, SELL-REDUCE-02, SELL-REDUCE-03
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Context:
 - Bug found during Phase 33 review
