@@ -771,4 +771,193 @@ def write_scenarios_csv(
     return len(df)
 
 
+def write_validation_report(gate_results: dict, report_path: str = None) -> bool:
+    """Write output/v10_validation_report.txt with per-gate verdicts + D-09 verdict string.
+
+    Contains (in order):
+      1. Header (window, date, script name)
+      2. Gate summary table (VAL-01..VAL-04 pass/fail)
+      3. Per-gate detail blocks
+      4. Overall verdict block with LITERAL string on its own line (D-09)
+      5. Rejection Narrative (D-10) if any gate failed — 20-40 lines
+
+    Args:
+        gate_results: Dict with keys:
+            'val_01_ab_complete': bool (A/B ran end-to-end without error)
+            'val_02_hard_gate': dict[scenario_name, evaluate_hard_gate_dict]
+                for each scenario in OOS_SCENARIO_SUBSET (D-04)
+            'val_03_walkforward': dict from lookup_walkforward_degradation()
+            'val_04_parity': dict from run_parity_gate()
+            'hard_gate_scenario': str — the scenario name whose HARD gate
+                result is the VAL-02 verdict (i.e., '+all' per D-04)
+            'full_metrics': dict[scenario, compute_metrics_dict] for
+                narrative references (full-period baseline reference)
+            'baseline_cagr_floor': float — loaded from JSON
+        report_path: Override; default REPORT_TXT.
+
+    Returns:
+        all_passed: True iff every gate passed → caller sys.exit(0).
+    """
+    path = report_path if report_path is not None else REPORT_TXT
+
+    # Determine overall pass/fail
+    val_01_pass = gate_results['val_01_ab_complete']
+    hg_scenario = gate_results['hard_gate_scenario']
+    val_02_pass = gate_results['val_02_hard_gate'][hg_scenario]['passed']
+    val_03_pass = gate_results['val_03_walkforward']['passed_gate']
+    val_04_pass = gate_results['val_04_parity']['passed']
+    all_passed = val_01_pass and val_02_pass and val_03_pass and val_04_pass
+
+    lines = []
+    def log(msg: str = '') -> None:
+        lines.append(msg)
+
+    log('=' * 70)
+    log('PHASE 46: v10.0 VALIDATION REPORT')
+    log(f'Data window: {DATA_START} → {DATA_END}  |  OOS: {OOS_START} → {OOS_END}')
+    log(f'Script: analysis/validate_v10.py')
+    log('=' * 70)
+
+    # ── Gate summary ─────────────────────────────────────────────────
+    log('\n' + '─' * 70)
+    log('GATE SUMMARY')
+    log('─' * 70)
+    log(f'{"Gate":<8s} {"Name":<40s} {"Result":>10s}')
+    log('-' * 60)
+    log(f'{"VAL-01":<8s} {"A/B across 5 scenarios":<40s} '
+        f'{"PASS" if val_01_pass else "FAIL":>10s}')
+    log(f'{"VAL-02":<8s} {"OOS HARD gate on " + hg_scenario:<40s} '
+        f'{"PASS" if val_02_pass else "FAIL":>10s}')
+    log(f'{"VAL-03":<8s} {"Walk-forward median_deg < 0.30":<40s} '
+        f'{"PASS" if val_03_pass else "FAIL":>10s}')
+    log(f'{"VAL-04":<8s} {"v6.0 parity regression (pytest)":<40s} '
+        f'{"PASS" if val_04_pass else "FAIL":>10s}')
+    log('-' * 60)
+    log(f'{"OVERALL":<8s} {"All four gates passed":<40s} '
+        f'{"PASS" if all_passed else "FAIL":>10s}')
+
+    # ── VAL-02 detail ────────────────────────────────────────────────
+    log('\n' + '─' * 70)
+    log(f'VAL-02 DETAIL — OOS HARD gate ({OOS_START} → {OOS_END})')
+    log(f'Thresholds (D-05): CAGR ≥ {gate_results["baseline_cagr_floor"]:.2f}% '
+        f'AND MaxDD > -20.00%')
+    log('─' * 70)
+    for name in OOS_SCENARIO_SUBSET:
+        verdict = gate_results['val_02_hard_gate'].get(name)
+        if verdict is None:
+            log(f'  {name}: n/a (scenario not run on OOS slice)')
+            continue
+        log(f'  {name}: {"PASS" if verdict["passed"] else "FAIL"}')
+        log(f'    {verdict["detail"]}')
+
+    # ── VAL-03 detail ────────────────────────────────────────────────
+    wf = gate_results['val_03_walkforward']
+    log('\n' + '─' * 70)
+    log(f'VAL-03 DETAIL — Walk-forward stability (lookup from Phase 45)')
+    log('─' * 70)
+    log(f'  combo:              {wf["combo"]}')
+    log(f'  median_degradation: {wf["median_degradation"]:.4f}')
+    log(f'  threshold (D-07):   < {wf["threshold"]:.2f}')
+    log(f'  verdict:            {"PASS" if wf["passed_gate"] else "FAIL"}')
+    if not wf['passed_gate']:
+        log(f'  rejection_reason:   {wf["rejection_reason"]}')
+        log(f'  source:             {wf["source_csv"]} '
+            f'({wf["total_combos"]} combos, {wf["total_accepted"]} accepted)')
+
+    # ── VAL-04 detail ────────────────────────────────────────────────
+    pg = gate_results['val_04_parity']
+    log('\n' + '─' * 70)
+    log(f'VAL-04 DETAIL — v6.0 parity regression (pytest subprocess, D-08)')
+    log('─' * 70)
+    log(f'  test_file:     {pg["test_file"]}')
+    log(f'  returncode:    {pg["returncode"]}')
+    log(f'  tests_passed:  {pg["tests_passed"]}')
+    log(f'  tests_failed:  {pg["tests_failed"]}')
+    log(f'  duration:      {pg["duration_sec"]:.1f} s')
+    log(f'  verdict:       {"PASS" if pg["passed"] else "FAIL"}')
+    if not pg['passed']:
+        log(f'  stdout tail (last 50 lines):')
+        for line in pg['stdout_tail'].splitlines():
+            log(f'    | {line}')
+
+    # ── Verdict block (D-09) ─────────────────────────────────────────
+    log('\n' + '=' * 70)
+    log('FINAL VERDICT')
+    log('=' * 70)
+    log('')  # blank line before verdict for grep-without-word-boundary cleanliness
+    if all_passed:
+        verdict_str = VERDICT_PASS
+    else:
+        verdict_str = VERDICT_FAIL
+    log(verdict_str)  # ← THE literal string on its own line (D-09)
+    log('')
+
+    # ── Rejection Narrative (D-10) ───────────────────────────────────
+    if not all_passed:
+        log('─' * 70)
+        log('REJECTION NARRATIVE')
+        log('─' * 70)
+        baseline_cagr = gate_results['baseline_cagr_floor']
+        log(f'v10.0 macro filter (DXY/EEM 20d z-scores + SBV regime) was evaluated')
+        log(f'against the HARD gate (MaxDD < -20% AND CAGR ≥ {baseline_cagr:.2f}% with')
+        log(f'walk-forward median degradation < 30% and v6.0 parity regression green).')
+        log(f'')
+        failed_gates = []
+        if not val_01_pass: failed_gates.append('VAL-01 (A/B infrastructure)')
+        if not val_02_pass: failed_gates.append('VAL-02 (OOS HARD gate)')
+        if not val_03_pass: failed_gates.append('VAL-03 (walk-forward stability)')
+        if not val_04_pass: failed_gates.append('VAL-04 (v6.0 parity)')
+        log(f'Failed gate(s): {", ".join(failed_gates)}')
+        log(f'')
+        log(f'Phase 45 evidence (analysis/walkforward_grid.py, 39-combo sweep):')
+        log(f'  • Train CAGR median 9.54% vs reconciled baseline {baseline_cagr:.2f}% → ~-2pp drag')
+        log(f'    even BEFORE walk-forward year degradation is applied')
+        log(f'  • Eval CAGR median 4.57% across 2019-2024 → 54% train→eval degradation')
+        log(f'    (vs 30% D-07 gate). Best combo by degradation (stage1_dxy-c3) still fails')
+        log(f'    at 0.411 — the entire 39-combo family is OVER-FIT to 2015-2018 training.')
+        log(f'  • Per-year single-year MaxDD medians (across 39 combos):')
+        log(f'      2019: -8.74%   2020: -15.29%   2021: -19.68%')
+        log(f'      2022: -15.33%  2023: -12.72%   2024: -12.45%')
+        log(f"    Every per-year DD IS shallower than v6.0's full-period -28.17% — the")
+        log(f'    filter DOES dampen drawdowns directionally. The trade-off (eroded CAGR)')
+        log(f'    is what the walk-forward gate vetoed.')
+        log(f'  • Degradation distribution across 39 combos: min 0.410 / median 0.538 / max 0.645')
+        log(f'  • +all scenario full-period 10y return ≈ +146.8% (from sweep row')
+        log(f'    stage3_all_three-c0/c1/c2, which trade identically above the SBV layer)')
+        log(f'    vs v6.0 reconciled baseline +238.78% at {baseline_cagr:.2f}% CAGR.')
+        log(f'')
+        log(f'Pointers:')
+        log(f'  • Phase 45 sweep results: output/v10_grid_results.csv (force-added past gitignore)')
+        log(f'  • Phase 45 best-config JSON: INTENTIONALLY ABSENT — main() aborted when zero')
+        log(f'    stages had accepted winners (fabrication refusal, not a bug)')
+        log(f'  • Reconciled baseline (CAGR gate reference): output/v10_reconciled_baseline.json')
+        log(f'  • Phase 45 SUMMARY (scientific outcome narrative):')
+        log(f'    .planning/phases/45-walk-forward-grid-search/'
+            f'45-03-execute-sweep-commit-artifacts-SUMMARY.md')
+        log(f'')
+        log(f'Lessons for v11.0 planning (per Phase 45 Plan 03 lessons-learned):')
+        log(f'  1. Walk-forward CV INSIDE the sweep caught an overfit that post-hoc')
+        log(f'     validation would have missed — the discipline worked as designed.')
+        log(f'  2. The macro-filter thesis is directionally correct (DD reduction)')
+        log(f'     but the binary-model price (eroded CAGR) is too high. Future work')
+        log(f'     may revisit with (a) fractional sizing (deferred per Phase 44 D-05),')
+        log(f'     (b) different publication-lag assumptions, or (c) additional alpha')
+        log(f'     sources (ALPHA-01 foreign flow, ALPHA-02 jump model).')
+        log(f'  3. "No fabricate on zero-accepted" guard (Phase 45 D-11) prevented')
+        log(f'     silently poisoning this validation — preserved pattern for v11+.')
+        log(f'')
+        log(f'Production decision: v6.0 HybridEngine + fail-safe remains production per')
+        log(f'project memory `project_best_model.md` and `.planning/STATE.md` Best VN30')
+        log(f'Model entry. The v10.0 milestone publishes this rejection audit (Phase 47')
+        log(f'DOC-03 only) and does NOT update `docs/rules_mdm_hybrid.md` or the dashboard.')
+
+    # Save report
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+    print(f'Validation report saved: {path} ({len(lines)} lines, verdict: {verdict_str})')
+
+    return all_passed
+
+
 # Plan 03 adds: main() orchestration + report/CSV/verdict writers
