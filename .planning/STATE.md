@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
-status: verifying
-stopped_at: Phase 46 context gathered (defaults locked)
-last_updated: "2026-04-24T08:20:56.971Z"
-last_activity: "2026-04-23 - Completed quick task 260423-nl3: README.md at project root"
+status: executing
+stopped_at: Completed 46-01 scenario scaffold
+last_updated: "2026-04-24T09:02:37.355Z"
+last_activity: 2026-04-24
 progress:
   total_phases: 4
   completed_phases: 4
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Discover MDM rules + apply on Vietnamese market — current focus: reduce v6.0 HybridEngine MaxDD from -28.6% to < -20% via VN-native macro filter (DXY/EEM/SBV regime), after reconciling baseline drift (shipped 11.5% → measured 10.70%).
-**Current focus:** Phase 46 — A/B + OOS Validation (HARD Gate) [retain-v6.0 branch expected]
+**Current focus:** Phase 46 — ab-oos-validation-hard-gate
 
 ## Current Position
 
-Phase: 45
-Plan: Not started
-Status: Ready for verification. Phase 46 planner unblocked — enters retain-v6.0 branch
-Last activity: 2026-04-23 - Completed quick task 260423-nl3: README.md at project root
+Phase: 46 (ab-oos-validation-hard-gate) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-24
 
 Progress: [██████▋░░░] 67% (v10.0: 4/6 phases complete — 42, 43, 44, 45; remaining: 46, 47)
 
@@ -120,6 +120,9 @@ See PROJECT.md Key Decisions table. Recent decisions affecting v10.0:
 - [Phase 45]: Plan 45-03: v10 walkforward sweep ran to completion (2m37s, exit 0, D-18 guard did not fire); 0/39 combos accepted. All rejected by D-09 gate median_degradation >= 0.30 (median 0.538, min 0.410, max 0.645). Train CAGR median 9.54% -> eval CAGR median 4.57% (54% degradation, ~2x the 30% gate). Full-period 10y return median +146.84%, best +163.39% vs v6.0 reconciled baseline +238.78% / 11.47% CAGR. Worst-year DD -19.68% (2021, shallower than v6.0 -28.17% full-period).
 - [Phase 45]: Plan 45-03: Retain-v6.0 verdict approved at Task 3 human-verify checkpoint. Phase 46 enters retain-v6.0 branch per plan line 211 and v10.0 HARD gate conditional logic. output/v10_grid_best.json intentionally NOT written because main() aborts JSON payload when zero stages have winners (D-11 consumer refusal semantics, not a bug) -- Phase 46 planner must handle this branch. Retain-v6.0 implies Phase 47 runs DOC-03 audit only, skips DOC-01/02.
 - [Phase 45]: Plan 45-03: Commit strategy adapted from plan Task 4 (CSV + JSON) to CSV-alone because JSON intentionally absent; commit message body names retain-v6.0 verdict explicitly so git log is machine-grep-able for Phase 46 branching. Pattern: when D-09-style acceptance gate rejects all candidates, commit the rejection artifact with verdict in the message body rather than skipping the artifact or fabricating a null winner.
+- [Phase 46-ab-oos-validation-hard-gate]: Plan 46-01: Z_EXTREME_POSITIVE=999.0 + SBV_MULTIPLIER_NOOP=2.5 locked as D-02 isolation constants — preserves MDMV2Config __post_init__ sign constraints while making the factor branch unreachable on 2015-2026 data (z-scores rarely exceed |5|; ~994 headroom)
+- [Phase 46-ab-oos-validation-hard-gate]: Plan 46-01: verify_extremes_never_trigger() returns diagnostic dict (dxy_z_abs_max, eem_z_abs_max, headroom) not bool — headroom is load-bearing for Plan 03 report so future pandas upgrades that shift observed z ranges can be caught rather than silently losing safety margin
+- [Phase 46-ab-oos-validation-hard-gate]: Plan 46-01: Runtime python verification blocked by Windows Application Control policy on _ctypes.pyd for uv cpython-3.10.20; substituted AST-level structural verification via system Python 3.13. All 15+ module constants, function signatures, and return-dict keys verified via ast.literal_eval. Runtime assertion behavior (KeyError/AssertionError firing on synthetic inputs) deferred to Plan 02's first execution on an unblocked environment
 
 ### Pending Todos
 
@@ -137,7 +140,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-24T08:20:56.962Z
-Stopped at: Phase 46 context gathered (defaults locked)
-Resume file: .planning/phases/46-ab-oos-validation-hard-gate/46-CONTEXT.md
+Last session: 2026-04-24T09:02:37.350Z
+Stopped at: Completed 46-01 scenario scaffold
+Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
