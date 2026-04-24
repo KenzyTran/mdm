@@ -196,6 +196,67 @@ def run_engine(df: pd.DataFrame, cfg) -> pd.DataFrame:
     return engine.run(df.copy())
 
 
+def verify_extremes_never_trigger(df_with_macro_cols: pd.DataFrame) -> dict:
+    """D-02 sanity check: prove isolation extremes are unreachable on 2015-2026 data.
+
+    The +DXY/+EEM/+SBV-regime scenarios rely on |z| >= 999 thresholds to
+    disable the OTHER factors. If observed dxy_z or eem_z ever reach 999
+    in the data window, those scenarios silently leak factor effects.
+
+    This helper runs on a DataFrame produced by a macro-on engine run
+    (which gains dxy_z + eem_z columns via add_macro_columns). Any
+    macro-on scenario will do — simplest is to call it on the +all run
+    once, since VN30_PRESET emits the same underlying z-columns as
+    +DXY/+EEM.
+
+    Args:
+        df_with_macro_cols: DataFrame with 'dxy_z' and 'eem_z' columns.
+
+    Returns:
+        Dict with:
+          dxy_z_abs_max: max(|dxy_z|) observed in the window
+          eem_z_abs_max: max(|eem_z|) observed in the window
+          headroom: smallest gap between observed max and Z_EXTREME_POSITIVE
+                    across both factors (positive means safe)
+
+    Raises:
+        AssertionError: if either observed |z| >= Z_EXTREME_POSITIVE.
+        KeyError: if required columns are missing (hard fail — scenario
+            builder was run against the wrong engine results).
+    """
+    if 'dxy_z' not in df_with_macro_cols.columns:
+        raise KeyError(
+            "dxy_z column absent — verify_extremes_never_trigger must be "
+            "called on a macro-on engine results DataFrame (run +all scenario first)."
+        )
+    if 'eem_z' not in df_with_macro_cols.columns:
+        raise KeyError("eem_z column absent — see dxy_z KeyError above.")
+
+    dxy_abs_max = float(df_with_macro_cols['dxy_z'].abs().max())
+    eem_abs_max = float(df_with_macro_cols['eem_z'].abs().max())
+
+    assert dxy_abs_max < Z_EXTREME_POSITIVE, (
+        f"observed |dxy_z| max = {dxy_abs_max:.3f} >= Z_EXTREME_POSITIVE "
+        f"({Z_EXTREME_POSITIVE}); isolation extremes LEAK in +EEM/+SBV "
+        f"scenarios — increase Z_EXTREME_POSITIVE to > {dxy_abs_max:.3f}."
+    )
+    assert eem_abs_max < Z_EXTREME_POSITIVE, (
+        f"observed |eem_z| max = {eem_abs_max:.3f} >= Z_EXTREME_POSITIVE "
+        f"({Z_EXTREME_POSITIVE}); isolation extremes LEAK in +DXY/+SBV "
+        f"scenarios — increase Z_EXTREME_POSITIVE to > {eem_abs_max:.3f}."
+    )
+
+    headroom = min(
+        Z_EXTREME_POSITIVE - dxy_abs_max,
+        Z_EXTREME_POSITIVE - eem_abs_max,
+    )
+    return {
+        'dxy_z_abs_max': dxy_abs_max,
+        'eem_z_abs_max': eem_abs_max,
+        'headroom': headroom,
+    }
+
+
 # Plan 02 adds: load_hard_gate_thresholds(), lookup_walkforward_degradation(),
 #               run_parity_gate()
 # Plan 03 adds: main() orchestration + report/CSV/verdict writers
