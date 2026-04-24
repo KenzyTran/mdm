@@ -548,4 +548,227 @@ def run_parity_gate(timeout_sec: int = 300) -> dict:
     }
 
 
+# ═══════════════════════════════════════════════════════════════════════
+# Report writers (Plan 03) — text report + CSV
+# ═══════════════════════════════════════════════════════════════════════
+
+
+def write_ab_comparison_report(
+    full_metrics: dict,
+    oos_metrics: dict,
+    wf_lookup: dict,
+    extremes_check: dict,
+    bh_stats: dict,
+    report_path: str = None,
+) -> list:
+    """Write output/v10_ab_comparison.txt with VAL-01 A/B table + diagnostics.
+
+    Mirrors output/v9_ab_comparison.txt structure; extends from 4 to 5
+    scenarios and adds VAL-03 walk-forward reference block (D-07) and
+    extremes-headroom block (D-02 runtime sanity).
+
+    Args:
+        full_metrics: {scenario_name: metrics_dict} for full-period runs.
+        oos_metrics: {scenario_name: metrics_dict} for OOS slice (only
+            baseline + +all populated per D-04; others may be None).
+        wf_lookup: Dict from lookup_walkforward_degradation().
+        extremes_check: Dict from verify_extremes_never_trigger().
+        bh_stats: Buy & Hold reference dict with keys
+            total_return_pct, cagr_pct, max_dd_pct.
+        report_path: Override output path. Default AB_COMPARISON_TXT.
+
+    Returns:
+        List of lines written (for the caller to fold into the unified
+        validation_report.txt if desired).
+    """
+    path = report_path if report_path is not None else AB_COMPARISON_TXT
+    lines = []
+    def log(msg: str = '') -> None:
+        lines.append(msg)
+
+    log('=' * 70)
+    log('PHASE 46: v10.0 A/B COMPARISON (VAL-01)')
+    log(f'Data window: {DATA_START} → {DATA_END}')
+    log('=' * 70)
+
+    # Scenarios built
+    log(f'\nScenarios built: {SCENARIO_ORDER}')
+    log(f'Scenario isolation (D-02): +DXY / +EEM / +SBV-regime disable '
+        f'OTHER factors via |z| >= 999 extremes and SBV multiplier = 2.5.')
+    log(f'Isolation sanity check (verify_extremes_never_trigger):')
+    log(f'  observed max |dxy_z| = {extremes_check["dxy_z_abs_max"]:.3f} '
+        f'(headroom to 999: {999 - extremes_check["dxy_z_abs_max"]:.1f})')
+    log(f'  observed max |eem_z| = {extremes_check["eem_z_abs_max"]:.3f} '
+        f'(headroom to 999: {999 - extremes_check["eem_z_abs_max"]:.1f})')
+    log(f'  headroom ≥ {extremes_check["headroom"]:.1f} → isolation extremes never reachable')
+
+    # ── VAL-01 A/B table (D-01 + D-02 + D-03) ────────────────────────
+    log('\n' + '─' * 70)
+    log('VAL-01: A/B COMPARISON — 5 scenarios on full period')
+    log('─' * 70)
+    log(f'\n{"Scenario":<14s} {"TotRet":>9s} {"CAGR":>8s} {"MaxDD":>8s} {"Sharpe":>8s} '
+        f'{"Trans":>6s} {"BUY%":>6s} {"CASH%":>6s} {"SELL%":>6s}')
+    log('-' * 82)
+    for name in SCENARIO_ORDER:
+        m = full_metrics[name]
+        log(f'{name:<14s} {m["total_return_pct"]:>+8.1f}% {m["cagr_pct"]:>7.2f}% '
+            f'{m["max_dd_pct"]:>7.2f}% {m["sharpe_rf3"]:>8.3f} '
+            f'{m["transitions"]:>6d} {m["buy_pct"]:>5.1f}% '
+            f'{m["cash_pct"]:>5.1f}% {m["sell_pct"]:>5.1f}%')
+    log(f'{"B&H VN30":<14s} {bh_stats["total_return_pct"]:>+8.1f}% '
+        f'{bh_stats["cagr_pct"]:>7.2f}% {bh_stats["max_dd_pct"]:>7.2f}% '
+        f'{"—":>8s} {"—":>6s} {"100.0":>5s}% {"0.0":>5s}% {"0.0":>5s}%')
+
+    # ── Whipsaw diagnostic ───────────────────────────────────────────
+    log('\n' + '─' * 70)
+    log('WHIPSAW DIAGNOSTIC — SELL count + MA50-breakdown share')
+    log(f'v6.0 shipped reference: 124 SELL signals, 83.87% MA50-breakdown share '
+        '(from output/v10_reconciled_baseline.json)')
+    log('─' * 70)
+    baseline_sell = full_metrics['baseline']['sell_count']
+    baseline_ma50_share = full_metrics['baseline']['ma50_breakdown_sell_share']
+    log(f'\n{"Scenario":<14s} {"SELL#":>6s} {"MA50%":>8s} {"BUY#":>6s} '
+        f'{"dSELL":>7s} {"dMA50":>8s}')
+    log('-' * 57)
+    for name in SCENARIO_ORDER:
+        m = full_metrics[name]
+        sell_delta = m['sell_count'] - baseline_sell
+        if not (np.isnan(m['ma50_breakdown_sell_share']) or np.isnan(baseline_ma50_share)):
+            ma50_share_pct = m['ma50_breakdown_sell_share'] * 100
+            ma50_delta = (m['ma50_breakdown_sell_share'] - baseline_ma50_share) * 100
+        else:
+            ma50_share_pct = float('nan')
+            ma50_delta = float('nan')
+        log(f'{name:<14s} {m["sell_count"]:>6d} {ma50_share_pct:>7.1f}% '
+            f'{m["buy_count"]:>6d} {sell_delta:>+7d} {ma50_delta:>+7.1f}%')
+
+    # ── VAL-03 walk-forward reference block ──────────────────────────
+    log('\n' + '─' * 70)
+    log('VAL-03: WALK-FORWARD STABILITY (lookup from Phase 45 sweep)')
+    log('─' * 70)
+    log(f'Reading {wf_lookup["source_csv"]} for combo {wf_lookup["combo"]}')
+    log(f'  median_degradation:   {wf_lookup["median_degradation"]:.4f}')
+    log(f'  gate threshold (D-07): {wf_lookup["threshold"]:.2f}')
+    log(f'  passed_gate:          {wf_lookup["passed_gate"]}')
+    log(f'  accepted in Phase 45: {wf_lookup["accepted"]} '
+        f'(rejection_reason: {wf_lookup["rejection_reason"]})')
+    log(f'  total combos in sweep: {wf_lookup["total_combos"]} '
+        f'(accepted: {wf_lookup["total_accepted"]})')
+
+    # ── OOS slice preview (D-04 two-scenario subset) ─────────────────
+    log('\n' + '─' * 70)
+    log(f'OOS SLICE METRICS (D-04: {OOS_START} → {OOS_END}, baseline + +all only)')
+    log('─' * 70)
+    log(f'\n{"Scenario":<14s} {"CAGR_oos":>10s} {"MaxDD_oos":>11s} {"Sharpe_oos":>11s}')
+    log('-' * 50)
+    for name in OOS_SCENARIO_SUBSET:
+        om = oos_metrics.get(name)
+        if om is None:
+            log(f'{name:<14s} {"n/a":>10s} {"n/a":>11s} {"n/a":>11s}')
+        else:
+            log(f'{name:<14s} {om["cagr_pct"]:>9.2f}% {om["max_dd_pct"]:>10.2f}% '
+                f'{om["sharpe_rf3"]:>11.3f}')
+
+    # Write report
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+    print(f'A/B comparison report saved: {path} ({len(lines)} lines)')
+    return lines
+
+
+def write_scenarios_csv(
+    full_metrics: dict,
+    oos_metrics: dict,
+    hard_gate_results: dict,
+    bh_stats: dict,
+    csv_path: str = None,
+) -> int:
+    """Write output/v10_ab_scenarios.csv with VAL-01 columns + OOS + HARD-gate.
+
+    Schema extends output/v9_ab_scenarios.csv:
+      scenario, sharpe_rf3, cagr_pct, max_dd_pct, total_return_pct,
+      transitions, sell_count, ma50_breakdown_sell_share, buy_count,
+      buy_pct, cash_pct, sell_pct, sell_count_delta, ma50_share_delta,
+      cagr_oos, max_dd_oos, sharpe_oos, hard_gate_passed
+
+    Args:
+        full_metrics: {scenario: metrics_dict} full-period.
+        oos_metrics: {scenario: metrics_dict or None} OOS slice.
+        hard_gate_results: {scenario: evaluate_hard_gate dict or None}.
+        bh_stats: Buy & Hold reference.
+        csv_path: Override path.
+
+    Returns:
+        Number of rows written (5 scenarios + 1 B&H row = 6 expected).
+    """
+    path = csv_path if csv_path is not None else SCENARIOS_CSV
+    baseline_sell = full_metrics['baseline']['sell_count']
+    baseline_ma50_share = full_metrics['baseline']['ma50_breakdown_sell_share']
+
+    rows = []
+    for name in SCENARIO_ORDER:
+        m = full_metrics[name]
+        om = oos_metrics.get(name)
+        gate = hard_gate_results.get(name)
+        ma50_delta = (
+            (m['ma50_breakdown_sell_share'] - baseline_ma50_share)
+            if not (np.isnan(m['ma50_breakdown_sell_share']) or np.isnan(baseline_ma50_share))
+            else float('nan')
+        )
+        rows.append({
+            'scenario': name,
+            'sharpe_rf3': m['sharpe_rf3'],
+            'cagr_pct': m['cagr_pct'],
+            'max_dd_pct': m['max_dd_pct'],
+            'total_return_pct': m['total_return_pct'],
+            'transitions': m['transitions'],
+            'sell_count': m['sell_count'],
+            'ma50_breakdown_sell_share': m['ma50_breakdown_sell_share'],
+            'buy_count': m['buy_count'],
+            'buy_pct': m['buy_pct'],
+            'cash_pct': m['cash_pct'],
+            'sell_pct': m['sell_pct'],
+            'sell_count_delta': m['sell_count'] - baseline_sell,
+            'ma50_share_delta': ma50_delta,
+            'cagr_oos': om['cagr_pct'] if om is not None else float('nan'),
+            'max_dd_oos': om['max_dd_pct'] if om is not None else float('nan'),
+            'sharpe_oos': om['sharpe_rf3'] if om is not None else float('nan'),
+            'hard_gate_passed': gate['passed'] if gate is not None else None,
+        })
+    # B&H row
+    rows.append({
+        'scenario': 'B&H VN30',
+        'sharpe_rf3': float('nan'),
+        'cagr_pct': bh_stats['cagr_pct'],
+        'max_dd_pct': bh_stats['max_dd_pct'],
+        'total_return_pct': bh_stats['total_return_pct'],
+        'transitions': 0,
+        'sell_count': 0,
+        'ma50_breakdown_sell_share': float('nan'),
+        'buy_count': 0,
+        'buy_pct': 100.0,
+        'cash_pct': 0.0,
+        'sell_pct': 0.0,
+        'sell_count_delta': float('nan'),
+        'ma50_share_delta': float('nan'),
+        'cagr_oos': float('nan'),
+        'max_dd_oos': float('nan'),
+        'sharpe_oos': float('nan'),
+        'hard_gate_passed': None,
+    })
+    df = pd.DataFrame(rows)
+    # Canonical column order (fixed per CONTEXT)
+    df = df[[
+        'scenario', 'sharpe_rf3', 'cagr_pct', 'max_dd_pct', 'total_return_pct',
+        'transitions', 'sell_count', 'ma50_breakdown_sell_share', 'buy_count',
+        'buy_pct', 'cash_pct', 'sell_pct', 'sell_count_delta', 'ma50_share_delta',
+        'cagr_oos', 'max_dd_oos', 'sharpe_oos', 'hard_gate_passed',
+    ]]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    df.to_csv(path, index=False)
+    print(f'Scenarios CSV saved: {path} ({len(df)} rows)')
+    return len(df)
+
+
 # Plan 03 adds: main() orchestration + report/CSV/verdict writers
