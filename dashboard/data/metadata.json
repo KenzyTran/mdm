@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-04-08 14:03",
+  "data_range": {
+    "start": "2015-01-05",
+    "end": "2026-04-07"
+  },
+  "models": [
+    "mdm_v2",
+    "mdm_hybrid",
+    "mdm_p15",
+    "mdm_v2_filtered",
+    "mdm_vnindex"
+  ],
+  "has_liquidity_overlay": true
+}

@@ -887,7 +887,12 @@ Plans:
   3. Walk-forward stability gate re-checks the selected scenario's median degradation across Phase 45's rolling windows; `< 30%` required; failure blocks acceptance with explicit reason logged
   4. v6.0 parity regression test (`macro_filter_enabled=False` → byte-exact v6.0 signal log match) is included in the validation run and must be green; failure blocks acceptance regardless of any gain on the other criteria
   5. Production Candidate recommendation committed as a literal string in `output/v10_validation_report.txt`: `"v10 macro filter accepted as production"` on full pass, `"v6.0 retained as production"` on any fail — grep-matchable, drives Phase 47 branching
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 46-01-scenario-scaffold-PLAN.md — fork analysis/validate_v10.py with module constants, SCENARIO_ORDER, build_scenarios() + D-02 factor isolation via threshold extremes, verify_extremes_never_trigger() runtime sanity
+- [ ] 46-02-gate-helpers-PLAN.md — load_hard_gate_thresholds() reads reconciled baseline JSON (no hardcoded 11.47), evaluate_hard_gate() D-05 rule, lookup_walkforward_degradation() reads Phase 45 CSV stage3_all_three-c1 row, run_parity_gate() subprocess invocation of Phase 44 parity pytest
+- [ ] 46-03-pipeline-wiring-PLAN.md — write_ab_comparison_report() + write_scenarios_csv() with VAL-01 columns, write_validation_report() with D-09 literal verdict + D-10 rejection narrative, main() orchestration with D-06 no-short-circuit + D-11 exit code
+- [ ] 46-04-execute-and-commit-PLAN.md — pre-flight regression green, execute validate_v10.py end-to-end, human-verify retain-v6.0 vs ship-v10 branch at checkpoint, force-add + commit three output artifacts with verdict-naming commit message
 **Canonical refs**: `analysis/validate_v9.py` (pattern for A/B + walk-forward + CSV + verdict string, adapt to v10), Phase 42 reconciled baseline (gate reference), Phase 45 `output/v10_grid_results.csv` (39-combo sweep, 0 accepted — see 45-03 SUMMARY for retain-v6.0 context; note: `output/v10_grid_best.json` intentionally NOT written by main() because zero stages had winners — Phase 46 planner must handle this branch)
 
 **Expected outcome (post-Phase-45)**: retain-v6.0 branch. Phase 45 concluded 0/39 combos passed the walk-forward D-09 gate (median train→eval degradation 54% vs 30% threshold). Phase 46's HARD gate (VAL-02) will either (a) mechanically confirm rejection and VAL-05 writes `"v6.0 retained as production"` → Phase 47 DOC-03 only, or (b) surface a narrower-than-grid-searched config that passes (not expected since D-03 space was swept exhaustively). Phase 46 planner should design A/B scenarios assuming branch (a) and read 45-03 SUMMARY.md for per-stage numbers.
