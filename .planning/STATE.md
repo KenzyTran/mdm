@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: VN Macro Filter + Baseline Reconciliation
 status: executing
-stopped_at: Completed 46-03 pipeline wiring
-last_updated: "2026-04-24T09:25:21.636Z"
+stopped_at: "Paused 46-04: Windows App Control sandbox block — waiting for user to run validate_v10.py from unblocked shell"
+last_updated: "2026-04-24T09:28:10.912Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 4
@@ -137,7 +137,9 @@ None. See `.planning/todos/pending/` (empty).
 
 ### Blockers/Concerns
 
-None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
+blocking Phase 42. Downstream concerns tracked in phase-specific plans.
+
+- Phase 46 Plan 04: uv cpython-3.10.20 _ctypes.pyd + uv pytest spawn both blocked by Windows Application Control in sandbox — cannot execute validate_v10.py end-to-end here. Plan 04 needs run from user's unblocked shell.
 
 ### Quick Tasks Completed
 
@@ -147,7 +149,7 @@ None blocking Phase 42. Downstream concerns tracked in phase-specific plans.
 
 ## Session Continuity
 
-Last session: 2026-04-24T09:25:21.628Z
-Stopped at: Completed 46-03 pipeline wiring
+Last session: 2026-04-24T09:28:10.904Z
+Stopped at: Paused 46-04: Windows App Control sandbox block — waiting for user to run validate_v10.py from unblocked shell
 Resume file: None
 Next command: `/gsd:plan-phase 42` to plan Baseline Reconciliation (BASE-01, BASE-02, BASE-03)
