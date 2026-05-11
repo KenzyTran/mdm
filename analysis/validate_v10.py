@@ -265,6 +265,15 @@ def verify_extremes_never_trigger(df_with_macro_cols: pd.DataFrame) -> dict:
 # ═══════════════════════════════════════════════════════════════════════
 
 
+def _coerce_accepted(val) -> bool:
+    """Normalise CSV `accepted` cell to bool. NaN treated as not-accepted."""
+    if isinstance(val, str):
+        return val.strip().lower() == 'true'
+    if pd.isna(val):
+        return False
+    return bool(val)
+
+
 def load_hard_gate_thresholds() -> dict:
     """Load VAL-02 HARD gate thresholds per D-05.
 
@@ -428,24 +437,11 @@ def lookup_walkforward_degradation(combo_name: str = None) -> dict:
 
     row = matches.iloc[0]
     median_deg = float(row['median_degradation'])
-    # CSV's 'accepted' is a boolean column; pandas loads it as str or bool
-    # depending on dtype inference. Normalise.
-    raw_accepted = row['accepted']
-    if isinstance(raw_accepted, str):
-        accepted = raw_accepted.strip().lower() == 'true'
-    elif pd.isna(raw_accepted):
-        accepted = False
-    else:
-        accepted = bool(raw_accepted)
+    accepted = _coerce_accepted(row['accepted'])
     rejection_reason = (
         str(row['rejection_reason']) if pd.notna(row['rejection_reason']) else ''
     )
-
-    # Aggregate CSV counts for report context
-    if df['accepted'].dtype == object:
-        total_accepted = int((df['accepted'].astype(str).str.lower() == 'true').sum())
-    else:
-        total_accepted = int(df['accepted'].sum())
+    total_accepted = int(df['accepted'].map(_coerce_accepted).sum())
 
     return {
         'combo': target,
@@ -532,10 +528,7 @@ def run_parity_gate(timeout_sec: int = 300) -> dict:
         lines = text.splitlines()
         return '\n'.join(lines[-n:])
 
-    # Parse pytest summary line: anchored to the trailing "in T.Ts" timing the
-    # pytest summary always prints (e.g. "===== 5 passed in 90.21s ====="). Use
-    # the LAST match to skip per-test verbose lines that may contain "passed"
-    # / "failed" inside test names.
+    # Last match skips verbose per-test lines containing 'passed' / 'failed'.
     tests_passed = -1
     tests_failed = -1
     if stdout:
