@@ -433,6 +433,8 @@ def lookup_walkforward_degradation(combo_name: str = None) -> dict:
     raw_accepted = row['accepted']
     if isinstance(raw_accepted, str):
         accepted = raw_accepted.strip().lower() == 'true'
+    elif pd.isna(raw_accepted):
+        accepted = False
     else:
         accepted = bool(raw_accepted)
     rejection_reason = (
