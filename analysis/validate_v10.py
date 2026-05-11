@@ -806,7 +806,8 @@ def write_validation_report(gate_results: dict, report_path: str = None) -> bool
     # Determine overall pass/fail
     val_01_pass = gate_results['val_01_ab_complete']
     hg_scenario = gate_results['hard_gate_scenario']
-    val_02_pass = gate_results['val_02_hard_gate'][hg_scenario]['passed']
+    hg_result = gate_results['val_02_hard_gate'].get(hg_scenario)
+    val_02_pass = hg_result['passed'] if hg_result is not None else False
     val_03_pass = gate_results['val_03_walkforward']['passed_gate']
     val_04_pass = gate_results['val_04_parity']['passed']
     all_passed = val_01_pass and val_02_pass and val_03_pass and val_04_pass
