@@ -611,12 +611,15 @@ def write_ab_comparison_report(
     # Scenarios built
     log(f'\nScenarios built: {SCENARIO_ORDER}')
     log(f'Scenario isolation (D-02): +DXY / +EEM / +SBV-regime disable '
-        f'OTHER factors via |z| >= 999 extremes and SBV multiplier = 2.5.')
+        f'OTHER factors via |z| >= {Z_EXTREME_POSITIVE} extremes and '
+        f'SBV multiplier = {SBV_MULTIPLIER_NOOP}.')
     log(f'Isolation sanity check (verify_extremes_never_trigger):')
     log(f'  observed max |dxy_z| = {extremes_check["dxy_z_abs_max"]:.3f} '
-        f'(headroom to 999: {999 - extremes_check["dxy_z_abs_max"]:.1f})')
+        f'(headroom to {Z_EXTREME_POSITIVE}: '
+        f'{Z_EXTREME_POSITIVE - extremes_check["dxy_z_abs_max"]:.1f})')
     log(f'  observed max |eem_z| = {extremes_check["eem_z_abs_max"]:.3f} '
-        f'(headroom to 999: {999 - extremes_check["eem_z_abs_max"]:.1f})')
+        f'(headroom to {Z_EXTREME_POSITIVE}: '
+        f'{Z_EXTREME_POSITIVE - extremes_check["eem_z_abs_max"]:.1f})')
     log(f'  headroom ≥ {extremes_check["headroom"]:.1f} → isolation extremes never reachable')
 
     # ── VAL-01 A/B table (D-01 + D-02 + D-03) ────────────────────────
