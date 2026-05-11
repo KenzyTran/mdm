@@ -530,17 +530,23 @@ def run_parity_gate(timeout_sec: int = 300) -> dict:
         lines = text.splitlines()
         return '\n'.join(lines[-n:])
 
-    # Parse pytest summary line: "5 passed in 90.2s" or "4 passed, 1 failed in ..."
+    # Parse pytest summary line: anchored to the trailing "in T.Ts" timing the
+    # pytest summary always prints (e.g. "===== 5 passed in 90.21s ====="). Use
+    # the LAST match to skip per-test verbose lines that may contain "passed"
+    # / "failed" inside test names.
     tests_passed = -1
     tests_failed = -1
     if stdout:
-        # Look for the final summary line
-        passed_match = _re.search(r'(\d+) passed', stdout)
-        failed_match = _re.search(r'(\d+) failed', stdout)
-        if passed_match:
-            tests_passed = int(passed_match.group(1))
-        if failed_match:
-            tests_failed = int(failed_match.group(1))
+        summary_re = _re.compile(
+            r'(?:(\d+)\s+failed)?[,\s]*(?:(\d+)\s+passed)?[^\n]*?\sin\s+[\d.]+s'
+        )
+        matches = list(summary_re.finditer(stdout))
+        if matches:
+            failed_str, passed_str = matches[-1].groups()
+            if passed_str is not None:
+                tests_passed = int(passed_str)
+            if failed_str is not None:
+                tests_failed = int(failed_str)
         # If no 'failed' token found AND 'passed' found AND rc==0, set failed=0
         if tests_passed >= 0 and tests_failed == -1 and rc == 0:
             tests_failed = 0
