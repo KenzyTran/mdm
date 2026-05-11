@@ -1009,10 +1009,12 @@ def main():
     df_full = build_indicator_dataframe(df_full)
     print(f'VN30 data: {len(df_full)} rows ({df_full["date"].min().date()} → '
           f'{df_full["date"].max().date()})')
-    assert df_full['date'].max() >= pd.Timestamp('2025-12-01'), (
-        f"Insufficient data: max date {df_full['date'].max()} — OOS window "
-        f"requires through {OOS_END}"
-    )
+    required_max = pd.Timestamp(OOS_END)
+    if df_full['date'].max() < required_max:
+        raise RuntimeError(
+            f"Insufficient data: max date {df_full['date'].max().date()} < "
+            f"OOS_END {OOS_END}. Re-pull VN30 data."
+        )
 
     # ── Build scenarios ──────────────────────────────────────────────
     scenarios = build_scenarios()
