@@ -345,8 +345,8 @@ def evaluate_hard_gate(metrics: dict, thresholds: dict) -> dict:
     max_dd_pass = max_dd_obs > max_dd_req
     passed = cagr_pass and max_dd_pass
 
-    cagr_glyph = '✓' if cagr_pass else '✗'
-    maxdd_glyph = '✓' if max_dd_pass else '✗'
+    cagr_glyph = 'PASS' if cagr_pass else 'FAIL'
+    maxdd_glyph = 'PASS' if max_dd_pass else 'FAIL'
     detail = (
         f"CAGR {cagr_glyph} {cagr_obs:.2f}% vs floor {cagr_req:.2f}% | "
         f"MaxDD {maxdd_glyph} {max_dd_obs:.2f}% vs ceiling {max_dd_req:.2f}%"
@@ -1052,7 +1052,7 @@ def main():
                   f'|eem_z|max={extremes_check["eem_z_abs_max"]:.2f}  '
                   f'headroom={extremes_check["headroom"]:.1f}')
         except AssertionError as exc:
-            print(f'\n❌ D-02 ISOLATION LEAK: {exc}')
+            print(f'\nD-02 ISOLATION LEAK: {exc}')
             val_01_ab_complete = False
 
     # ── Buy & Hold reference ─────────────────────────────────────────
