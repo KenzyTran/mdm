@@ -514,6 +514,12 @@ def run_parity_gate(timeout_sec: int = 300) -> dict:
         rc = -2
         stdout = ''
         stderr = f"[subprocess FileNotFoundError: {exc}]"
+    except (OSError, subprocess.SubprocessError, UnicodeDecodeError) as exc:
+        # PermissionError (OSError subclass — Windows App Control denies
+        # _ctypes.pyd), other OS errors, and stdout decode failures.
+        rc = -3
+        stdout = ''
+        stderr = f"[subprocess {type(exc).__name__}: {exc}]"
 
     duration = time.time() - start
 
