@@ -1084,6 +1084,7 @@ def main():
     print('─' * 70)
     oos_metrics: dict = {}
     hard_gate_per_scenario: dict = {}
+    oos_start_ts = pd.Timestamp(OOS_START)
     for name in OOS_SCENARIO_SUBSET:
         res_full = full_results.get(name)
         if res_full is None:
@@ -1091,7 +1092,7 @@ def main():
             hard_gate_per_scenario[name] = None
             print(f'  {name}: n/a (full-period run errored)')
             continue
-        oos_slice = res_full[res_full['date'] >= OOS_START].copy().reset_index(drop=True)
+        oos_slice = res_full[res_full['date'] >= oos_start_ts].copy().reset_index(drop=True)
         if len(oos_slice) < 2:
             oos_metrics[name] = None
             hard_gate_per_scenario[name] = None
