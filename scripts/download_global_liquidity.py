@@ -78,6 +78,10 @@ def main():
 
     print('\n[2/3] Merging and calculating...')
 
+    if 'WALCL' not in frames:
+        print('ERROR: WALCL (Fed Total Assets) download failed — cannot continue.')
+        sys.exit(1)
+
     # Start with Fed balance sheet (weekly, Wednesday)
     df = frames['WALCL'].copy()
 
@@ -112,13 +116,17 @@ def main():
         df['BOJ_USD'] = 0
 
     # Calculate components (all in millions USD)
+    for col in ['WTREGEN', 'RRPONTSYD']:
+        if col not in df.columns:
+            print(f'  WARNING: {col} missing — fed_net will be inaccurate')
     df['fed_net'] = df['WALCL'] - df.get('WTREGEN', 0) - df.get('RRPONTSYD', 0)
     df['global_liquidity'] = df['fed_net'] + df['ECB_USD'] + df['BOJ_USD']
 
     # Slope indicator: 20-week rate of change
     df['liquidity_roc_20w'] = df['global_liquidity'].pct_change(20) * 100
-    # Simple signal: positive ROC = QE floor ON
-    df['qe_floor'] = (df['liquidity_roc_20w'] > 0).astype(int)
+    # Simple signal: positive ROC = QE floor ON (NaN where ROC is unavailable)
+    df['qe_floor'] = np.where(df['liquidity_roc_20w'].isna(), np.nan,
+                              (df['liquidity_roc_20w'] > 0).astype(int))
 
     # Select output columns
     out = df[['date', 'WALCL', 'fed_net', 'ECB_USD', 'BOJ_USD',

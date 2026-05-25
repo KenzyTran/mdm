@@ -51,7 +51,7 @@ def compute_metrics(results, long_only=False):
     sell_pct = sum(1 for s in states if s == 'SELL') / n * 100
 
     years = (results['date'].iloc[-1] - results['date'].iloc[0]).days / 365.25
-    cagr = (eq[-1] ** (1 / years) - 1) * 100 if eq[-1] > 0 else -100
+    cagr = (eq[-1] ** (1 / years) - 1) * 100 if eq[-1] > 0 and years > 0 else -100
 
     return {
         'total_return': round(total_ret, 1),
@@ -88,7 +88,7 @@ def main():
     df = build_indicator_dataframe(df)
 
     bh_ret = (df['close'].iloc[-1] / df['close'].iloc[0] - 1) * 100
-    print(f"Buy & Hold: +{bh_ret:.0f}%")
+    print(f"Buy & Hold: {bh_ret:+.0f}%")
 
     # --- Baseline: current VN30_PRESET ---
     print("\n" + "-" * 80)
@@ -167,7 +167,8 @@ def main():
         v2 = replace(VN30_PRESET, cash_deterioration_days=best_cd)
         for long_only, mode_name in [(False, 'L+S'), (True, 'L-only')]:
             m = run_config(df, v2, filter_enabled=f_enabled, filter_config=fc, long_only=long_only)
-            delta = m['total_return'] - baseline['total_return']
+            base_ref = baseline if not long_only else baseline_lo
+            delta = m['total_return'] - base_ref['total_return']
             print(f"{fc_name:>8} {fc.majority_threshold:>7.2f} {mode_name:>10} "
                   f"{m['total_return']:>+7.0f}% {m['cagr']:>5.1f}% {m['max_dd']:>6.1f}% "
                   f"{m['transitions']:>5} {delta:>+7.1f}%")

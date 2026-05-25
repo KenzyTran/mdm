@@ -505,8 +505,10 @@ def run_parity_gate(timeout_sec: int = 300) -> dict:
         stderr = proc.stderr
     except subprocess.TimeoutExpired as exc:
         rc = -1
-        stdout = (exc.stdout or '') + f"\n[TIMEOUT after {timeout_sec}s]"
-        stderr = (exc.stderr or '') + f"\n[TIMEOUT after {timeout_sec}s]"
+        raw_out = exc.stdout or ''
+        raw_err = exc.stderr or ''
+        stdout = (raw_out.decode(errors='replace') if isinstance(raw_out, bytes) else raw_out) + f"\n[TIMEOUT after {timeout_sec}s]"
+        stderr = (raw_err.decode(errors='replace') if isinstance(raw_err, bytes) else raw_err) + f"\n[TIMEOUT after {timeout_sec}s]"
     except FileNotFoundError as exc:
         # 'uv' not in PATH or similar — capture and fail the gate
         rc = -2
@@ -532,17 +534,12 @@ def run_parity_gate(timeout_sec: int = 300) -> dict:
     tests_passed = -1
     tests_failed = -1
     if stdout:
-        summary_re = _re.compile(
-            r'(?:(\d+)\s+failed)?[,\s]*(?:(\d+)\s+passed)?[^\n]*?\sin\s+[\d.]+s'
-        )
-        matches = list(summary_re.finditer(stdout))
-        if matches:
-            failed_str, passed_str = matches[-1].groups()
-            if passed_str is not None:
-                tests_passed = int(passed_str)
-            if failed_str is not None:
-                tests_failed = int(failed_str)
-        # If no 'failed' token found AND 'passed' found AND rc==0, set failed=0
+        passed_match = _re.search(r'(\d+)\s+passed', stdout)
+        failed_match = _re.search(r'(\d+)\s+failed', stdout)
+        if passed_match:
+            tests_passed = int(passed_match.group(1))
+        if failed_match:
+            tests_failed = int(failed_match.group(1))
         if tests_passed >= 0 and tests_failed == -1 and rc == 0:
             tests_failed = 0
 
@@ -1130,19 +1127,25 @@ def main():
     print('\n' + '─' * 70)
     print('Writing Phase 46 deliverables')
     print('─' * 70)
-    write_ab_comparison_report(
-        full_metrics=full_metrics,
-        oos_metrics=oos_metrics,
-        wf_lookup=wf_lookup,
-        extremes_check=extremes_check,
-        bh_stats=bh_stats,
-    )
-    write_scenarios_csv(
-        full_metrics=full_metrics,
-        oos_metrics=oos_metrics,
-        hard_gate_results=hard_gate_per_scenario,
-        bh_stats=bh_stats,
-    )
+    try:
+        write_ab_comparison_report(
+            full_metrics=full_metrics,
+            oos_metrics=oos_metrics,
+            wf_lookup=wf_lookup,
+            extremes_check=extremes_check,
+            bh_stats=bh_stats,
+        )
+    except Exception as exc:
+        print(f'WARNING: write_ab_comparison_report failed: {exc}')
+    try:
+        write_scenarios_csv(
+            full_metrics=full_metrics,
+            oos_metrics=oos_metrics,
+            hard_gate_results=hard_gate_per_scenario,
+            bh_stats=bh_stats,
+        )
+    except Exception as exc:
+        print(f'WARNING: write_scenarios_csv failed: {exc}')
     all_passed = write_validation_report({
         'val_01_ab_complete': val_01_ab_complete,
         'val_02_hard_gate': hard_gate_per_scenario,
